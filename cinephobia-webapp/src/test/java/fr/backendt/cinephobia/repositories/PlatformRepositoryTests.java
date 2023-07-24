@@ -76,34 +76,34 @@ class PlatformRepositoryTests {
     }
 
     @Test
-    void getPlatformContainingNameTest() {
+    void getPlatformsContainingNameTest() {
         // GIVEN
         Platform expected;
-        Optional<Platform> result;
+        List<Platform> results;
         String namePart = PLATFORM_TEST.getName()
                 .toUpperCase()
                 .substring(2, 6);
 
         // WHEN
         expected = repository.save(PLATFORM_TEST);
-        result = repository.findByNameContainingIgnoreCase(namePart);
+        results = repository.findAllByNameContainingIgnoreCase(namePart);
 
         // THEN
-        assertThat(result).contains(expected);
+        assertThat(results).containsExactly(expected);
     }
 
     @Test
-    void failToGetPlatformContainingNameTest() {
+    void failToGetPlatformsContainingNameTest() {
         // GIVEN
-        Optional<Platform> result;
+        List<Platform> results;
         String nonexistentNamePart = "hey";
 
         // WHEN
         repository.save(PLATFORM_TEST);
-        result = repository.findByNameContainingIgnoreCase(nonexistentNamePart);
+        results = repository.findAllByNameContainingIgnoreCase(nonexistentNamePart);
 
         // THEN
-        assertThat(result).isEmpty();
+        assertThat(results).isEmpty();
     }
 
     @Test

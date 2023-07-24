@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
 import java.util.Optional;
 
 import static fr.backendt.cinephobia.TestingModelValues.TRIGGER_TEST;
@@ -45,50 +46,50 @@ class TriggerRepositoryTests {
     }
 
     @Test
-    void getTriggerContainingNameTest() {
+    void getTriggersContainingNameTest() {
         // GIVEN
         Trigger expected;
-        Optional<Trigger> result;
+        List<Trigger> results;
         String namePart = TRIGGER_TEST.getName()
                 .toUpperCase()
                 .substring(4);
 
         // WHEN
         expected = repository.save(TRIGGER_TEST);
-        result = repository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(namePart, namePart);
+        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(namePart, namePart);
 
         // THEN
-        assertThat(result).contains(expected);
+        assertThat(results).containsExactly(expected);
     }
 
     @Test
-    void getTriggerContainingDescriptionTest() {
+    void getTriggersContainingDescriptionTest() {
         // GIVEN
         Trigger expected;
-        Optional<Trigger> result;
+        List<Trigger> results;
         String descriptionPart = TRIGGER_TEST.getName()
                 .toUpperCase()
                 .substring(0, 11);
 
         // WHEN
         expected = repository.save(TRIGGER_TEST);
-        result = repository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(descriptionPart, descriptionPart);
+        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(descriptionPart, descriptionPart);
 
         // THEN
-        assertThat(result).contains(expected);
+        assertThat(results).containsExactly(expected);
     }
     @Test
-    void failToGetTriggerContainingNameOrDescriptionTest() {
+    void failToGetTriggersContainingNameOrDescriptionTest() {
         // GIVEN
-        Optional<Trigger> result;
+        List<Trigger> results;
         String incorrectSearch = "tecno";
 
         // WHEN
         repository.save(TRIGGER_TEST);
-        result = repository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(incorrectSearch, incorrectSearch);
+        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(incorrectSearch, incorrectSearch);
 
         // THEN
-        assertThat(result).isEmpty();
+        assertThat(results).isEmpty();
     }
 
     @Test
