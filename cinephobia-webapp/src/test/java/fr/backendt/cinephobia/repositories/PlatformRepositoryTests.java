@@ -83,13 +83,27 @@ class PlatformRepositoryTests {
         String namePart = PLATFORM_TEST.getName()
                 .toUpperCase()
                 .substring(2, 6);
-        
+
         // WHEN
         expected = repository.save(PLATFORM_TEST);
         result = repository.findByNameContainingIgnoreCase(namePart);
 
         // THEN
         assertThat(result).contains(expected);
+    }
+
+    @Test
+    void failToGetPlatformContainingNameTest() {
+        // GIVEN
+        Optional<Platform> result;
+        String nonexistentNamePart = "hey";
+
+        // WHEN
+        repository.save(PLATFORM_TEST);
+        result = repository.findByNameContainingIgnoreCase(nonexistentNamePart);
+
+        // THEN
+        assertThat(result).isEmpty();
     }
 
     @Test
