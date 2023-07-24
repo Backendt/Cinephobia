@@ -48,7 +48,7 @@ class PlatformRepositoryTests {
     }
 
     @Test
-    void getPlatformTest() {
+    void getPlatformByIdTest() {
         // GIVEN
         Platform expected;
         Optional<Platform> result;
@@ -56,6 +56,37 @@ class PlatformRepositoryTests {
         // WHEN
         expected = repository.save(PLATFORM_TEST);
         result = repository.findById(expected.getId());
+
+        // THEN
+        assertThat(result).contains(expected);
+    }
+
+    @Test
+    void getPlatformByNameTest() {
+        // GIVEN
+        Platform expected;
+        Optional<Platform> result;
+
+        // WHEN
+        expected = repository.save(PLATFORM_TEST);
+        result = repository.findByName(PLATFORM_TEST.getName());
+
+        // THEN
+        assertThat(result).contains(expected);
+    }
+
+    @Test
+    void getPlatformContainingNameTest() {
+        // GIVEN
+        Platform expected;
+        Optional<Platform> result;
+        String namePart = PLATFORM_TEST.getName()
+                .toUpperCase()
+                .substring(2, 6);
+        
+        // WHEN
+        expected = repository.save(PLATFORM_TEST);
+        result = repository.findByNameContainingIgnoreCase(namePart);
 
         // THEN
         assertThat(result).contains(expected);
