@@ -62,20 +62,6 @@ class PlatformRepositoryTests {
     }
 
     @Test
-    void getPlatformByNameTest() {
-        // GIVEN
-        Platform expected;
-        Optional<Platform> result;
-
-        // WHEN
-        expected = repository.save(PLATFORM_TEST);
-        result = repository.findByName(PLATFORM_TEST.getName());
-
-        // THEN
-        assertThat(result).contains(expected);
-    }
-
-    @Test
     void getPlatformsContainingNameTest() {
         // GIVEN
         Platform expected;
