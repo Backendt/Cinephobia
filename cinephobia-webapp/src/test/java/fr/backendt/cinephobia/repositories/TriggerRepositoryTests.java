@@ -15,78 +15,72 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class TriggerRepositoryTests {
 
-    private static final Trigger TRIGGER_TEST = new Trigger("Technophobia", "Fear of technology");
-
     @Autowired
     private TriggerRepository repository;
 
     @Test
     void createTriggerTest() {
         // GIVEN
+        Trigger trigger = new Trigger("Technophobia", "Fear of technology");
         Trigger result;
 
         // WHEN
-        result = repository.save(TRIGGER_TEST);
+        result = repository.save(trigger);
 
         // THEN
-        assertThat(result.getId()).isNotNull();
+        assertThat(result).hasNoNullFieldsOrProperties();
     }
 
     @Test
     void getTriggerByIdTest() {
         // GIVEN
-        Trigger expected;
+        Long triggerId = 1L;
         Optional<Trigger> result;
 
         // WHEN
-        expected = repository.save(TRIGGER_TEST);
-        result = repository.findById(expected.getId());
+        result = repository.findById(triggerId);
 
         // THEN
-        assertThat(result).contains(expected);
+        assertThat(result).isNotEmpty();
+        assertThat(result.get()).hasNoNullFieldsOrProperties();
     }
 
     @Test
     void getTriggersContainingNameTest() {
         // GIVEN
-        Trigger expected;
+        String fullName = "Testphobia";
+        String namePart = "estp";
         List<Trigger> results;
-        String namePart = TRIGGER_TEST.getName()
-                .toUpperCase()
-                .substring(4);
 
         // WHEN
-        expected = repository.save(TRIGGER_TEST);
         results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(namePart, namePart);
 
         // THEN
-        assertThat(results).containsExactly(expected);
+        assertThat(results).isNotEmpty();
+        assertThat(results.get(0).getName()).isEqualTo(fullName);
     }
 
     @Test
     void getTriggersContainingDescriptionTest() {
         // GIVEN
-        Trigger expected;
+        String fullDescription = "Fear of software bugs";
+        String descriptionPart = "Soft";
         List<Trigger> results;
-        String descriptionPart = TRIGGER_TEST.getName()
-                .toUpperCase()
-                .substring(0, 11);
 
         // WHEN
-        expected = repository.save(TRIGGER_TEST);
         results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(descriptionPart, descriptionPart);
 
         // THEN
-        assertThat(results).containsExactly(expected);
+        assertThat(results).isNotEmpty();
+        assertThat(results.get(0).getDescription()).isEqualTo(fullDescription);
     }
     @Test
     void failToGetTriggersContainingNameOrDescriptionTest() {
         // GIVEN
         List<Trigger> results;
-        String incorrectSearch = "tecno";
+        String incorrectSearch = "techno";
 
         // WHEN
-        repository.save(TRIGGER_TEST);
         results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(incorrectSearch, incorrectSearch);
 
         // THEN
@@ -96,16 +90,14 @@ class TriggerRepositoryTests {
     @Test
     void deleteTriggerByIdTest() {
         // GIVEN
-        Trigger savedTrigger;
+        Long triggerId = 1L;
         Optional<Trigger> resultBefore;
         Optional<Trigger> resultAfter;
 
         // WHEN
-        savedTrigger = repository.save(TRIGGER_TEST);
-
-        resultBefore = repository.findById(savedTrigger.getId());
-        repository.deleteById(savedTrigger.getId());
-        resultAfter = repository.findById(savedTrigger.getId());
+        resultBefore = repository.findById(triggerId);
+        repository.deleteById(triggerId);
+        resultAfter = repository.findById(triggerId);
 
         // THEN
         assertThat(resultBefore).isNotEmpty();

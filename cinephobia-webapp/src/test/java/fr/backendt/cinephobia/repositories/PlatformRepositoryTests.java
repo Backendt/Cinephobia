@@ -15,68 +15,61 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class PlatformRepositoryTests {
 
-    private static final Platform PLATFORM_TEST = new Platform("JUnit TV");
-
     @Autowired
     private PlatformRepository repository;
 
     @Test
     void createPlatformTest() {
         // GIVEN
+        Platform platform = new Platform("JUnit TV");
         Platform result;
 
         // WHEN
-        result = repository.save(PLATFORM_TEST);
+        result = repository.save(platform);
 
         // THEN
-        assertThat(result.getId()).isNotNull();
+        assertThat(result).hasNoNullFieldsOrProperties();
     }
 
     @Test
     void getAllPlatformsTest() {
         // GIVEN
-        List<Platform> resultsBefore;
-        List<Platform> resultsAfter;
+        List<Platform> results;
 
         // WHEN
-        resultsBefore = repository.findAll();
-        repository.save(PLATFORM_TEST);
-        resultsAfter = repository.findAll();
+        results = repository.findAll();
 
         // THEN
-        assertThat(resultsBefore).isEmpty();
-        assertThat(resultsAfter).isNotEmpty();
+        assertThat(results).isNotEmpty();
     }
 
     @Test
     void getPlatformByIdTest() {
         // GIVEN
-        Platform expected;
+        Long platformId = 1L;
         Optional<Platform> result;
 
         // WHEN
-        expected = repository.save(PLATFORM_TEST);
-        result = repository.findById(expected.getId());
+        result = repository.findById(platformId);
 
         // THEN
-        assertThat(result).contains(expected);
+        assertThat(result).isNotEmpty();
+        assertThat(result.get()).hasNoNullFieldsOrProperties();
     }
 
     @Test
     void getPlatformsContainingNameTest() {
         // GIVEN
-        Platform expected;
+        String partTitle = "cine";
+        String fullTitle = "Cinema";
         List<Platform> results;
-        String namePart = PLATFORM_TEST.getName()
-                .toUpperCase()
-                .substring(2, 6);
 
         // WHEN
-        expected = repository.save(PLATFORM_TEST);
-        results = repository.findAllByNameContainingIgnoreCase(namePart);
+        results = repository.findAllByNameContainingIgnoreCase(partTitle);
 
         // THEN
-        assertThat(results).containsExactly(expected);
+        assertThat(results).isNotEmpty();
+        assertThat(results.get(0).getName()).isEqualTo(fullTitle);
     }
 
     @Test
@@ -86,7 +79,6 @@ class PlatformRepositoryTests {
         String nonexistentNamePart = "hey";
 
         // WHEN
-        repository.save(PLATFORM_TEST);
         results = repository.findAllByNameContainingIgnoreCase(nonexistentNamePart);
 
         // THEN
@@ -96,15 +88,14 @@ class PlatformRepositoryTests {
     @Test
     void deletePlatformTest() {
         // GIVEN
-        Platform savedPlatform;
+        Long platformId = 1L;
         Optional<Platform> resultBefore;
         Optional<Platform> resultAfter;
 
         // WHEN
-        savedPlatform = repository.save(PLATFORM_TEST);
-        resultBefore = repository.findById(savedPlatform.getId());
-        repository.deleteById(savedPlatform.getId());
-        resultAfter = repository.findById(savedPlatform.getId());
+        resultBefore = repository.findById(platformId);
+        repository.deleteById(platformId);
+        resultAfter = repository.findById(platformId);
 
         // THEN
         assertThat(resultBefore).isNotEmpty();
