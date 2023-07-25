@@ -9,12 +9,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.Optional;
 
-import static fr.backendt.cinephobia.TestingModelValues.PLATFORM_TEST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
 @SpringBootTest
 class PlatformRepositoryTests {
+
+    private static final Platform PLATFORM_TEST = new Platform("JUnit TV");
 
     @Autowired
     private PlatformRepository repository;

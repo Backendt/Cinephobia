@@ -9,12 +9,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.Optional;
 
-import static fr.backendt.cinephobia.TestingModelValues.TRIGGER_TEST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
 @SpringBootTest
 class TriggerRepositoryTests {
+
+    private static final Trigger TRIGGER_TEST = new Trigger("Technophobia", "Fear of technology");
 
     @Autowired
     private TriggerRepository repository;
