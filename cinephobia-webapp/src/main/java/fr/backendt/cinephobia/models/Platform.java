@@ -26,4 +26,9 @@ public class Platform {
     public Platform(String name) {
         this.name = name;
     }
+
+    public Platform(Platform platform) {
+        this.id = platform.id;
+        this.name = platform.name;
+    }
 }
