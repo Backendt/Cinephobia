@@ -31,4 +31,10 @@ public class Trigger {
         this.name = name;
         this.description = description;
     }
+
+    public Trigger(Trigger trigger) {
+        this.id = trigger.id;
+        this.name = trigger.name;
+        this.description = trigger.description;
+    }
 }
