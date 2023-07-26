@@ -7,6 +7,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +52,18 @@ class MediaRepositoryTests {
     }
 
     @Test
+    void failToCreateDuplicateMediaTest() {
+        // GIVEN
+        Platform platform = platformRepository.findById(1L).orElseThrow();
+        Media media = new Media("Cinephobia: The Revenge", "https://example.com/hey.png", List.of(platform));
+
+        // WHEN
+        // THEN
+        assertThatExceptionOfType(DataIntegrityViolationException.class)
+                .isThrownBy(() -> repository.save(media));
+    }
+
+    @Test
     void failToCreateMediaWithHttpUrlTest() {
         // GIVEN
         Platform savedPlatform = platformRepository.findById(1L).orElseThrow();
@@ -87,6 +100,7 @@ class MediaRepositoryTests {
         // THEN
         assertThat(result).isNotEmpty();
         assertThat(result.get()).hasNoNullFieldsOrProperties();
+        assertThat(result.get().getPlatforms()).isNotEmpty();
     }
 
     @Test

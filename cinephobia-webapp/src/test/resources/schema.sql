@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS media(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS media_platform(
+CREATE TABLE IF NOT EXISTS media_platforms(
     platform_id BIGINT NOT NULL,
     media_id BIGINT NOT NULL,
     FOREIGN KEY (platform_id) REFERENCES platform(id),

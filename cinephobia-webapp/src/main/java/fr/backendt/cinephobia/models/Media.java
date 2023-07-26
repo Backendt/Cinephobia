@@ -9,6 +9,7 @@ import lombok.Generated;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.URL;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -32,11 +33,19 @@ public class Media {
 
     @Size(min = 1, max = 10, message = "There must be between 1 and 10 platforms")
     @ManyToMany
+    @JoinTable(inverseJoinColumns = @JoinColumn(name = "platform_id"))
     private List<Platform> platforms;
 
     public Media(String title, String imageUrl, List<Platform> platforms) {
         this.title = title;
         this.imageUrl = imageUrl;
         this.platforms = platforms;
+    }
+
+    public Media(Media media) {
+        this.id = media.id;
+        this.title = media.title;
+        this.imageUrl = media.imageUrl;
+        this.platforms = new ArrayList<>(media.platforms);
     }
 }
