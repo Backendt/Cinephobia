@@ -36,4 +36,11 @@ public class Warn {
         this.media = media;
         this.expositionLevel = expositionLevel;
     }
+
+    public Warn(Warn warn) {
+        this.id = warn.id;
+        this.trigger = warn.trigger;
+        this.media = warn.media;
+        this.expositionLevel = warn.expositionLevel;
+    }
 }

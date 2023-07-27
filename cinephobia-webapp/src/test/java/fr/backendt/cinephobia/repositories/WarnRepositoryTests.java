@@ -7,11 +7,14 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Transactional
 @SpringBootTest
@@ -40,6 +43,45 @@ class WarnRepositoryTests {
 
         // THEN
         assertThat(result.getId()).isNotNull();
+    }
+
+    @Test
+    void failToCreateWarnWithUnsavedTriggerTest() {
+        // GIVEN
+        Trigger trigger = new Trigger( "Not saved", "Trigger not saved");
+        Media media = mediaRepository.findById(1L).orElseThrow();
+        Warn warn = new Warn(trigger, media, 9);
+
+        // THEN
+        // WHEN
+        assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+                .isThrownBy(() -> repository.save(warn));
+    }
+
+    @Test
+    void failToCreateWarnWithInvalidTriggerTest() {
+        // GIVEN
+        Trigger trigger = new Trigger(1337L, "Not saved", "Trigger not saved");
+        Media media = mediaRepository.findById(1L).orElseThrow();
+        Warn warn = new Warn(trigger, media, 9);
+
+        // THEN
+        // WHEN
+        assertThatExceptionOfType(DataIntegrityViolationException.class)
+                .isThrownBy(() -> repository.save(warn));
+    }
+
+    @Test
+    void failToCreateWarnWithInvalidMediaTest() {
+        // GIVEN
+        Trigger trigger = triggerRepository.findById(1L).orElseThrow();
+        Media media = new Media(1337L, "Not saved", "https://example.com/hey.png", List.of());
+        Warn warn = new Warn(trigger, media, 9);
+
+        // THEN
+        // WHEN
+        assertThatExceptionOfType(DataIntegrityViolationException.class)
+                .isThrownBy(() -> repository.save(warn));
     }
 
     @Test
