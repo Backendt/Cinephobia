@@ -1,18 +1,16 @@
 package fr.backendt.cinephobia.repositories;
 
 import fr.backendt.cinephobia.models.Trigger;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Transactional
-@SpringBootTest
+@DataJpaTest
 class TriggerRepositoryTests {
 
     @Autowired
