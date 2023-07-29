@@ -50,6 +50,25 @@ class MediaRepositoryTests {
     }
 
     @Test
+    void failToSaveMediaPlatformTest() {
+        // GIVEN
+        Platform unsavedPlatform = new Platform("UnsavedPlatformTM");
+        Media media = new Media("Oh no!", "https://example.com/oops.png", List.of(unsavedPlatform));
+        Media result;
+        int platformsSizeBefore;
+        int platformsSizeAfter;
+
+        // WHEN
+        platformsSizeBefore = platformRepository.findAll().size();
+        result = repository.save(media);
+        platformsSizeAfter = platformRepository.findAll().size();
+
+        // THEN
+        assertThat(platformsSizeBefore).isEqualTo(platformsSizeAfter);
+        assertThat(result.getPlatforms().get(0).getId()).isNull();
+    }
+
+    @Test
     void failToCreateDuplicateMediaTest() {
         // GIVEN
         Platform platform = platformRepository.findById(1L).orElseThrow();
