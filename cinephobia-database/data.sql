@@ -1,7 +1,4 @@
-CREATE DATABASE IF NOT EXISTS cinephobia;
-USE cinephobia;
-
-CREATE TABLE IF NOT EXISTS trigger(
+CREATE TABLE IF NOT EXISTS `trigger`(
     id BIGINT NOT NULL AUTO_INCREMENT,
     name VARCHAR(30) NOT NULL UNIQUE,
     description VARCHAR(60) NOT NULL,
@@ -33,7 +30,7 @@ CREATE TABLE IF NOT EXISTS warn(
     trigger_id BIGINT NOT NULL,
     media_id BIGINT NOT NULL,
     exposition_level TINYINT NOT NULL,
-    FOREIGN KEY (trigger_id) REFERENCES trigger(id),
+    FOREIGN KEY (trigger_id) REFERENCES `trigger`(id),
     FOREIGN KEY (media_id) REFERENCES media(id),
     PRIMARY KEY (id)
 );

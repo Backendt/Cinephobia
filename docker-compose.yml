@@ -1,0 +1,36 @@
+services:
+
+  mysql-db:
+    container_name: cinephobia-mysql
+    build: ./cinephobia-database/
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  spring-api:
+    container_name: cinephobia-api
+    build: ./cinephobia-webapp/
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      - MYSQL_HOST=cinephobia-mysql
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+
+volumes:
+  mysql-data: {} 
