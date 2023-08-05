@@ -1,10 +1,13 @@
 package fr.backendt.cinephobia.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.backendt.cinephobia.exceptions.ModelException;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.services.PlatformService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -16,8 +19,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -62,6 +64,48 @@ class PlatformControllerTests {
                 .andExpect(request().asyncResult(platformTest));
 
         verify(service).createPlatform(platformTest);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"      ", "a", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})
+    void createInvalidPlatformNamesTest(String invalidName) throws Exception {
+        // GIVEN
+        Platform invalidPlatform = new Platform(invalidName);
+        String platformData = objectMapper.writeValueAsString(invalidPlatform);
+
+        String requestUrl = "/api/v1/platform";
+        RequestBuilder request = post(requestUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(platformData);
+
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isBadRequest());
+
+        verify(service, never()).createPlatform(platformTest);
+    }
+
+    @Test
+    void createDuplicatePlatformTest() throws Exception {
+        // GIVEN
+        Platform duplicatePlatform = new Platform("Netflix");
+        String platformData = objectMapper.writeValueAsString(duplicatePlatform);
+
+        String requestUrl = "/api/v1/platform";
+        RequestBuilder request = post(requestUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(platformData);
+
+        when(service.createPlatform(any()))
+                .thenThrow(ModelException.class);
+
+        // WHEN
+        mvc.perform(request)
+        // THEN
+                .andExpect(status().isBadRequest());
+
+        verify(service).createPlatform(duplicatePlatform);
     }
 
     @Test
@@ -120,6 +164,23 @@ class PlatformControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
                 .andExpect(request().asyncResult(platformTest));
+
+        verify(service).getPlatform(platformId);
+    }
+
+    @Test
+    void getUnknownPlatformTest() throws Exception {
+        // GIVEN
+        Long platformId = 1337L;
+        String requestUrl = "/api/v1/platform/{id}";
+        RequestBuilder request = get(requestUrl, platformId);
+
+        when(service.getPlatform(any()))
+                .thenThrow(ModelException.ModelNotFoundException.class);
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isNotFound());
 
         verify(service).getPlatform(platformId);
     }
