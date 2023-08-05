@@ -1,100 +1,127 @@
 package fr.backendt.cinephobia.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.services.PlatformService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.RequestBuilder;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WebMvcTest(PlatformController.class)
 class PlatformControllerTests {
 
-    private PlatformController controller;
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
     private PlatformService service;
 
     private Platform platformTest;
 
     @BeforeEach
-    void initTests() {
-        service = Mockito.mock(PlatformService.class);
-        controller = new PlatformController(service);
-
-        platformTest = new Platform("Junit TV");
+    void initTestPlatform() {
+        platformTest = new Platform("New Platform");
     }
 
     @Test
-    void getPlatformsTest() {
+    void createPlatformTest() throws Exception {
         // GIVEN
-        String searchString = null;
+        String platformData = objectMapper.writeValueAsString(platformTest);
+        String requestUrl = "/api/v1/platform";
+        RequestBuilder request = post(requestUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(platformData);
+
+        when(service.createPlatform(any()))
+                .thenReturn(CompletableFuture.completedFuture(platformTest));
+
+        // WHEN
+        mvc.perform(request)
+        // THEN
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andExpect(request().asyncResult(platformTest));
+
+        verify(service).createPlatform(platformTest);
+    }
+
+    @Test
+    void getAllPlatformsTest() throws Exception {
+        // GIVEN
+        String requestUrl = "/api/v1/platform";
+        RequestBuilder request = get(requestUrl);
+
         List<Platform> platforms = List.of(platformTest);
-        List<Platform> results;
 
         when(service.getAllPlatforms())
                 .thenReturn(CompletableFuture.completedFuture(platforms));
-        // WHEN
-        results = controller.getPlatforms(searchString).join();
 
+        // WHEN
+        mvc.perform(request)
         // THEN
-        verify(service).getAllPlatforms();
-        assertThat(results).containsExactlyElementsOf(platforms);
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andExpect(request().asyncResult(platforms));
     }
 
     @Test
-    void searchPlatformsTest() {
+    void searchPlatformsTest() throws Exception {
         // GIVEN
-        String searchString = "uni";
+        String searchString = "new";
+        String requestUrl = "/api/v1/platform";
+        RequestBuilder request = get(requestUrl)
+                .param("search", searchString);
+
         List<Platform> platforms = List.of(platformTest);
-        List<Platform> results;
 
         when(service.getPlatformsContainingInName(any()))
                 .thenReturn(CompletableFuture.completedFuture(platforms));
         // WHEN
-        results = controller.getPlatforms(searchString).join();
-
+        mvc.perform(request)
         // THEN
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andExpect(request().asyncResult(platforms));
+
         verify(service).getPlatformsContainingInName(searchString);
-        assertThat(results).containsExactlyElementsOf(platforms);
     }
 
     @Test
-    void getPlatformTest() {
+    void getPlatformTest() throws Exception {
         // GIVEN
         Long platformId = 1L;
-        Platform result;
+        String requestUrl = "/api/v1/platform/{id}";
+        RequestBuilder request = get(requestUrl, platformId);
 
         when(service.getPlatform(any()))
                 .thenReturn(CompletableFuture.completedFuture(platformTest));
         // WHEN
-        result = controller.getPlatform(platformId).join();
-
+        mvc.perform(request)
         // THEN
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andExpect(request().asyncResult(platformTest));
+
         verify(service).getPlatform(platformId);
-        assertThat(result).isEqualTo(platformTest);
-    }
-
-    @Test
-    void createPlatformTest() {
-        // GIVEN
-        Platform savedPlatform = new Platform(platformTest);
-        savedPlatform.setId(1L);
-
-        Platform result;
-
-        when(service.createPlatform(any()))
-                .thenReturn(CompletableFuture.completedFuture(savedPlatform));
-        // WHEN
-        result = controller.createPlatform(platformTest).join();
-
-        // THEN
-        verify(service).createPlatform(platformTest);
-        assertThat(result).isEqualTo(savedPlatform);
     }
 
 }
