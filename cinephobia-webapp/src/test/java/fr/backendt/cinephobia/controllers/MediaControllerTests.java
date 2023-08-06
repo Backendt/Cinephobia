@@ -1,0 +1,195 @@
+package fr.backendt.cinephobia.controllers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.models.Media;
+import fr.backendt.cinephobia.models.Platform;
+import fr.backendt.cinephobia.services.MediaService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.RequestBuilder;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(MediaController.class)
+class MediaControllerTests {
+
+    @Autowired
+    private MockMvc mvc;
+
+    @MockBean
+    private MediaService service;
+
+    private Media mediaTest;
+
+    @BeforeEach
+    void initTests() {
+        Platform platform = new Platform();
+        platform.setId(1L);
+
+        mediaTest = new Media("1 function, 1000 tests", "https://example.com/help.png", List.of(platform));
+    }
+
+    @Test
+    void createMediaTest() throws Exception {
+        // GIVEN
+        String mediaData = new ObjectMapper().writeValueAsString(mediaTest);
+
+        String requestUrl = "/api/v1/media";
+        RequestBuilder request = post(requestUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mediaData);
+
+        when(service.createMedia(any()))
+                .thenReturn(CompletableFuture.completedFuture(mediaTest));
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andExpect(request().asyncResult(mediaTest));
+
+        verify(service).createMedia(mediaTest);
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {
+                    "    ,https://example.com/",
+                    "a,https://example.com/",
+                    "Title,javascript:alert(1)",
+                    "Title,http://example.com/",
+                    "Title,   ",
+                    "Title,"
+            }, ignoreLeadingAndTrailingWhitespace = false)
+    void createInvalidMediaTest(String title, String imageUrl) throws Exception {
+        // GIVEN
+        Platform platform = new Platform(1L, null);
+        Media invalidMedia = new Media(title, imageUrl, List.of(platform));
+        String mediaData = new ObjectMapper().writeValueAsString(invalidMedia);
+
+        String requestUrl = "/api/v1/media";
+        RequestBuilder request = post(requestUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mediaData);
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isBadRequest());
+
+        verify(service, never()).createMedia(any());
+    }
+
+    @Test
+    void createDuplicateMediaTest() throws Exception {
+        // GIVEN
+        String mediaData = new ObjectMapper().writeValueAsString(mediaTest);
+
+        String requestUrl = "/api/v1/media";
+        RequestBuilder request = post(requestUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mediaData);
+
+        when(service.createMedia(any())).thenThrow(ModelException.class);
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isBadRequest());
+
+        verify(service).createMedia(mediaTest);
+    }
+
+    @Test
+    void getAllMediasTest() throws Exception {
+        // GIVEN
+        String requestUrl = "/api/v1/media";
+        RequestBuilder request = get(requestUrl);
+
+        List<Media> medias = List.of(mediaTest);
+        when(service.getAllMedias())
+                .thenReturn(CompletableFuture.completedFuture(medias));
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andExpect(request().asyncResult(medias));
+
+        verify(service).getAllMedias();
+    }
+
+    @Test
+    void getMediasContainingStringTest() throws Exception {
+        // GIVEN
+        String mediaSearch = "test";
+        String requestUrl = "/api/v1/media";
+        RequestBuilder request = get(requestUrl)
+                .param("search", mediaSearch);
+
+        List<Media> medias = List.of(mediaTest);
+
+        when(service.getMediaContainingInTitle(any()))
+                .thenReturn(CompletableFuture.completedFuture(medias));
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andExpect(request().asyncResult(medias));
+
+
+        verify(service).getMediaContainingInTitle(mediaSearch);
+    }
+
+    @Test
+    void getMediaByIdTest() throws Exception {
+        // GIVEN
+        Long mediaId = 1L;
+        String requestUrl = "/api/v1/media/{id}";
+        RequestBuilder request = get(requestUrl, mediaId);
+
+        when(service.getMedia(any()))
+                .thenReturn(CompletableFuture.completedFuture(mediaTest));
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andExpect(request().asyncResult(mediaTest));
+
+        verify(service).getMedia(mediaId);
+    }
+
+    @Test
+    void getUnknownMediaByIdTest() throws Exception {
+        // GIVEN
+        Long mediaId = 1L;
+        String requestUrl = "/api/v1/media/{id}";
+        RequestBuilder request = get(requestUrl, mediaId);
+
+        when(service.getMedia(any()))
+                .thenThrow(ModelException.ModelNotFoundException.class);
+        // WHEN
+        mvc.perform(request)
+                // THEN
+                .andExpect(status().isNotFound());
+
+        verify(service).getMedia(mediaId);
+    }
+
+}
