@@ -83,7 +83,7 @@ class PlatformControllerTests {
                 // THEN
                 .andExpect(status().isBadRequest());
 
-        verify(service, never()).createPlatform(platformTest);
+        verify(service, never()).createPlatform(any());
     }
 
     @Test
