@@ -4,13 +4,12 @@ import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.services.TriggerService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-@Controller
+@RestController
 @RequestMapping("/api/v1/trigger")
 public class TriggerController {
 
