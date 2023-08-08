@@ -33,7 +33,7 @@ public class WarnMapper {
     public WarnDTO toDTO(Warn entity) {
         Long triggerId = entity.getTrigger().getId();
         Long mediaId = entity.getMedia().getId();
-        return new WarnDTO(entity.getId(), triggerId, mediaId, entity.getExpositionLevel());
+        return new WarnDTO(entity.getId(), mediaId, triggerId, entity.getExpositionLevel());
     }
 
     public List<WarnDTO> toDTOs(List<Warn> warns) {
