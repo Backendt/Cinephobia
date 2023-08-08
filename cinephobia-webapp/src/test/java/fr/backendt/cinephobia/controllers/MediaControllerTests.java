@@ -2,8 +2,10 @@ package fr.backendt.cinephobia.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.mappers.MediaMapper;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Platform;
+import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +37,11 @@ class MediaControllerTests {
     @MockBean
     private MediaService service;
 
+    @MockBean
+    private MediaMapper mapper;
+
     private Media mediaTest;
+    private MediaDTO mediaDTOTest;
 
     @BeforeEach
     void initTests() {
@@ -43,12 +49,17 @@ class MediaControllerTests {
         platform.setId(1L);
 
         mediaTest = new Media("1 function, 1000 tests", "https://example.com/help.png", List.of(platform));
+        mediaDTOTest = new MediaDTO("1 function, 1000 tests", "https://example.com/help.png", List.of(1L));
+
+        when(mapper.toDTO(mediaTest)).thenReturn(mediaDTOTest);
+        when(mapper.toEntity(mediaDTOTest)).thenReturn(mediaTest);
+        when(mapper.toDTOs(List.of(mediaTest))).thenReturn(List.of(mediaDTOTest));
     }
 
     @Test
     void createMediaTest() throws Exception {
         // GIVEN
-        String mediaData = new ObjectMapper().writeValueAsString(mediaTest);
+        String mediaData = new ObjectMapper().writeValueAsString(mediaDTOTest);
 
         String requestUrl = "/api/v1/media";
         RequestBuilder request = post(requestUrl)
@@ -62,7 +73,7 @@ class MediaControllerTests {
                 // THEN
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andExpect(request().asyncResult(mediaTest));
+                .andExpect(request().asyncResult(mediaDTOTest));
 
         verify(service).createMedia(mediaTest);
     }
@@ -79,8 +90,7 @@ class MediaControllerTests {
             }, ignoreLeadingAndTrailingWhitespace = false)
     void createInvalidMediaTest(String title, String imageUrl) throws Exception {
         // GIVEN
-        Platform platform = new Platform(1L, null);
-        Media invalidMedia = new Media(title, imageUrl, List.of(platform));
+        MediaDTO invalidMedia = new MediaDTO(title, imageUrl, List.of(1L));
         String mediaData = new ObjectMapper().writeValueAsString(invalidMedia);
 
         String requestUrl = "/api/v1/media";
@@ -98,7 +108,7 @@ class MediaControllerTests {
     @Test
     void createDuplicateMediaTest() throws Exception {
         // GIVEN
-        String mediaData = new ObjectMapper().writeValueAsString(mediaTest);
+        String mediaData = new ObjectMapper().writeValueAsString(mediaDTOTest);
 
         String requestUrl = "/api/v1/media";
         RequestBuilder request = post(requestUrl)
@@ -121,6 +131,7 @@ class MediaControllerTests {
         RequestBuilder request = get(requestUrl);
 
         List<Media> medias = List.of(mediaTest);
+        List<MediaDTO> expected = List.of(mediaDTOTest);
         when(service.getAllMedias())
                 .thenReturn(CompletableFuture.completedFuture(medias));
         // WHEN
@@ -128,7 +139,7 @@ class MediaControllerTests {
                 // THEN
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andExpect(request().asyncResult(medias));
+                .andExpect(request().asyncResult(expected));
 
         verify(service).getAllMedias();
     }
@@ -142,6 +153,7 @@ class MediaControllerTests {
                 .param("search", mediaSearch);
 
         List<Media> medias = List.of(mediaTest);
+        List<MediaDTO> expected = List.of(mediaDTOTest);
 
         when(service.getMediaContainingInTitle(any()))
                 .thenReturn(CompletableFuture.completedFuture(medias));
@@ -150,7 +162,7 @@ class MediaControllerTests {
                 // THEN
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andExpect(request().asyncResult(medias));
+                .andExpect(request().asyncResult(expected));
 
 
         verify(service).getMediaContainingInTitle(mediaSearch);
@@ -170,7 +182,7 @@ class MediaControllerTests {
                 // THEN
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andExpect(request().asyncResult(mediaTest));
+                .andExpect(request().asyncResult(mediaDTOTest));
 
         verify(service).getMedia(mediaId);
     }
