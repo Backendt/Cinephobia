@@ -1,6 +1,7 @@
 package fr.backendt.cinephobia.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.backendt.cinephobia.controllers.api.v1.PlatformController;
 import fr.backendt.cinephobia.exceptions.ModelException;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.services.PlatformService;

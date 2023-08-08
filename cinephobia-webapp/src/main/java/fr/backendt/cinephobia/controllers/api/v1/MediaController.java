@@ -1,4 +1,4 @@
-package fr.backendt.cinephobia.controllers;
+package fr.backendt.cinephobia.controllers.api.v1;
 
 import fr.backendt.cinephobia.mappers.MediaMapper;
 import fr.backendt.cinephobia.models.Media;

@@ -1,4 +1,4 @@
-package fr.backendt.cinephobia.controllers;
+package fr.backendt.cinephobia.controllers.api.v1;
 
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.services.PlatformService;
