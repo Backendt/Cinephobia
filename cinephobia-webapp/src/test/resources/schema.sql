@@ -34,3 +34,19 @@ CREATE TABLE IF NOT EXISTS warn(
     FOREIGN KEY (media_id) REFERENCES media(id),
     PRIMARY KEY (id)
 );
+
+CREATE TABLE IF NOT EXISTS users(
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    display_name VARCHAR(30) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS users_warns(
+    warn_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    FOREIGN KEY (warn_id) REFERENCES warn(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
