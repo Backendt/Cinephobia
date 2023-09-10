@@ -53,7 +53,7 @@ class MediaControllerTests {
         platform.setId(1L);
 
         mediaTest = new Media("1 function, 1000 tests", "https://example.com/help.png", List.of(platform));
-        mediaDTOTest = new MediaDTO("1 function, 1000 tests", "https://example.com/help.png", List.of(1L));
+        mediaDTOTest = new MediaDTO(null, "1 function, 1000 tests", "https://example.com/help.png", List.of(1L));
 
         when(mapper.toDTO(mediaTest)).thenReturn(mediaDTOTest);
         when(mapper.toEntity(mediaDTOTest)).thenReturn(mediaTest);
@@ -95,7 +95,7 @@ class MediaControllerTests {
             }, ignoreLeadingAndTrailingWhitespace = false)
     void createInvalidMediaTest(String title, String imageUrl) throws Exception {
         // GIVEN
-        MediaDTO invalidMedia = new MediaDTO(title, imageUrl, List.of(1L));
+        MediaDTO invalidMedia = new MediaDTO(null, title, imageUrl, List.of(1L));
         String mediaData = new ObjectMapper().writeValueAsString(invalidMedia);
 
         String requestUrl = "/api/v1/media";

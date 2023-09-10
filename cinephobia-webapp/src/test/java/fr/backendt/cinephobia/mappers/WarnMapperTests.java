@@ -41,7 +41,7 @@ class WarnMapperTests {
         mediaTest = new Media(2L, "Media test", "Description test", List.of());
         triggerTest = new Trigger(3L, "Trigger test", "Description test");
         warnTest = new Warn(triggerTest, mediaTest, 6);
-        warnDTOTest = new WarnDTO(2L, 3L, 6);
+        warnDTOTest = new WarnDTO(null, 2L, 3L, 6);
     }
 
     @Test

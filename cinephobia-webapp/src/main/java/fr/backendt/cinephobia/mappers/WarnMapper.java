@@ -24,10 +24,10 @@ public class WarnMapper {
     }
 
     public Warn toEntity(WarnDTO dto) {
-        Media media = mediaService.getMedia(dto.getMediaId()).join();
-        Trigger trigger = triggerService.getTrigger(dto.getTriggerId()).join();
+        Media media = mediaService.getMedia(dto.mediaId()).join();
+        Trigger trigger = triggerService.getTrigger(dto.triggerId()).join();
 
-        return new Warn(dto.getId(), trigger, media, dto.getExpositionLevel());
+        return new Warn(dto.id(), trigger, media, dto.expositionLevel());
     }
 
     public WarnDTO toDTO(Warn entity) {

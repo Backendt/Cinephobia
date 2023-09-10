@@ -35,7 +35,7 @@ class MediaMapperTests {
 
         platformTest = new Platform(1L, "Example platform");
         mediaTest = new Media("Media test", "Description test", List.of(platformTest));
-        dtoTest = new MediaDTO("Media test", "Description test", List.of(1L));
+        dtoTest = new MediaDTO(null, "Media test", "Description test", List.of(1L));
     }
 
     @Test

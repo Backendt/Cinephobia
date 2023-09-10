@@ -53,7 +53,7 @@ class WarnControllerTests {
         Media media = new Media(1L, null, null, null);
         Trigger trigger = new Trigger(1L, null, null);
         warnTest = new Warn(1L, trigger, media, 9);
-        warnDtoTest = new WarnDTO(1L, 1L, 9);
+        warnDtoTest = new WarnDTO(null, 1L, 1L, 9);
 
         when(mapper.toDTO(warnTest)).thenReturn(warnDtoTest);
         when(mapper.toEntity(warnDtoTest)).thenReturn(warnTest);
@@ -93,7 +93,7 @@ class WarnControllerTests {
     })
     void createInvalidWarnTest(Long triggerId, Long mediaId, int expositionLevel) throws Exception {
         // GIVEN
-        WarnDTO invalidWarn = new WarnDTO(triggerId, mediaId, expositionLevel);
+        WarnDTO invalidWarn = new WarnDTO(null, triggerId, mediaId, expositionLevel);
         String warnData = new ObjectMapper().writeValueAsString(invalidWarn);
 
         String requestUrl = "/api/v1/warn";

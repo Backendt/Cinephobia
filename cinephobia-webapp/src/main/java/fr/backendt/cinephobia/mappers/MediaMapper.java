@@ -19,12 +19,12 @@ public class MediaMapper {
     }
 
     public Media toEntity(MediaDTO dto) {
-        List<Platform> platforms = dto.getPlatformsId().stream()
+        List<Platform> platforms = dto.platformsId().stream()
                 .map(platformService::getPlatform)
                 .map(CompletableFuture::join)
                 .toList();
 
-        return new Media(dto.getId(), dto.getTitle(), dto.getImageUrl(), platforms);
+        return new Media(dto.id(), dto.title(), dto.imageUrl(), platforms);
     }
 
     public MediaDTO toDTO(Media media) {
