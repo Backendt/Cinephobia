@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services.integration;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.services.PlatformService;
 import jakarta.transaction.Transactional;
@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -45,7 +45,7 @@ class PlatformServiceIT {
         // THEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.createPlatform(duplicatePlatform).join())
-                .withCauseExactlyInstanceOf(ModelException.class);
+                .withCauseExactlyInstanceOf(EntityException.class);
     }
 
     @Test
@@ -112,7 +112,7 @@ class PlatformServiceIT {
         // THEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.getPlatform(unknownPlatformId).join())
-                .withCauseExactlyInstanceOf(ModelNotFoundException.class);
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
     }
 
 }

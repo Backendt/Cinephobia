@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.repositories.MediaRepository;
@@ -56,7 +56,7 @@ class MediaServiceTests {
 
         // THEN
         // WHEN
-        assertThatExceptionOfType(ModelException.class)
+        assertThatExceptionOfType(EntityException.class)
                 .isThrownBy(() -> service.createMedia(testMedia));
     }
 
@@ -98,7 +98,7 @@ class MediaServiceTests {
 
         when(repository.findById(any())).thenReturn(Optional.empty());
         // WHEN
-        assertThatExceptionOfType(ModelException.ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityException.EntityNotFoundException.class)
                 .isThrownBy(() -> service.getMedia(mediaId).join());
 
         // THEN

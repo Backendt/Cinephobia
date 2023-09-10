@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.repositories.TriggerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
@@ -26,13 +26,13 @@ public class TriggerService {
     }
 
     @Async
-    public CompletableFuture<Trigger> createTrigger(Trigger trigger) throws ModelException {
+    public CompletableFuture<Trigger> createTrigger(Trigger trigger) throws EntityException {
         trigger.setId(null);
         try {
             Trigger savedTrigger = repository.save(trigger);
             return completedFuture(savedTrigger);
         } catch(DataIntegrityViolationException exception) {
-            throw new ModelException("Trigger already exists");
+            throw new EntityException("Trigger already exists");
         }
     }
 
@@ -49,9 +49,9 @@ public class TriggerService {
     }
 
     @Async
-    public CompletableFuture<Trigger> getTrigger(Long id) throws ModelNotFoundException {
+    public CompletableFuture<Trigger> getTrigger(Long id) throws EntityNotFoundException {
         Trigger trigger = repository.findById(id)
-                .orElseThrow(() -> new ModelNotFoundException("Trigger not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Trigger not found"));
         return completedFuture(trigger);
     }
 

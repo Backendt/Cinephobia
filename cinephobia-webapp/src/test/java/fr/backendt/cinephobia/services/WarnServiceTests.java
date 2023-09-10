@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.Warn;
@@ -14,7 +14,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import java.util.List;
 import java.util.Optional;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -65,7 +65,7 @@ class WarnServiceTests {
                 .thenThrow(InvalidDataAccessApiUsageException.class);
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelException.class)
+        assertThatExceptionOfType(EntityException.class)
                 .isThrownBy(() -> service.createWarn(testWarn));
         verify(repository).save(expected);
     }
@@ -80,7 +80,7 @@ class WarnServiceTests {
                 .thenThrow(DataIntegrityViolationException.class);
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelException.class)
+        assertThatExceptionOfType(EntityException.class)
                 .isThrownBy(() -> service.createWarn(testWarn));
         verify(repository).save(expected);
     }
@@ -139,7 +139,7 @@ class WarnServiceTests {
         when(repository.findById(any())).thenReturn(Optional.empty());
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityNotFoundException.class)
                 .isThrownBy(() -> service.getWarn(warnId));
         verify(repository).findById(warnId);
     }

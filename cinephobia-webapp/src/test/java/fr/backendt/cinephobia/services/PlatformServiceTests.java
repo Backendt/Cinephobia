@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.repositories.PlatformRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import java.util.List;
 import java.util.Optional;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -55,7 +55,7 @@ class PlatformServiceTests {
                 .thenThrow(DataIntegrityViolationException.class);
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelException.class)
+        assertThatExceptionOfType(EntityException.class)
                 .isThrownBy(() -> service.createPlatform(duplicatePlatform));
     }
 
@@ -114,10 +114,10 @@ class PlatformServiceTests {
         Long platformId = 1L;
 
         when(repository.findById(any()))
-                .thenThrow(ModelNotFoundException.class);
+                .thenThrow(EntityNotFoundException.class);
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityNotFoundException.class)
                 .isThrownBy(() -> service.getPlatform(platformId));
         verify(repository).findById(platformId);
     }

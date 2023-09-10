@@ -2,7 +2,7 @@ package fr.backendt.cinephobia.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.backendt.cinephobia.controllers.api.v1.TriggerController;
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.services.TriggerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 
@@ -21,11 +22,13 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WithMockUser
 @WebMvcTest(TriggerController.class)
 class TriggerControllerTests {
 
@@ -48,12 +51,13 @@ class TriggerControllerTests {
     @Test
     void createTriggerTest() throws Exception {
         // GIVEN
-        String triggerData = new ObjectMapper().writeValueAsString(triggerTest);
+        String triggerData = mapper.writeValueAsString(triggerTest);
 
         String requestUrl = "/api/v1/trigger";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(triggerData);
+                .content(triggerData)
+                .with(csrf());
 
         when(service.createTrigger(any()))
                 .thenReturn(CompletableFuture.completedFuture(triggerTest));
@@ -80,12 +84,13 @@ class TriggerControllerTests {
     void createInvalidTriggerTest(String name, String description) throws Exception {
         // GIVEN
         Trigger invalidTrigger = new Trigger(name, description);
-        String triggerData = new ObjectMapper().writeValueAsString(invalidTrigger);
+        String triggerData = mapper.writeValueAsString(invalidTrigger);
 
         String requestUrl = "/api/v1/trigger";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(triggerData);
+                .content(triggerData)
+                .with(csrf());
         // WHEN
         mvc.perform(request)
         // THEN
@@ -97,14 +102,15 @@ class TriggerControllerTests {
     @Test
     void createDuplicateTriggerTest() throws Exception {
         // GIVEN
-        String triggerData = new ObjectMapper().writeValueAsString(triggerTest);
+        String triggerData = mapper.writeValueAsString(triggerTest);
 
         String requestUrl = "/api/v1/trigger";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(triggerData);
+                .content(triggerData)
+                .with(csrf());
 
-        when(service.createTrigger(any())).thenThrow(ModelException.class);
+        when(service.createTrigger(any())).thenThrow(EntityException.class);
         // WHEN
         mvc.perform(request)
         // THEN
@@ -182,7 +188,7 @@ class TriggerControllerTests {
         RequestBuilder request = get(requestUrl, triggerId);
 
         when(service.getTrigger(any()))
-                .thenThrow(ModelException.ModelNotFoundException.class);
+                .thenThrow(EntityException.EntityNotFoundException.class);
         // WHEN
         mvc.perform(request)
                 // THEN

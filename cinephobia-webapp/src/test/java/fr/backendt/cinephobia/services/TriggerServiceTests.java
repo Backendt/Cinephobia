@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.repositories.TriggerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import java.util.List;
 import java.util.Optional;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -56,7 +56,7 @@ class TriggerServiceTests {
                 .thenThrow(DataIntegrityViolationException.class);
         // THEN
         // WHEN
-        assertThatExceptionOfType(ModelException.class)
+        assertThatExceptionOfType(EntityException.class)
                 .isThrownBy(() -> service.createTrigger(trigger));
     }
 
@@ -117,7 +117,7 @@ class TriggerServiceTests {
 
         when(repository.findById(any())).thenReturn(Optional.empty());
         // WHEN
-        assertThatExceptionOfType(ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityNotFoundException.class)
                 .isThrownBy(() -> service.getTrigger(triggerId));
 
         // THEN

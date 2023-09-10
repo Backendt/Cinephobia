@@ -4,16 +4,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-public class ModelException extends RuntimeException {
+public class EntityException extends RuntimeException {
 
-    public ModelException(String message) {
+    public EntityException(String message) {
         super(message);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public static class ModelNotFoundException extends ModelException {
+    public static class EntityNotFoundException extends EntityException {
 
-        public ModelNotFoundException(String message) {
+        public EntityNotFoundException(String message) {
             super(message);
         }
 

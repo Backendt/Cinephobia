@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services.integration;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.Warn;
@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -58,7 +58,7 @@ class WarnServiceIT {
         // THEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.createWarn(invalidWarn).join())
-                .withCauseExactlyInstanceOf(ModelException.class);
+                .withCauseExactlyInstanceOf(EntityException.class);
     }
 
     @Test
@@ -75,7 +75,7 @@ class WarnServiceIT {
         // THEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.createWarn(invalidWarn).join())
-                .withCauseExactlyInstanceOf(ModelException.class);
+                .withCauseExactlyInstanceOf(EntityException.class);
     }
 
     @Test
@@ -143,7 +143,7 @@ class WarnServiceIT {
         // THEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.getWarn(unknownWarnId).join())
-                .withCauseExactlyInstanceOf(ModelNotFoundException.class);
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
     }
 
 }

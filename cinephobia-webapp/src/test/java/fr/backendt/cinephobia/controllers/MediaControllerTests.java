@@ -2,7 +2,7 @@ package fr.backendt.cinephobia.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.backendt.cinephobia.controllers.api.v1.MediaController;
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.mappers.MediaMapper;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Platform;
@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 
@@ -24,11 +25,13 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WithMockUser
 @WebMvcTest(MediaController.class)
 class MediaControllerTests {
 
@@ -65,7 +68,8 @@ class MediaControllerTests {
         String requestUrl = "/api/v1/media";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mediaData);
+                .content(mediaData)
+                .with(csrf());
 
         when(service.createMedia(any()))
                 .thenReturn(CompletableFuture.completedFuture(mediaTest));
@@ -97,7 +101,8 @@ class MediaControllerTests {
         String requestUrl = "/api/v1/media";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mediaData);
+                .content(mediaData)
+                .with(csrf());
         // WHEN
         mvc.perform(request)
                 // THEN
@@ -114,9 +119,10 @@ class MediaControllerTests {
         String requestUrl = "/api/v1/media";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mediaData);
+                .content(mediaData)
+                .with(csrf());
 
-        when(service.createMedia(any())).thenThrow(ModelException.class);
+        when(service.createMedia(any())).thenThrow(EntityException.class);
         // WHEN
         mvc.perform(request)
                 // THEN
@@ -196,7 +202,7 @@ class MediaControllerTests {
         RequestBuilder request = get(requestUrl, mediaId);
 
         when(service.getMedia(any()))
-                .thenThrow(ModelException.ModelNotFoundException.class);
+                .thenThrow(EntityException.EntityNotFoundException.class);
         // WHEN
         mvc.perform(request)
                 // THEN

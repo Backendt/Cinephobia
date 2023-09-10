@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @Service
@@ -30,7 +30,7 @@ public class UserService {
             User savedUser = repository.save(user);
             return completedFuture(savedUser);
         } catch(DataIntegrityViolationException exception) {
-            throw new ModelException("User with the same email already exists");
+            throw new EntityException("User with the same email already exists");
         }
     }
 
@@ -43,14 +43,14 @@ public class UserService {
     @Async
     public CompletableFuture<User> getUserById(Long id) {
         User user = repository.findById(id)
-                .orElseThrow(() -> new ModelNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return completedFuture(user);
     }
 
     @Async
     public CompletableFuture<User> getUserByEmail(String email) {
         User user = repository.findByEmail(email)
-                .orElseThrow(() -> new ModelNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return completedFuture(user);
     }
 
@@ -58,7 +58,7 @@ public class UserService {
     public CompletableFuture<User> replaceUserById(Long id, User user) {
         boolean userExists = repository.existsById(id);
         if(!userExists) {
-            throw new ModelNotFoundException("User not found");
+            throw new EntityNotFoundException("User not found");
         }
 
         user.setId(id);
@@ -80,10 +80,10 @@ public class UserService {
     }
 
     @Async
-    public void deleteUserById(Long id) {
+    public void deleteUserById(Long id) { // TODO CompletableFuture<Void>
         boolean userExists = repository.existsById(id);
         if(!userExists) {
-            throw new ModelNotFoundException("User not found");
+            throw new EntityNotFoundException("User not found");
         }
 
         repository.deleteById(id);

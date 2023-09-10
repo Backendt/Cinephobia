@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.mappers;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.Warn;
@@ -93,9 +93,9 @@ class WarnMapperTests {
         when(mediaService.getMedia(any()))
                 .thenReturn(CompletableFuture.completedFuture(mediaTest));
         when(triggerService.getTrigger(any()))
-                .thenThrow(ModelException.ModelNotFoundException.class);
+                .thenThrow(EntityException.EntityNotFoundException.class);
         // WHEN
-        assertThatExceptionOfType(ModelException.ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityException.EntityNotFoundException.class)
                 .isThrownBy(() -> mapper.toEntity(warnDTOTest));
 
         // THEN

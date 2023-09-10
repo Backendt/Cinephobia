@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.mappers;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.models.dto.MediaDTO;
@@ -83,9 +83,9 @@ class MediaMapperTests {
     void convertDtoWithUnknownPlatformToEntityTest() {
         // GIVEN
         when(service.getPlatform(any()))
-                .thenThrow(ModelException.ModelNotFoundException.class);
+                .thenThrow(EntityException.EntityNotFoundException.class);
         // WHEN
-        assertThatExceptionOfType(ModelException.ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityException.EntityNotFoundException.class)
                 .isThrownBy(() -> mapper.toEntity(dtoTest));
 
         // THEN

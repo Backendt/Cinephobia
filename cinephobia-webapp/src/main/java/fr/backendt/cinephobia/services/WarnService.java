@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Warn;
 import fr.backendt.cinephobia.repositories.WarnRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @Service
@@ -26,13 +26,13 @@ public class WarnService {
     }
 
     @Async
-    public CompletableFuture<Warn> createWarn(Warn warn) throws ModelException {
+    public CompletableFuture<Warn> createWarn(Warn warn) throws EntityException {
         warn.setId(null);
         try {
             Warn savedWarn = repository.save(warn);
             return completedFuture(savedWarn);
         } catch(DataIntegrityViolationException | InvalidDataAccessApiUsageException exception) {
-            throw new ModelException("Unknown media and/or trigger");
+            throw new EntityException("Unknown media and/or trigger");
         }
     }
 
@@ -49,9 +49,9 @@ public class WarnService {
     }
 
     @Async
-    public CompletableFuture<Warn> getWarn(Long id) throws ModelNotFoundException {
+    public CompletableFuture<Warn> getWarn(Long id) throws EntityNotFoundException {
         Warn warn = repository.findById(id)
-                .orElseThrow(() -> new ModelNotFoundException("Warn not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Warn not found"));
         return completedFuture(warn);
     }
 }

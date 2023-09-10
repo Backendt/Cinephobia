@@ -2,7 +2,7 @@ package fr.backendt.cinephobia.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.backendt.cinephobia.controllers.api.v1.PlatformController;
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.services.PlatformService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 
@@ -21,11 +22,13 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WithMockUser
 @WebMvcTest(PlatformController.class)
 class PlatformControllerTests {
 
@@ -52,7 +55,8 @@ class PlatformControllerTests {
         String requestUrl = "/api/v1/platform";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(platformData);
+                .content(platformData)
+                .with(csrf());
 
         when(service.createPlatform(any()))
                 .thenReturn(CompletableFuture.completedFuture(platformTest));
@@ -77,7 +81,8 @@ class PlatformControllerTests {
         String requestUrl = "/api/v1/platform";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(platformData);
+                .content(platformData)
+                .with(csrf());
 
         // WHEN
         mvc.perform(request)
@@ -96,10 +101,11 @@ class PlatformControllerTests {
         String requestUrl = "/api/v1/platform";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(platformData);
+                .content(platformData)
+                .with(csrf());
 
         when(service.createPlatform(any()))
-                .thenThrow(ModelException.class);
+                .thenThrow(EntityException.class);
 
         // WHEN
         mvc.perform(request)
@@ -177,7 +183,7 @@ class PlatformControllerTests {
         RequestBuilder request = get(requestUrl, platformId);
 
         when(service.getPlatform(any()))
-                .thenThrow(ModelException.ModelNotFoundException.class);
+                .thenThrow(EntityException.EntityNotFoundException.class);
         // WHEN
         mvc.perform(request)
                 // THEN

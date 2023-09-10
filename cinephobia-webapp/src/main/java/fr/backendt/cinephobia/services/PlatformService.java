@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.repositories.PlatformRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 @Service
 public class PlatformService {
@@ -25,13 +25,13 @@ public class PlatformService {
     }
 
     @Async
-    public CompletableFuture<Platform> createPlatform(Platform platform) throws ModelException {
+    public CompletableFuture<Platform> createPlatform(Platform platform) throws EntityException {
         platform.setId(null);
         try {
             Platform savedPlatform = repository.save(platform);
             return completedFuture(savedPlatform);
         } catch(DataIntegrityViolationException exception) {
-            throw new ModelException("Platform already exists");
+            throw new EntityException("Platform already exists");
         }
     }
 
@@ -48,9 +48,9 @@ public class PlatformService {
     }
 
     @Async
-    public CompletableFuture<Platform> getPlatform(Long id) throws ModelNotFoundException {
+    public CompletableFuture<Platform> getPlatform(Long id) throws EntityNotFoundException {
         Platform platform = repository.findById(id)
-                .orElseThrow(() -> new ModelNotFoundException("Platform not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Platform not found"));
         return completedFuture(platform);
     }
 

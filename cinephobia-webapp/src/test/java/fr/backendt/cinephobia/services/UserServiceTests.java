@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,12 +15,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static org.mockito.Mockito.*;
 
 class UserServiceTests {
 
-    private UserRepository  repository;
+    private UserRepository repository;
     private UserService service;
 
     private User testUser;
@@ -56,7 +56,7 @@ class UserServiceTests {
                 .thenThrow(DataIntegrityViolationException.class);
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelException.class)
+        assertThatExceptionOfType(EntityException.class)
                 .isThrownBy(() -> service.createUser(testUser).join());
     }
 
@@ -99,7 +99,7 @@ class UserServiceTests {
                 .thenReturn(Optional.empty());
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelException.ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityNotFoundException.class)
                 .isThrownBy(() -> service.getUserById(unknownUserId).join());
     }
 
@@ -128,7 +128,7 @@ class UserServiceTests {
                 .thenReturn(Optional.empty());
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelException.ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityNotFoundException.class)
                 .isThrownBy(() -> service.getUserByEmail(unknownEmail).join());
     }
 
@@ -202,7 +202,7 @@ class UserServiceTests {
                 .thenReturn(Optional.empty());
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityNotFoundException.class)
                 .isThrownBy(() -> service.updateUserById(unknownUserId, userUpdate).join());
 
         verify(repository).findById(unknownUserId);
@@ -238,7 +238,7 @@ class UserServiceTests {
         when(repository.existsById(any())).thenReturn(false);
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityNotFoundException.class)
                 .isThrownBy(() -> service.replaceUserById(userId, testUser).join());
         verify(repository).existsById(userId);
         verify(repository, never()).save(any());
@@ -266,7 +266,7 @@ class UserServiceTests {
         when(repository.existsById(any())).thenReturn(false);
         // WHEN
         // THEN
-        assertThatExceptionOfType(ModelNotFoundException.class)
+        assertThatExceptionOfType(EntityNotFoundException.class)
                 .isThrownBy(() -> service.deleteUserById(userId));
 
         verify(repository).existsById(userId);

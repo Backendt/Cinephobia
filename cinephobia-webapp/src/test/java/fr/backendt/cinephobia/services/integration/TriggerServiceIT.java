@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services.integration;
 
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.services.TriggerService;
 import jakarta.transaction.Transactional;
@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 
-import static fr.backendt.cinephobia.exceptions.ModelException.ModelNotFoundException;
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -47,7 +47,7 @@ class TriggerServiceIT {
         // THEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.createTrigger(duplicateTrigger).join())
-                .withRootCauseExactlyInstanceOf(ModelException.class);
+                .withCauseExactlyInstanceOf(EntityException.class);
     }
 
     @Test
@@ -115,7 +115,7 @@ class TriggerServiceIT {
         // THEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.getTrigger(unknownTriggerId).join())
-                .withCauseExactlyInstanceOf(ModelNotFoundException.class);
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
     }
 
 

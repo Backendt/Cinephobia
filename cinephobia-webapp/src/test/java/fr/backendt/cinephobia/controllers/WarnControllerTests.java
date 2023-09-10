@@ -2,7 +2,7 @@ package fr.backendt.cinephobia.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.backendt.cinephobia.controllers.api.v1.WarnController;
-import fr.backendt.cinephobia.exceptions.ModelException;
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.mappers.WarnMapper;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Trigger;
@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 
@@ -25,11 +26,13 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WithMockUser
 @WebMvcTest(WarnController.class)
 class WarnControllerTests {
 
@@ -65,7 +68,8 @@ class WarnControllerTests {
         String requestUrl = "/api/v1/warn";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(warnData);
+                .content(warnData)
+                .with(csrf());
 
         when(service.createWarn(any()))
                 .thenReturn(CompletableFuture.completedFuture(warnTest));
@@ -95,7 +99,8 @@ class WarnControllerTests {
         String requestUrl = "/api/v1/warn";
         RequestBuilder request = post(requestUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(warnData);
+                .content(warnData)
+                .with(csrf());
         // WHEN
         mvc.perform(request)
                 // THEN
@@ -151,7 +156,7 @@ class WarnControllerTests {
         RequestBuilder request = get(requestUrl, warnId);
 
         when(service.getWarn(any()))
-                .thenThrow(ModelException.ModelNotFoundException.class);
+                .thenThrow(EntityException.EntityNotFoundException.class);
         // WHEN
         mvc.perform(request)
                 // THEN
