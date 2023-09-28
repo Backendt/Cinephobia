@@ -3,7 +3,6 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.repositories.PlatformRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -11,15 +10,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @Service
 public class PlatformService {
 
     private final PlatformRepository repository;
 
-    @Autowired
     public PlatformService(PlatformRepository repository) {
         this.repository = repository;
     }

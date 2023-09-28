@@ -5,7 +5,6 @@ import fr.backendt.cinephobia.models.Warn;
 import fr.backendt.cinephobia.models.dto.WarnDTO;
 import fr.backendt.cinephobia.services.WarnService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +17,6 @@ public class WarnController {
     private final WarnService service;
     private final WarnMapper mapper;
 
-    @Autowired
     public WarnController(WarnService service, WarnMapper mapper) {
         this.service = service;
         this.mapper = mapper;

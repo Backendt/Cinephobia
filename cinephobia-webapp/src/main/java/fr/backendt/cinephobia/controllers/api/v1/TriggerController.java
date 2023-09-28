@@ -3,7 +3,6 @@ package fr.backendt.cinephobia.controllers.api.v1;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.services.TriggerService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +14,6 @@ public class TriggerController {
 
     private final TriggerService service;
 
-    @Autowired
     public TriggerController(TriggerService service) {
         this.service = service;
     }

@@ -5,7 +5,6 @@ import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +17,6 @@ public class MediaController {
     private final MediaService service;
     private final MediaMapper mapper;
 
-    @Autowired
     public MediaController(MediaService service, MediaMapper mapper) {
         this.service = service;
         this.mapper = mapper;

@@ -3,7 +3,6 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.repositories.MediaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,6 @@ public class MediaService {
 
     private final MediaRepository repository;
 
-    @Autowired
     public MediaService(MediaRepository repository) {
         this.repository = repository;
     }

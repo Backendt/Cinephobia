@@ -3,7 +3,6 @@ package fr.backendt.cinephobia.controllers.api.v1;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.services.PlatformService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +14,6 @@ public class PlatformController {
 
     private final PlatformService service;
 
-    @Autowired
     public PlatformController(PlatformService service) {
         this.service = service;
     }

@@ -3,7 +3,6 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Warn;
 import fr.backendt.cinephobia.repositories.WarnRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.scheduling.annotation.Async;
@@ -20,7 +19,6 @@ public class WarnService {
 
     private final WarnRepository repository;
 
-    @Autowired
     public WarnService(WarnRepository repository) {
         this.repository = repository;
     }
