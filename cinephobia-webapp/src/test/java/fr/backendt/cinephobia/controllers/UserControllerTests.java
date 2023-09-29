@@ -116,6 +116,8 @@ class UserControllerTests {
                 .content(userPatchData)
                 .with(csrf());
 
+        when(service.hashUserPassword(any()))
+                .thenReturn(userPatchEntity);
         when(service.updateUserById(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(user));
         // WHEN
@@ -125,6 +127,7 @@ class UserControllerTests {
                 .andExpect(request().asyncStarted())
                 .andExpect(request().asyncResult(userResponseDTO));
 
+        verify(service).hashUserPassword(userPatchEntity);
         verify(service).updateUserById(userId, userPatchEntity);
     }
 
@@ -157,7 +160,6 @@ class UserControllerTests {
         String userPatchData = mapper.writeValueAsString(userPatch);
         User userPatchEntity = new User(null, "New Name", null, null, null);
 
-
         long userId = 1L;
         String adminEndpoint = USER_ENDPOINT + '/' + userId;
         RequestBuilder request = patch(adminEndpoint)
@@ -165,6 +167,8 @@ class UserControllerTests {
                 .content(userPatchData)
                 .with(csrf());
 
+        when(service.hashUserPassword(any()))
+                .thenReturn(userPatchEntity);
         when(service.updateUserById(any(), any()))
                 .thenThrow(EntityException.EntityNotFoundException.class);
         // WHEN
@@ -172,6 +176,7 @@ class UserControllerTests {
                 // THEN
                 .andExpect(status().isNotFound());
 
+        verify(service).hashUserPassword(userPatchEntity);
         verify(service).updateUserById(userId, userPatchEntity);
     }
 
@@ -190,6 +195,8 @@ class UserControllerTests {
                 .content(newUserData)
                 .with(csrf());
 
+        when(service.hashUserPassword(any()))
+                .thenReturn(expected);
         when(service.replaceUserById(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(user));
         // WHEN
@@ -198,7 +205,8 @@ class UserControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
                 .andExpect(request().asyncResult(userResponseDTO));
-        
+
+        verify(service).hashUserPassword(expected);
         verify(service).replaceUserById(userId, expected);
     }
 
@@ -278,6 +286,8 @@ class UserControllerTests {
                 .content(userData)
                 .with(csrf());
 
+        when(service.hashUserPassword(any()))
+                .thenReturn(expected);
         when(service.createUser(any())).thenReturn(CompletableFuture.completedFuture(user));
         // WHEN
         mvc.perform(request)
@@ -286,6 +296,7 @@ class UserControllerTests {
                 .andExpect(request().asyncStarted())
                 .andExpect(request().asyncResult(userResponseDTO));
 
+        verify(service).hashUserPassword(expected);
         verify(service).createUser(expected);
     }
 
@@ -321,12 +332,15 @@ class UserControllerTests {
                 .content(userData)
                 .with(csrf());
 
+        when(service.hashUserPassword(any()))
+                .thenReturn(expected);
         when(service.createUser(any())).thenThrow(EntityException.class);
         // WHEN
         mvc.perform(request)
         // THEN
                 .andExpect(status().isBadRequest());
 
+        verify(service).hashUserPassword(expected);
         verify(service).createUser(expected);
     }
 
@@ -362,6 +376,8 @@ class UserControllerTests {
                 .content(userUpdateData)
                 .with(csrf());
 
+        when(service.hashUserPassword(any()))
+                .thenReturn(expected);
         when(service.updateUserById(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(user));
         // WHEN
@@ -371,6 +387,7 @@ class UserControllerTests {
                 .andExpect(request().asyncStarted())
                 .andExpect(request().asyncResult(userResponseDTO));
 
+        verify(service).hashUserPassword(expected);
         verify(service).updateUserById(currentUserId, expected);
     }
 
@@ -387,6 +404,8 @@ class UserControllerTests {
                 .content(newUserData)
                 .with(csrf());
 
+        when(service.hashUserPassword(any()))
+                .thenReturn(expected);
         when(service.replaceUserById(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(user));
         // WHEN
@@ -396,6 +415,7 @@ class UserControllerTests {
                 .andExpect(request().asyncStarted())
                 .andExpect(request().asyncResult(userResponseDTO));
 
+        verify(service).hashUserPassword(expected);
         verify(service).replaceUserById(currentUserId, expected);
     }
 

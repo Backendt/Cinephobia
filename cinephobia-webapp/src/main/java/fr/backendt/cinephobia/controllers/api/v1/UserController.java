@@ -49,17 +49,19 @@ public class UserController {
     @RolesAllowed("ADMIN")
     @PatchMapping("/{id}")
     public CompletableFuture<UserResponseDTO> updateUser(@PathVariable Long id, @Validated @RequestBody UserDTO userDtoPatch) {
-        User userPatch = mapper.map(userDtoPatch, User.class);
-        return service.updateUserById(id, userPatch) // TODO HASH PASSWORD
+        User rawUserPatch = mapper.map(userDtoPatch, User.class);
+        User userPatch = service.hashUserPassword(rawUserPatch);
+        return service.updateUserById(id, userPatch)
                 .thenApply(responseMapper);
     }
 
     @RolesAllowed("ADMIN")
     @PutMapping("/{id}")
     public CompletableFuture<UserResponseDTO> replaceUser(@PathVariable Long id, @Validated({NotNull.class, Default.class}) @RequestBody UserDTO userDto) {
-        User user = mapper.map(userDto, User.class);
-        user.setRole("USER");
-        return service.replaceUserById(id, user) // TODO HASH PASSWORD
+        User receivedUser = mapper.map(userDto, User.class);
+        receivedUser.setRole("USER");
+        User user = service.hashUserPassword(receivedUser);
+        return service.replaceUserById(id, user)
                 .thenApply(responseMapper);
     }
 
@@ -75,10 +77,11 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public CompletableFuture<UserResponseDTO> createUser(@Validated({NotNull.class, Default.class}) @RequestBody UserDTO user) {
-        User receivedUser = mapper.map(user, User.class);
+    public CompletableFuture<UserResponseDTO> createUser(@Validated({NotNull.class, Default.class}) @RequestBody UserDTO userDto) {
+        User receivedUser = mapper.map(userDto, User.class);
         receivedUser.setRole("USER");
-        return service.createUser(receivedUser) // TODO HASH PASSWORD
+        User user = service.hashUserPassword(receivedUser);
+        return service.createUser(user)
                 .thenApply(responseMapper);
     }
 

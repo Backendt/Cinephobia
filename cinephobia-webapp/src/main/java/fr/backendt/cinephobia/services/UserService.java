@@ -6,6 +6,7 @@ import fr.backendt.cinephobia.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,9 +19,11 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 public class UserService {
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Async
@@ -88,6 +91,16 @@ public class UserService {
 
         repository.deleteById(id);
         return completedFuture(null);
+    }
+
+    public User hashUserPassword(User user) {
+        User hashedUser = new User(user);
+        String rawPassword = hashedUser.getPassword();
+        if(rawPassword != null) {
+            String hashedPassword = passwordEncoder.encode(rawPassword);
+            hashedUser.setPassword(hashedPassword);
+        }
+        return hashedUser;
     }
 
 }

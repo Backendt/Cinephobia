@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +29,7 @@ class UserServiceTests {
     @BeforeEach
     void initTests() {
         this.repository = Mockito.mock(UserRepository.class);
-        this.service = new UserService(repository);
+        this.service = new UserService(repository, new BCryptPasswordEncoder());
 
         testUser = new User("Jane Doe", "jane.doe@test.com", "myPassword1234", "USER");
     }
@@ -251,7 +252,7 @@ class UserServiceTests {
 
         when(repository.existsById(any())).thenReturn(true);
         // WHEN
-        service.deleteUserById(userId);
+        service.deleteUserById(userId).join();
 
         // THEN
         verify(repository).existsById(userId);
@@ -267,10 +268,38 @@ class UserServiceTests {
         // WHEN
         // THEN
         assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.deleteUserById(userId));
+                .isThrownBy(() -> service.deleteUserById(userId).join());
 
         verify(repository).existsById(userId);
         verify(repository, never()).deleteById(any());
+    }
+
+    @Test
+    void hashUserPasswordTest() {
+        // GIVEN
+        String rawPassword = testUser.getPassword();
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String resultPassword;
+
+        // WHEN
+        resultPassword = service.hashUserPassword(testUser).getPassword();
+
+        // THEN
+        assertThat(resultPassword).isNotEqualTo(rawPassword);
+        assertThat(passwordEncoder.matches(rawPassword, resultPassword)).isTrue();
+    }
+
+    @Test
+    void hashUserNullPasswordTest() {
+        // GIVEN
+        testUser.setPassword(null);
+        String resultPassword;
+
+        // WHEN
+        resultPassword = service.hashUserPassword(testUser).getPassword();
+
+        // THEN
+        assertThat(resultPassword).isNull();
     }
 
 }
