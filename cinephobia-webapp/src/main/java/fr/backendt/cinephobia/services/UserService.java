@@ -80,13 +80,14 @@ public class UserService {
     }
 
     @Async
-    public void deleteUserById(Long id) { // TODO CompletableFuture<Void>
+    public CompletableFuture<Void> deleteUserById(Long id) {
         boolean userExists = repository.existsById(id);
         if(!userExists) {
             throw new EntityNotFoundException("User not found");
         }
 
         repository.deleteById(id);
+        return completedFuture(null);
     }
 
 }

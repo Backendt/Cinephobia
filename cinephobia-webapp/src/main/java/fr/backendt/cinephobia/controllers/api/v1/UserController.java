@@ -66,8 +66,7 @@ public class UserController {
     @RolesAllowed("ADMIN")
     @DeleteMapping("/{id}")
     public CompletableFuture<Void> deleteUser(@PathVariable Long id) {
-        service.deleteUserById(id);
-        return CompletableFuture.completedFuture(null); // TODO
+        return service.deleteUserById(id);
     }
 
     /*
