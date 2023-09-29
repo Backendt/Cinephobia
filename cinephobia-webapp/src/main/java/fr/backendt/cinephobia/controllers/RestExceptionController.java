@@ -36,8 +36,8 @@ public class RestExceptionController extends ResponseEntityExceptionHandler {
             errorMessages.add(errorMessage);
         }
 
-        String mainMessage = "Invalid fields";
+        String mainMessage = "Invalid field(s)";
         ApiErrorMessage apiErrorMessage = new ApiErrorMessage(HttpStatus.BAD_REQUEST, mainMessage, errorMessages);
-        return handleExceptionInternal(ex, apiErrorMessage, headers, apiErrorMessage.getStatus(), request);
+        return handleExceptionInternal(ex, apiErrorMessage, headers, apiErrorMessage.status(), request);
     }
 }
