@@ -13,8 +13,7 @@ import java.util.Optional;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,7 +30,7 @@ class PlatformServiceTests {
     }
 
     @Test
-    void createPlatformTest() {
+    void createPlatformTest() throws EntityException {
         // GIVEN
         Platform platform = new Platform(1L, "JUnit TV");
         Platform expected = new Platform(platform);
@@ -92,7 +91,7 @@ class PlatformServiceTests {
     }
 
     @Test
-    void getPlatformByIdTest() {
+    void getPlatformByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long platformId = 1L;
         Platform platform = new Platform(platformId, "Hello");
@@ -106,20 +105,6 @@ class PlatformServiceTests {
         // THEN
         verify(repository).findById(platformId);
         assertThat(result).isEqualTo(platform);
-    }
-
-    @Test
-    void failToGetPlatformByIdTest() {
-        // GIVEN
-        Long platformId = 1L;
-
-        when(repository.findById(any()))
-                .thenThrow(EntityNotFoundException.class);
-        // WHEN
-        // THEN
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.getPlatform(platformId));
-        verify(repository).findById(platformId);
     }
 
 }

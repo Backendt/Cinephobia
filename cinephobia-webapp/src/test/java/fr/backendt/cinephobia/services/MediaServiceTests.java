@@ -36,7 +36,7 @@ class MediaServiceTests {
 
 
     @Test
-    void createMediaTest() {
+    void createMediaTest() throws EntityException {
         // GIVEN
         Media expected = new Media(testMedia);
         testMedia.setId(1L);
@@ -77,7 +77,7 @@ class MediaServiceTests {
     }
 
     @Test
-    void getMediaByIdTest() {
+    void getMediaByIdTest() throws EntityException.EntityNotFoundException {
         // GIVEN
         Long mediaId = 1L;
         Media result;

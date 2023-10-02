@@ -25,7 +25,7 @@ class MediaServiceIT {
     private MediaService service;
 
     @Test
-    void createMediaTest() {
+    void createMediaTest() throws EntityException {
         // GIVEN
         Platform platform = new Platform();
         platform.setId(1L);
@@ -100,7 +100,7 @@ class MediaServiceIT {
     }
 
     @Test
-    void getMediaByIdTest() {
+    void getMediaByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long mediaId = 1L;
         Media result;

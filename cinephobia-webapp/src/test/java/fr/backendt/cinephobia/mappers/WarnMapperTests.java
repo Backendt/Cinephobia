@@ -70,7 +70,7 @@ class WarnMapperTests {
     }
 
     @Test
-    void convertToEntityTest() {
+    void convertToEntityTest() throws EntityException.EntityNotFoundException {
         // GIVEN
         Warn result;
 
@@ -88,7 +88,7 @@ class WarnMapperTests {
     }
 
     @Test
-    void convertToInvalidEntityTest() {
+    void convertToInvalidEntityTest() throws EntityException.EntityNotFoundException {
         // GIVEN
         when(mediaService.getMedia(any()))
                 .thenReturn(CompletableFuture.completedFuture(mediaTest));

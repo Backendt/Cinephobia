@@ -35,7 +35,7 @@ class UserServiceTests {
     }
 
     @Test
-    void createUserTest() {
+    void createUserTest() throws EntityException {
         // GIVEN
         User testUserWithId = new User(testUser);
         testUserWithId.setId(1L);
@@ -76,7 +76,7 @@ class UserServiceTests {
     }
 
     @Test
-    void getUserByIdTest() {
+    void getUserByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long userId = 1L;
         User result;
@@ -105,7 +105,7 @@ class UserServiceTests {
     }
 
     @Test
-    void getUserByEmailTest() {
+    void getUserByEmailTest() throws EntityNotFoundException {
         // GIVEN
         String userEmail = "user@test.com";
         User result;
@@ -134,7 +134,7 @@ class UserServiceTests {
     }
 
     @Test
-    void updateUserByIdTest() {
+    void updateUserByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long userId = 1L;
         User userUpdate = new User();
@@ -162,7 +162,7 @@ class UserServiceTests {
     }
 
     @Test
-    void updateUserByIdDoesntUpdateIdTest() {
+    void updateUserByIdDoesntUpdateIdTest() throws EntityNotFoundException {
         // GIVEN
         Long userId = 1L;
 
@@ -211,7 +211,7 @@ class UserServiceTests {
     }
 
     @Test
-    void replaceUserByIdTest() {
+    void replaceUserByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long userId = 1L;
         User newUser = new User("New User", "user@test.com", "newpassword", "USER");
@@ -246,7 +246,7 @@ class UserServiceTests {
     }
 
     @Test
-    void deleteUserByIdTest() {
+    void deleteUserByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long userId = 1L;
 

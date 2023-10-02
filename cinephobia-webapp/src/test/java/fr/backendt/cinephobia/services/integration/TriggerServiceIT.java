@@ -24,7 +24,7 @@ class TriggerServiceIT {
     private TriggerService service;
 
     @Test
-    void createTriggerTest() {
+    void createTriggerTest() throws EntityException {
         // GIVEN
         Trigger trigger = new Trigger("Vulnphobia", "Fear of introducing a vulnerability in a software");
         Trigger result;
@@ -93,7 +93,7 @@ class TriggerServiceIT {
     }
 
     @Test
-    void getTriggerByIdTest() {
+    void getTriggerByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long triggerId = 1L;
         Trigger result;

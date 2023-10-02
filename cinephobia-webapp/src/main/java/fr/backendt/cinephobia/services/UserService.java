@@ -27,7 +27,7 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<User> createUser(User user) {
+    public CompletableFuture<User> createUser(User user) throws EntityException {
         user.setId(null);
         try {
             User savedUser = repository.save(user);
@@ -44,21 +44,21 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<User> getUserById(Long id) {
+    public CompletableFuture<User> getUserById(Long id) throws EntityNotFoundException {
         User user = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return completedFuture(user);
     }
 
     @Async
-    public CompletableFuture<User> getUserByEmail(String email) {
+    public CompletableFuture<User> getUserByEmail(String email) throws EntityNotFoundException {
         User user = repository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return completedFuture(user);
     }
 
     @Async
-    public CompletableFuture<User> replaceUserById(Long id, User user) {
+    public CompletableFuture<User> replaceUserById(Long id, User user) throws EntityNotFoundException {
         boolean userExists = repository.existsById(id);
         if(!userExists) {
             throw new EntityNotFoundException("User not found");
@@ -70,7 +70,7 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<User> updateUserById(Long id, User user) {
+    public CompletableFuture<User> updateUserById(Long id, User user) throws EntityNotFoundException {
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setSkipNullEnabled(true);
 
@@ -83,7 +83,7 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<Void> deleteUserById(Long id) {
+    public CompletableFuture<Void> deleteUserById(Long id) throws EntityNotFoundException {
         boolean userExists = repository.existsById(id);
         if(!userExists) {
             throw new EntityNotFoundException("User not found");

@@ -31,7 +31,7 @@ class TriggerServiceTests {
     }
 
     @Test
-    void createTriggerTest() {
+    void createTriggerTest() throws EntityException {
         // GIVEN
         Trigger trigger = new Trigger(1L, "Testphobia", "Fear of tests");
         Trigger expected = new Trigger(trigger);
@@ -95,7 +95,7 @@ class TriggerServiceTests {
     }
 
     @Test
-    void getTriggerByIdTest() {
+    void getTriggerByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long triggerId = 1L;
         Trigger trigger = new Trigger(triggerId, "Testphobia", "Fear of tests");

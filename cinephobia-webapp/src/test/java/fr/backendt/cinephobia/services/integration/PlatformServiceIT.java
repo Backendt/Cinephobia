@@ -24,7 +24,7 @@ class PlatformServiceIT {
     private PlatformService service;
 
     @Test
-    void createPlatformTest() {
+    void createPlatformTest() throws EntityException {
         // GIVEN
         Platform unsavedPlatform = new Platform("JUnit TV");
         Platform result;
@@ -91,7 +91,7 @@ class PlatformServiceIT {
     }
 
     @Test
-    void getPlatformByIdTest() {
+    void getPlatformByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long platformId = 1L;
         Platform result;

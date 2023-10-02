@@ -40,7 +40,7 @@ class WarnServiceTests {
     }
 
     @Test
-    void createWarnTest() {
+    void createWarnTest() throws EntityException {
         // GIVEN
         Warn expected = new Warn(testWarn);
         expected.setId(null);
@@ -117,7 +117,7 @@ class WarnServiceTests {
     }
 
     @Test
-    void getWarnByIdTest() {
+    void getWarnByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long warnId = 1L;
         Warn result;

@@ -65,7 +65,7 @@ class MediaMapperTests {
     }
 
     @Test
-    void convertDtoToEntityTest() {
+    void convertDtoToEntityTest() throws EntityException.EntityNotFoundException {
         // GIVEN
         Media result;
 
@@ -80,7 +80,7 @@ class MediaMapperTests {
     }
 
     @Test
-    void convertDtoWithUnknownPlatformToEntityTest() {
+    void convertDtoWithUnknownPlatformToEntityTest() throws EntityException.EntityNotFoundException {
         // GIVEN
         when(service.getPlatform(any()))
                 .thenThrow(EntityException.EntityNotFoundException.class);
