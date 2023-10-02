@@ -19,7 +19,7 @@ public class NotBlankIfPresentValidator implements ConstraintValidator<NotBlankI
 
     @Documented
     @Constraint(validatedBy = NotBlankIfPresentValidator.class)
-    @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE, ElementType.PARAMETER})
+    @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE, ElementType.PARAMETER, ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface NotBlankIfPresent{
         String message() default "String should not be blank";
