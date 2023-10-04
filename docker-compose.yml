@@ -11,8 +11,8 @@ services:
       - MYSQL_PASSWORD
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
-      interval: 3s
-      retries: 5
+      interval: 4s
+      retries: 20
       start_period: 30s
     volumes:
       - mysql-data:/var/lib/mysql
