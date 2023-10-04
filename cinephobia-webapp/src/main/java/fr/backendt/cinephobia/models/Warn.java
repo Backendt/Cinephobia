@@ -20,6 +20,7 @@ public class Warn {
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "triggr_id")
     @NotNull(message = "The trigger is required")
     private Trigger trigger;
 

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Generated
+@Table(name = "triggr") // "trigger" is a MySQL keyword, and is causing issues
 public class Trigger {
 
     @Id
