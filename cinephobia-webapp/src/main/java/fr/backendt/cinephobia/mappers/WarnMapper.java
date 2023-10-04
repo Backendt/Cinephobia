@@ -1,5 +1,6 @@
 package fr.backendt.cinephobia.mappers;
 
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.Warn;
@@ -23,7 +24,7 @@ public class WarnMapper {
         this.triggerService = triggerService;
     }
 
-    public Warn toEntity(WarnDTO dto) {
+    public Warn toEntity(WarnDTO dto) throws EntityException.EntityNotFoundException {
         Media media = mediaService.getMedia(dto.mediaId()).join();
         Trigger trigger = triggerService.getTrigger(dto.triggerId()).join();
 

@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.exceptions;
 
-public class EntityException extends Exception {
+public class EntityException extends RuntimeException {
 
     public EntityException(String message) {
         super(message);
