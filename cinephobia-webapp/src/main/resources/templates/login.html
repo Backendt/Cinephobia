@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link th:href="@{/css/form.css}" rel="stylesheet" type="text/css" >
+    <title>Cinéphobia - Login</title>
+</head>
+<body>
+
+    <div class="center">
+        <h1>Login</h1>
+        <p th:if="${param.error != null}" class="error">Invalid email or password.</p>
+        <form method='POST'>
+            <label>
+                Email
+                <input type='email' placeholder="Email" name='email' value='' required>
+            </label>
+            <label>
+                Password
+                <input type='password' placeholder="Password" name='password' required/>
+            </label>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input name="submit" type="submit" value="Login"/>
+        </form>
+    </div>
+
+    <a href="/register">Create an account</a>
+
+</body>
+</html>

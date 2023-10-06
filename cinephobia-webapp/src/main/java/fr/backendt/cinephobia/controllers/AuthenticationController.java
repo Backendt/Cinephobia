@@ -6,6 +6,7 @@ import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.groups.Default;
+import org.jboss.logging.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +25,11 @@ public class AuthenticationController {
     public AuthenticationController(UserService service) {
         this.service = service;
         this.mapper = new ModelMapper();
+    }
+
+    @GetMapping("/login")
+    public String getLoginPage() {
+        return "login";
     }
 
     @GetMapping("/register")
@@ -47,6 +53,7 @@ public class AuthenticationController {
         try {
             service.createUser(user);
         } catch(EntityException exception) {
+            model.addAttribute("user", dto);
             result.rejectValue("email", "email-taken", "Email already taken");
             return "register";
         }
