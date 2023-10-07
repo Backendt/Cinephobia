@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.failedFuture;
 
 @Service
 public class TriggerService {
@@ -24,13 +25,15 @@ public class TriggerService {
 
     @Async
     public CompletableFuture<Trigger> createTrigger(Trigger trigger) throws EntityException {
-        trigger.setId(null);
-        try {
-            Trigger savedTrigger = repository.save(trigger);
-            return completedFuture(savedTrigger);
-        } catch(DataIntegrityViolationException exception) {
-            throw new EntityException("Trigger already exists");
+        boolean triggerAlreadyExists = repository.existsByNameIgnoreCase(trigger.getName());
+        if(triggerAlreadyExists) {
+            return failedFuture(
+                    new EntityException("Trigger already exists")
+            );
         }
+        trigger.setId(null);
+        Trigger savedTrigger = repository.save(trigger);
+        return completedFuture(savedTrigger);
     }
 
     @Async
@@ -47,9 +50,11 @@ public class TriggerService {
 
     @Async
     public CompletableFuture<Trigger> getTrigger(Long id) throws EntityNotFoundException {
-        Trigger trigger = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Trigger not found"));
-        return completedFuture(trigger);
+        return repository.findById(id)
+                .map(CompletableFuture::completedFuture)
+                .orElse(failedFuture(
+                        new EntityNotFoundException("Trigger not found")
+                ));
     }
 
 }

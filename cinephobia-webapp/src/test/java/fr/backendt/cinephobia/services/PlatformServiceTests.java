@@ -10,13 +10,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class PlatformServiceTests {
 
@@ -37,11 +37,14 @@ class PlatformServiceTests {
         expected.setId(null);
         Platform result;
 
+        when(repository.existsByNameIgnoreCase(any()))
+                .thenReturn(false);
         when(repository.save(any())).thenReturn(platform);
         // WHEN
         result = service.createPlatform(platform).join();
 
         // THEN
+        verify(repository).existsByNameIgnoreCase(platform.getName());
         verify(repository).save(expected);
         assertThat(result).isEqualTo(platform);
     }
@@ -50,12 +53,16 @@ class PlatformServiceTests {
     void failToCreateDuplicatePlatformTest() {
         // GIVEN
         Platform duplicatePlatform = new Platform("Cinema");
-        when(repository.save(duplicatePlatform))
-                .thenThrow(DataIntegrityViolationException.class);
+        when(repository.existsByNameIgnoreCase(any()))
+                .thenReturn(true);
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityException.class)
-                .isThrownBy(() -> service.createPlatform(duplicatePlatform));
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.createPlatform(duplicatePlatform).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
+
+        verify(repository).existsByNameIgnoreCase(duplicatePlatform.getName());
+        verify(repository, never()).save(any());
     }
 
     @Test

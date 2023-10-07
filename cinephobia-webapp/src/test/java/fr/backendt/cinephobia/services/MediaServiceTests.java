@@ -11,12 +11,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class MediaServiceTests {
 
@@ -41,10 +41,13 @@ class MediaServiceTests {
         Media expected = new Media(testMedia);
         testMedia.setId(1L);
 
+        when(repository.existsByTitleIgnoreCase(any()))
+                .thenReturn(false);
         // WHEN
         service.createMedia(testMedia).join();
 
         // THEN
+        verify(repository).existsByTitleIgnoreCase(testMedia.getTitle());
         verify(repository).save(expected); // "expected" has null id
     }
 
@@ -54,10 +57,16 @@ class MediaServiceTests {
         when(repository.save(any()))
                 .thenThrow(DataIntegrityViolationException.class);
 
+        when(repository.existsByTitleIgnoreCase(any()))
+                .thenReturn(true);
         // THEN
         // WHEN
-        assertThatExceptionOfType(EntityException.class)
-                .isThrownBy(() -> service.createMedia(testMedia));
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.createMedia(testMedia).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
+
+        verify(repository).existsByTitleIgnoreCase(testMedia.getTitle());
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -98,8 +107,9 @@ class MediaServiceTests {
 
         when(repository.findById(any())).thenReturn(Optional.empty());
         // WHEN
-        assertThatExceptionOfType(EntityException.EntityNotFoundException.class)
-                .isThrownBy(() -> service.getMedia(mediaId).join());
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.getMedia(mediaId).join())
+                .withCauseExactlyInstanceOf(EntityException.EntityNotFoundException.class);
 
         // THEN
         verify(repository).findById(mediaId);

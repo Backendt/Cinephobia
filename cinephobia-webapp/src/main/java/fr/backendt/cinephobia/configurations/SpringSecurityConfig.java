@@ -31,7 +31,7 @@ public class SpringSecurityConfig {
                 .formLogin(login -> login
                         .loginPage("/login")
                         .usernameParameter("email")
-                        .defaultSuccessUrl("/"));
+                        .defaultSuccessUrl("/", true));
         return http.build();
     }
 

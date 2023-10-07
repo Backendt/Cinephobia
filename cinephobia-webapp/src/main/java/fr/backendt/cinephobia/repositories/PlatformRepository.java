@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface PlatformRepository extends JpaRepository<Platform, Long> {
     List<Platform> findAllByNameContainingIgnoreCase(String name);
+    boolean existsByNameIgnoreCase(String name);
 }

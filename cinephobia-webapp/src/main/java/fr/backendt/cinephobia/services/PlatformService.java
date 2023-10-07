@@ -3,7 +3,6 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.repositories.PlatformRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.failedFuture;
 
 @Service
 public class PlatformService {
@@ -24,13 +24,15 @@ public class PlatformService {
 
     @Async
     public CompletableFuture<Platform> createPlatform(Platform platform) throws EntityException {
-        platform.setId(null);
-        try {
-            Platform savedPlatform = repository.save(platform);
-            return completedFuture(savedPlatform);
-        } catch(DataIntegrityViolationException exception) {
-            throw new EntityException("Platform already exists");
+        boolean platformAlreadyExists = repository.existsByNameIgnoreCase(platform.getName());
+        if(platformAlreadyExists) {
+            return failedFuture(
+                    new EntityException("Platform already exists")
+            );
         }
+        platform.setId(null);
+        Platform savedPlatform = repository.save(platform);
+        return completedFuture(savedPlatform);
     }
 
     @Async
@@ -47,9 +49,11 @@ public class PlatformService {
 
     @Async
     public CompletableFuture<Platform> getPlatform(Long id) throws EntityNotFoundException {
-        Platform platform = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Platform not found"));
-        return completedFuture(platform);
+        return repository.findById(id)
+                .map(CompletableFuture::completedFuture)
+                .orElse(failedFuture(
+                        new EntityNotFoundException("Platform not found")
+                ));
     }
 
 }

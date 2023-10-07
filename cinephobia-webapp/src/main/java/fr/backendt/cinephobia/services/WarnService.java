@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.failedFuture;
 
 @Service
 public class WarnService {
@@ -30,7 +31,9 @@ public class WarnService {
             Warn savedWarn = repository.save(warn);
             return completedFuture(savedWarn);
         } catch(DataIntegrityViolationException | InvalidDataAccessApiUsageException exception) {
-            throw new EntityException("Unknown media and/or trigger");
+            return failedFuture(
+                    new EntityException("Unknown media and/or trigger")
+            );
         }
     }
 
@@ -48,8 +51,10 @@ public class WarnService {
 
     @Async
     public CompletableFuture<Warn> getWarn(Long id) throws EntityNotFoundException {
-        Warn warn = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Warn not found"));
-        return completedFuture(warn);
+        return repository.findById(id)
+                .map(CompletableFuture::completedFuture)
+                .orElse(failedFuture(
+                        new EntityNotFoundException("Warn not found")
+                ));
     }
 }

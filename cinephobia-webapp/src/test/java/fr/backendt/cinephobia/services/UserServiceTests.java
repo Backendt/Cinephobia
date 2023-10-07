@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -41,11 +42,14 @@ class UserServiceTests {
         testUserWithId.setId(1L);
         User result;
 
+        when(repository.existsByEmailIgnoreCase(any()))
+                .thenReturn(false);
         when(repository.save(any())).thenReturn(testUserWithId);
         // WHEN
         result = service.createUser(testUserWithId).join();
 
         // THEN
+        verify(repository).existsByEmailIgnoreCase(testUser.getEmail());
         verify(repository).save(testUser);
         assertThat(result).isNotNull();
     }
@@ -53,12 +57,17 @@ class UserServiceTests {
     @Test
     void createDuplicatedUserTest() {
         // GIVEN
-        when(repository.save(any()))
-                .thenThrow(DataIntegrityViolationException.class);
+        when(repository.existsByEmailIgnoreCase(any()))
+                .thenReturn(true);
+
         // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.createUser(testUser).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
+
         // THEN
-        assertThatExceptionOfType(EntityException.class)
-                .isThrownBy(() -> service.createUser(testUser).join());
+        verify(repository).existsByEmailIgnoreCase(testUser.getEmail());
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -100,8 +109,9 @@ class UserServiceTests {
                 .thenReturn(Optional.empty());
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.getUserById(unknownUserId).join());
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.getUserById(unknownUserId).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
     }
 
     @Test
@@ -129,8 +139,9 @@ class UserServiceTests {
                 .thenReturn(Optional.empty());
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.getUserByEmail(unknownEmail).join());
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.getUserByEmail(unknownEmail).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
     }
 
     @Test
@@ -147,15 +158,18 @@ class UserServiceTests {
 
         User result;
 
+        when(repository.findIdByEmailIgnoreCase(any()))
+                .thenReturn(Optional.of(userId));
         when(repository.findById(any()))
-                .thenReturn(Optional.of(testUser));
+                .thenReturn(Optional.of(testUser)); // Used in getUser(id)
         when(repository.save(any()))
                 .thenReturn(updatedUser);
         // WHEN
         result = service.updateUserById(userId, userUpdate).join();
 
         // THEN
-        verify(repository).findById(userId);
+        verify(repository).findIdByEmailIgnoreCase(newEmail);
+        verify(repository).findById(userId); // Used in getUser(id)
         verify(repository).save(updatedUser);
 
         assertThat(result).isEqualTo(updatedUser);
@@ -177,6 +191,8 @@ class UserServiceTests {
 
         User result;
 
+        when(repository.findIdByEmailIgnoreCase(any()))
+                .thenReturn(Optional.of(userId));
         when(repository.findById(any()))
                 .thenReturn(Optional.of(testUser));
         when(repository.save(any()))
@@ -185,6 +201,7 @@ class UserServiceTests {
         result = service.updateUserById(userId, userUpdate).join();
 
         // THEN
+        verify(repository).findIdByEmailIgnoreCase(testUser.getEmail());
         verify(repository).findById(userId);
         verify(repository).save(updatedUser);
 
@@ -203,10 +220,34 @@ class UserServiceTests {
                 .thenReturn(Optional.empty());
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.updateUserById(unknownUserId, userUpdate).join());
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.updateUserById(unknownUserId, userUpdate).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
 
+        verify(repository, never()).findIdByEmailIgnoreCase(any());
         verify(repository).findById(unknownUserId);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void updateUserByIdToUsedEmailTest() {
+        // GIVEN
+        long userId = 1L;
+        long otherUserId = 2L;
+        String takenEmail = "taken@email.com";
+
+        User userUpdate = new User();
+        userUpdate.setEmail(takenEmail);
+
+        when(repository.findIdByEmailIgnoreCase(any()))
+                .thenReturn(Optional.of(otherUserId));
+        // WHEN
+        // THEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.updateUserById(userId, userUpdate).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
+
+        verify(repository).findIdByEmailIgnoreCase(takenEmail);
         verify(repository, never()).save(any());
     }
 
@@ -221,12 +262,15 @@ class UserServiceTests {
         User result;
 
         when(repository.existsById(any())).thenReturn(true);
+        when(repository.findIdByEmailIgnoreCase(any()))
+                .thenReturn(Optional.empty());
         when(repository.save(any())).thenReturn(expectedUser);
         // WHEN
         result = service.replaceUserById(userId, newUser).join();
 
         // THEN
         verify(repository).existsById(userId);
+        verify(repository).findIdByEmailIgnoreCase(newUser.getEmail());
         verify(repository).save(expectedUser);
         assertThat(result).isEqualTo(expectedUser);
     }
@@ -239,8 +283,28 @@ class UserServiceTests {
         when(repository.existsById(any())).thenReturn(false);
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.replaceUserById(userId, testUser).join());
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.replaceUserById(userId, testUser).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
+        verify(repository).existsById(userId);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void replaceUserByIdToTakenEmailTest() {
+        // GIVEN
+        long userId = 1L;
+        long otherUserId = 2L;
+
+        when(repository.existsById(any())).thenReturn(true);
+        when(repository.findIdByEmailIgnoreCase(any()))
+                .thenReturn(Optional.of(otherUserId));
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.replaceUserById(userId, testUser).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
+        // THEN
+        verify(repository).findIdByEmailIgnoreCase(testUser.getEmail());
         verify(repository).existsById(userId);
         verify(repository, never()).save(any());
     }
@@ -267,8 +331,9 @@ class UserServiceTests {
         when(repository.existsById(any())).thenReturn(false);
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.deleteUserById(userId).join());
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.deleteUserById(userId).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
 
         verify(repository).existsById(userId);
         verify(repository, never()).deleteById(any());

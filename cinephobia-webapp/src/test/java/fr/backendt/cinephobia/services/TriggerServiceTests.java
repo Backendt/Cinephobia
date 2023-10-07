@@ -10,14 +10,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class TriggerServiceTests {
 
@@ -38,12 +38,15 @@ class TriggerServiceTests {
         expected.setId(null);
         Trigger result;
 
+        when(repository.existsByNameIgnoreCase(any()))
+                .thenReturn(false);
         when(repository.save(any())).thenReturn(trigger);
         // WHEN
         result = service.createTrigger(trigger).join();
 
         // THEN
         assertThat(result).isEqualTo(trigger);
+        verify(repository).existsByNameIgnoreCase(trigger.getName());
         verify(repository).save(expected);
     }
 
@@ -52,12 +55,16 @@ class TriggerServiceTests {
         // GIVEN
         Trigger trigger = new Trigger(1L, "Testphobia", "Fear of tests");
 
-        when(repository.save(any()))
-                .thenThrow(DataIntegrityViolationException.class);
+        when(repository.existsByNameIgnoreCase(any()))
+                .thenReturn(true);
         // THEN
         // WHEN
-        assertThatExceptionOfType(EntityException.class)
-                .isThrownBy(() -> service.createTrigger(trigger));
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.createTrigger(trigger).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
+
+        verify(repository).existsByNameIgnoreCase(trigger.getName());
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -117,8 +124,9 @@ class TriggerServiceTests {
 
         when(repository.findById(any())).thenReturn(Optional.empty());
         // WHEN
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.getTrigger(triggerId));
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.getTrigger(triggerId).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
 
         // THEN
         verify(repository).findById(triggerId);

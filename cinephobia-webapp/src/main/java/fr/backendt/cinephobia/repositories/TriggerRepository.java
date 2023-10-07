@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface TriggerRepository extends JpaRepository<Trigger, Long> {
     List<Trigger> findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String name, String description);
+    boolean existsByNameIgnoreCase(String name);
 }

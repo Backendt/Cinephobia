@@ -3,7 +3,6 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.repositories.MediaRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.failedFuture;
 
 @Service
 public class MediaService {
@@ -24,13 +24,15 @@ public class MediaService {
 
     @Async
     public CompletableFuture<Media> createMedia(Media media) throws EntityException {
-        media.setId(null);
-        try {
-            Media savedMedia = repository.save(media);
-            return completedFuture(savedMedia);
-        } catch(DataIntegrityViolationException exception) {
-            throw new EntityException("Media already exists");
+        boolean mediaAlreadyExists = repository.existsByTitleIgnoreCase(media.getTitle()); // TODO existsByTitleIgnoreCaseAndYearOfRelease
+        if(mediaAlreadyExists) {
+            return failedFuture(
+                    new EntityException("Media already exists")
+            );
         }
+        media.setId(null);
+        Media savedMedia = repository.save(media);
+        return completedFuture(savedMedia);
     }
 
     @Async
@@ -41,9 +43,11 @@ public class MediaService {
 
     @Async
     public CompletableFuture<Media> getMedia(Long id) throws EntityNotFoundException {
-        Media media = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Media not found"));
-        return completedFuture(media);
+        return repository.findById(id)
+                .map(CompletableFuture::completedFuture)
+                .orElse(failedFuture(
+                        new EntityNotFoundException("Media not found")
+                ));
     }
 
     @Async

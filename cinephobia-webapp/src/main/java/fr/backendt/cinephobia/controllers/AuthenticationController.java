@@ -6,7 +6,6 @@ import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.groups.Default;
-import org.jboss.logging.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +14,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+
+import java.util.concurrent.CompletionException;
 
 @Controller
 public class AuthenticationController {
@@ -51,11 +52,19 @@ public class AuthenticationController {
         user.setRole("USER");
 
         try {
-            service.createUser(user);
-        } catch(EntityException exception) {
-            model.addAttribute("user", dto);
-            result.rejectValue("email", "email-taken", "Email already taken");
-            return "register";
+            service.createUser(user).join();
+        } catch(CompletionException exception) {
+            if(exception.getCause() instanceof EntityException) {
+                model.addAttribute("user", dto);
+                result.rejectValue("email", "email-taken", "Email already taken");
+                return "register";
+            }
+
+            if(exception.getCause() instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+
+            throw new EntityException("Could not create user. Try again later");
         }
         return "redirect:/login";
     }

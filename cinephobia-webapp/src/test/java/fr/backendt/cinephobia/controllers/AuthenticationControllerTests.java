@@ -17,6 +17,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 
+import java.util.concurrent.CompletableFuture;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -71,6 +73,8 @@ class AuthenticationControllerTests {
 
         when(service.hashUserPassword(any()))
                 .thenReturn(new User(user));
+        when(service.createUser(any()))
+                .thenReturn(CompletableFuture.completedFuture(user));
         // WHEN
         mvc.perform(request)
         // THEN
@@ -133,7 +137,9 @@ class AuthenticationControllerTests {
         when(service.hashUserPassword(any()))
                 .thenReturn(new User(user));
         when(service.createUser(any()))
-                .thenThrow(EntityException.class);
+                .thenReturn(CompletableFuture.failedFuture(
+                        new EntityException("Error")
+                ));
         // WHEN
         mvc.perform(request)
                 // THEN

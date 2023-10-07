@@ -13,6 +13,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
@@ -65,8 +66,9 @@ class WarnServiceTests {
                 .thenThrow(InvalidDataAccessApiUsageException.class);
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityException.class)
-                .isThrownBy(() -> service.createWarn(testWarn));
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.createWarn(testWarn).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
         verify(repository).save(expected);
     }
 
@@ -80,8 +82,9 @@ class WarnServiceTests {
                 .thenThrow(DataIntegrityViolationException.class);
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityException.class)
-                .isThrownBy(() -> service.createWarn(testWarn));
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.createWarn(testWarn).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
         verify(repository).save(expected);
     }
 
@@ -139,8 +142,9 @@ class WarnServiceTests {
         when(repository.findById(any())).thenReturn(Optional.empty());
         // WHEN
         // THEN
-        assertThatExceptionOfType(EntityNotFoundException.class)
-                .isThrownBy(() -> service.getWarn(warnId));
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.getWarn(warnId).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
         verify(repository).findById(warnId);
     }
 
