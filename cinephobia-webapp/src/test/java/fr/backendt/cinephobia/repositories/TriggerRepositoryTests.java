@@ -2,6 +2,8 @@ package fr.backendt.cinephobia.repositories;
 
 import fr.backendt.cinephobia.models.Trigger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -104,5 +106,39 @@ class TriggerRepositoryTests {
         assertThat(resultAfter).isEmpty();
     }
 
+    @CsvSource({
+            "bugphobia",
+            "testphobia",
+            "TestPhobia",
+            "BUGPHOBIA"
+    })
+    @ParameterizedTest
+    void existsByNameTest(String name) {
+        // GIVEN
+        boolean result;
+
+        // WHEN
+        result = repository.existsByNameIgnoreCase(name);
+
+        // THEN
+        assertThat(result).isTrue();
+    }
+
+    @CsvSource({
+            "bugphobi",
+            "test phobia",
+            "ugphobia"
+    })
+    @ParameterizedTest
+    void existsByUnknownNameTest(String unknownName) {
+        // GIVEN
+        boolean result;
+
+        // WHEN
+        result = repository.existsByNameIgnoreCase(unknownName);
+
+        // THEN
+        assertThat(result).isFalse();
+    }
 
 }

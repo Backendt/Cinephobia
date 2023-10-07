@@ -2,6 +2,8 @@ package fr.backendt.cinephobia.repositories;
 
 import fr.backendt.cinephobia.models.Platform;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -100,6 +102,41 @@ class PlatformRepositoryTests {
         // THEN
         assertThat(resultBefore).isNotEmpty();
         assertThat(resultAfter).isEmpty();
+    }
+
+    @CsvSource({
+            "Prime Video",
+            "prime video",
+            "Disney+",
+            "disney+"
+    })
+    @ParameterizedTest
+    void existsByNameTest(String name) {
+        // GIVEN
+        boolean result;
+
+        // WHEN
+        result = repository.existsByNameIgnoreCase(name);
+
+        // THEN
+        assertThat(result).isTrue();
+    }
+
+    @CsvSource({
+            "Disney +",
+            "netfilx",
+            "prime-video"
+    })
+    @ParameterizedTest
+    void existsByUnknownNameTest(String unknownName) {
+        // GIVEN
+        boolean result;
+
+        // WHEN
+        result = repository.existsByNameIgnoreCase(unknownName);
+
+        // THEN
+        assertThat(result).isFalse();
     }
 
 }

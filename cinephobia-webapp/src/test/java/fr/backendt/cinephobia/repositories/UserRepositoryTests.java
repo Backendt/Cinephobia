@@ -3,6 +3,8 @@ package fr.backendt.cinephobia.repositories;
 import fr.backendt.cinephobia.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -111,6 +113,69 @@ class UserRepositoryTests {
         // THEN
         assertThat(existsBefore).isTrue();
         assertThat(existsAfter).isFalse();
+    }
+
+    @CsvSource({
+            "john.doe@test.com",
+            "John.doe@test.COM",
+            "JOHN.DOE@TEST.COM"
+    })
+    @ParameterizedTest
+    void getUserIdFromEmailTest(String email) {
+        // GIVEN
+        Optional<Long> result;
+
+        long expectedId = 1L;
+        // WHEN
+        result = repository.findIdByEmailIgnoreCase(email);
+
+        // THEN
+        assertThat(result).contains(expectedId);
+    }
+
+    @Test
+    void getUserIdFromUnknownEmailTest() {
+        // GIVEN
+        String unknownEmail = "john.doe@test.co";
+        Optional<Long> result;
+
+        // WHEN
+        result = repository.findIdByEmailIgnoreCase(unknownEmail);
+
+        // THEN
+        assertThat(result).isEmpty();
+    }
+
+    @CsvSource({
+            "John.doe@test.com",
+            "john.doe@TEST.COM"
+    })
+    @ParameterizedTest
+    void existsByEmailTest(String email) {
+        // GIVEN
+        boolean result;
+
+        // WHEN
+        result = repository.existsByEmailIgnoreCase(email);
+
+        // THEN
+        assertThat(result).isTrue();
+    }
+
+    @CsvSource({
+            "john.doe@test.co",
+            "johndoe@test.com"
+    })
+    @ParameterizedTest
+    void existsByUnknownEmailTest(String unknownEmail) {
+        // GIVEN
+        boolean result;
+
+        // WHEN
+        result = repository.existsByEmailIgnoreCase(unknownEmail);
+
+        // THEN
+        assertThat(result).isFalse();
     }
 
 }

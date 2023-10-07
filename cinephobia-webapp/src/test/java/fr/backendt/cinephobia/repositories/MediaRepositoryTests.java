@@ -4,6 +4,8 @@ import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.Platform;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -165,6 +167,39 @@ class MediaRepositoryTests {
         // THEN
         assertThat(resultBefore).isNotEmpty();
         assertThat(resultAfter).isEmpty();
+    }
+
+    @CsvSource({
+            "Cinephobia: The Revenge",
+            "cinephobia: The revenge"
+    })
+    @ParameterizedTest
+    void existsByTitleTest(String title) {
+        // GIVEN
+        boolean result;
+
+        // WHEN
+        result = repository.existsByTitleIgnoreCase(title);
+
+        // THEN
+        assertThat(result).isTrue();
+    }
+
+    @CsvSource({
+            "Cinephobia: The revengee",
+            "Cinephobia the revenge",
+            "Ci nephobia: The Revenge"
+    })
+    @ParameterizedTest
+    void existsByUnknownTitleTest(String unknownTitle) {
+        // GIVEN
+        boolean result;
+
+        // WHEN
+        result = repository.existsByTitleIgnoreCase(unknownTitle);
+
+        // THEN
+        assertThat(result).isFalse();
     }
 
 }

@@ -150,4 +150,15 @@ class AuthenticationControllerTests {
         verify(service).createUser(expected);
     }
 
+    @Test
+    void getLoginPageTest() throws Exception {
+        // GIVEN
+        RequestBuilder request = get("/login");
+
+        // WHEN
+        mvc.perform(request)
+        // THEN
+                .andExpect(status().isOk());
+    }
+
 }
