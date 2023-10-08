@@ -8,6 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -70,22 +73,6 @@ class MediaServiceTests {
     }
 
     @Test
-    void getAllMediaTest() {
-        // GIVEN
-        List<Media> medias = List.of(testMedia);
-        List<Media> results;
-
-        when(repository.findAll())
-                .thenReturn(medias);
-        // WHEN
-        results = service.getAllMedias().join();
-
-        // THEN
-        verify(repository).findAll();
-        assertThat(results).containsExactlyElementsOf(medias);
-    }
-
-    @Test
     void getMediaByIdTest() throws EntityException.EntityNotFoundException {
         // GIVEN
         Long mediaId = 1L;
@@ -119,15 +106,17 @@ class MediaServiceTests {
     void getMediaByTitleContainingStringTest() {
         // GIVEN
         String mediaTitlePart = "media";
-        List<Media> results;
+        PageRequest pageRequest = PageRequest.ofSize(99);
+        Page<Media> returnedPage = new PageImpl<>(List.of(testMedia));
+        Page<Media> results;
 
-        when(repository.findAllByTitleContainingIgnoreCase(any()))
-                .thenReturn(List.of(testMedia));
+        when(repository.findAllByTitleContainingIgnoreCase(any(), any()))
+                .thenReturn(returnedPage);
         // WHEN
-        results = service.getMediaContainingInTitle(mediaTitlePart).join();
+        results = service.getMediaPage(mediaTitlePart, pageRequest).join();
 
         // THEN
-        verify(repository).findAllByTitleContainingIgnoreCase(mediaTitlePart);
+        verify(repository).findAllByTitleContainingIgnoreCase(mediaTitlePart, pageRequest);
         assertThat(results).containsExactly(testMedia);
     }
 

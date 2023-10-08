@@ -3,10 +3,12 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.repositories.MediaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
@@ -24,7 +26,7 @@ public class MediaService {
 
     @Async
     public CompletableFuture<Media> createMedia(Media media) throws EntityException {
-        boolean mediaAlreadyExists = repository.existsByTitleIgnoreCase(media.getTitle()); // TODO existsByTitleIgnoreCaseAndYearOfRelease
+        boolean mediaAlreadyExists = repository.existsByTitleIgnoreCase(media.getTitle());
         if(mediaAlreadyExists) {
             return failedFuture(
                     new EntityException("Media already exists")
@@ -33,12 +35,6 @@ public class MediaService {
         media.setId(null);
         Media savedMedia = repository.save(media);
         return completedFuture(savedMedia);
-    }
-
-    @Async
-    public CompletableFuture<List<Media>> getAllMedias() {
-        List<Media> medias = repository.findAll();
-        return completedFuture(medias);
     }
 
     @Async
@@ -51,9 +47,12 @@ public class MediaService {
     }
 
     @Async
-    public CompletableFuture<List<Media>> getMediaContainingInTitle(String search) {
-        List<Media> medias = repository.findAllByTitleContainingIgnoreCase(search);
-        return completedFuture(medias);
+    public CompletableFuture<Page<Media>> getMediaPage(@Nullable String search, Pageable pageable) {
+        Page<Media> page = search == null ?
+                repository.findAll(pageable) :
+                repository.findAllByTitleContainingIgnoreCase(search, pageable);
+
+        return completedFuture(page);
     }
 
 }

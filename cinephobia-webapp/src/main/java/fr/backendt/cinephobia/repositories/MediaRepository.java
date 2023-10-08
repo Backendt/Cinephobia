@@ -1,15 +1,14 @@
 package fr.backendt.cinephobia.repositories;
 
 import fr.backendt.cinephobia.models.Media;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface MediaRepository extends JpaRepository<Media, Long> {
 
-    List<Media> findAllByTitleContainingIgnoreCase(String title);
-    //boolean existsByTitleIgnoreCaseAndYearOfRelease(String title, Long yearOfRelease);
+    Page<Media> findAllByTitleContainingIgnoreCase(String title, Pageable pageable);
     boolean existsByTitleIgnoreCase(String title);
 }

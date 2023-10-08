@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.concurrent.CompletionException;
@@ -57,46 +59,35 @@ class MediaServiceIT {
     }
 
     @Test
-    void getAllMediaTest() {
-        // GIVEN
-        List<Media> results;
-
-        // WHEN
-        results = service.getAllMedias().join();
-
-        // THEN
-        assertThat(results).isNotEmpty();
-        assertThat(results.get(0)).hasNoNullFieldsOrProperties();
-    }
-
-    @Test
     void getMediasContainingInTitleTest() {
         // GIVEN
-        String titlePart = "venge";
+        String titlePart = "Venge";
         String expectedTitle = "Cinephobia: The Revenge";
-        List<Media> results;
+        PageRequest pageRequest = PageRequest.ofSize(99);
+        Page<Media> results;
 
         // WHEN
-        results = service.getMediaContainingInTitle(titlePart).join();
+        results = service.getMediaPage(titlePart, pageRequest).join();
 
         // THEN
-        assertThat(results).isNotEmpty();
-        assertThat(results.get(0).getTitle()).isEqualTo(expectedTitle);
+        assertThat(results)
+                .hasSize(1);
+        assertThat(results.get().findFirst()).isPresent();
+        assertThat(results.get().findFirst().get().getTitle()).isEqualTo(expectedTitle);
     }
 
     @Test
     void getNoMediasContainingInTitleTest() {
         // GIVEN
-        String titlePart = "venge";
-        String expectedTitle = "Cinephobia: The Revenge";
-        List<Media> results;
+        String titlePart = "cinepobia";
+        PageRequest pageRequest = PageRequest.ofSize(99);
+        Page<Media> results;
 
         // WHEN
-        results = service.getMediaContainingInTitle(titlePart).join();
+        results = service.getMediaPage(titlePart, pageRequest).join();
 
         // THEN
-        assertThat(results).isNotEmpty();
-        assertThat(results.get(0).getTitle()).isEqualTo(expectedTitle);
+        assertThat(results).isEmpty();
     }
 
     @Test

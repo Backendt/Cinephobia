@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -129,24 +131,27 @@ class MediaRepositoryTests {
         // GIVEN
         String titlePart = "PHOBIA";
         String fullTitle = "Cinephobia: The Revenge";
-        List<Media> results;
+        Page<Media> results;
 
         // WHEN
-        results = repository.findAllByTitleContainingIgnoreCase(titlePart);
+        results = repository.findAllByTitleContainingIgnoreCase(titlePart, PageRequest.ofSize(99));
 
         // THEN
-        assertThat(results).isNotEmpty();
-        assertThat(results.get(0).getTitle()).isEqualTo(fullTitle);
+        assertThat(results)
+                .hasSize(1);
+        assertThat(results.get().findFirst()).isPresent();
+        assertThat(results.get().findFirst().get().getTitle()).isEqualTo(fullTitle);
     }
 
     @Test
     void failToGetMediasContainingTitleTest() {
         // GIVEN
-        List<Media> results;
+        PageRequest pageRequest = PageRequest.ofSize(99);
+        Page<Media> results;
         String nonexistentTitlePart = "hey";
 
         // WHEN
-        results = repository.findAllByTitleContainingIgnoreCase(nonexistentTitlePart);
+        results = repository.findAllByTitleContainingIgnoreCase(nonexistentTitlePart, pageRequest);
 
         // THEN
         assertThat(results).isEmpty();
