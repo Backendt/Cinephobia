@@ -9,6 +9,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
@@ -51,7 +52,7 @@ public class MediaService {
         Page<Media> page = search == null ?
                 repository.findAll(pageable) :
                 repository.findAllByTitleContainingIgnoreCase(search, pageable);
-
+        page.forEach(media -> media.setPlatforms(List.of()));
         return completedFuture(page);
     }
 

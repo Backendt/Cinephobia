@@ -31,7 +31,7 @@ public class Media {
     @NotBlank(message = "The image url is required")
     private String imageUrl;
 
-    @Size(min = 1, max = 10, message = "There must be between 1 and 10 platforms")
+    @Size(min = 1, max = 10, message = "There must be between 1 and 10 platforms") // TODO Change min to 0
     @ManyToMany
     @JoinTable(inverseJoinColumns = @JoinColumn(name = "platform_id"))
     private List<Platform> platforms;

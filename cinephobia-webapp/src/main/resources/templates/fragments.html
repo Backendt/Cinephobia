@@ -1,0 +1,10 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<ul id="mediaList" th:fragment="mediaList(medias)" th:each="media : ${medias}">
+    <li th:fragment="media(media)">
+        <p th:text="${media.title}"></p>
+        <img loading="lazy" th:src="${media.imageUrl}">
+    </li>
+</ul>
+
+</html>
