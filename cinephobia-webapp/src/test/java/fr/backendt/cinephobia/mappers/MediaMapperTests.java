@@ -51,20 +51,6 @@ class MediaMapperTests {
     }
 
     @Test
-    void convertEntitiesToDtoTest() {
-        // GIVEN
-        List<Media> medias = List.of(mediaTest);
-
-        List<MediaDTO> results;
-
-        // WHEN
-        results = mapper.toDTOs(medias);
-
-        // THEN
-        assertThat(results).containsExactly(dtoTest);
-    }
-
-    @Test
     void convertDtoToEntityTest() throws EntityException.EntityNotFoundException {
         // GIVEN
         Media result;

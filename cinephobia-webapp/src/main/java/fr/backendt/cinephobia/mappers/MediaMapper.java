@@ -40,10 +40,4 @@ public class MediaMapper {
         );
     }
 
-    public List<MediaDTO> toDTOs(List<Media> medias) {
-        return medias.stream()
-                .map(this::toDTO)
-                .toList();
-    }
-
 }
