@@ -44,15 +44,17 @@ class MediaRepositoryTests {
     }
 
     @Test
-    void failToCreateMediaWithoutPlatformTest() {
+    void createMediaWithoutPlatformTest() {
         // GIVEN
-        Media invalidMedia = new Media("Oh no!", "https://example.com/oops.png", List.of());
+        Media unsavedMedia = new Media("Java Testing: The return", "https://example.com/hello.png", List.of());
+        Media result;
 
         // WHEN
+        result = repository.save(unsavedMedia);
+
         // THEN
-        assertThatExceptionOfType(ConstraintViolationException.class)
-                .isThrownBy(() -> repository.save(invalidMedia))
-                .withMessageContaining("platform");
+        assertThat(result.getId()).isNotNull();
+        assertThat(result).hasNoNullFieldsOrProperties();
     }
 
     @Test

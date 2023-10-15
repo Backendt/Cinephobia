@@ -18,6 +18,6 @@ public record MediaDTO (
     @NotBlank(message = "The image url is required")
     String imageUrl,
 
-    @Size(min = 1, max = 10, message = "There must be between 1 and 10 platforms")
+    @Size(max = 10, message = "There must be less than 10 platforms")
     List<Long> platformsId
 ) {}
