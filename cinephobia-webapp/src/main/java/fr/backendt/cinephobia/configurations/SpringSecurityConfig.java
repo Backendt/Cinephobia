@@ -8,6 +8,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -32,12 +33,13 @@ public class SpringSecurityConfig {
         RequestMatcher htmxHeaderMatcher = new RequestHeaderRequestMatcher("HX-Request");
         http
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/register", "/login", "/**.css", "/**.js").permitAll()
+                        .requestMatchers("/register", "/login", "/webjars/**").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(login -> login
                         .loginPage("/login")
                         .usernameParameter("email")
                         .defaultSuccessUrl("/", true))
+                .logout(LogoutConfigurer::permitAll)
                 .exceptionHandling(exception -> exception // Full page refresh on auth timeout
                         .defaultAuthenticationEntryPointFor(hxAuthEntry, htmxHeaderMatcher));
         return http.build();
