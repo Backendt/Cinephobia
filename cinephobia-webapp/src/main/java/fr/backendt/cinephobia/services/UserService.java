@@ -36,8 +36,11 @@ public class UserService {
             );
         }
 
+        hashUserPassword(user);
         user.setId(null);
-        User savedUser = repository.save(user);
+        user.setRole("USER");
+        User hashedUser = hashUserPassword(user);
+        User savedUser = repository.save(hashedUser);
         return completedFuture(savedUser);
     }
 
@@ -77,7 +80,8 @@ public class UserService {
         }
 
         user.setId(id);
-        User savedUser = repository.save(user);
+        User hashedUser = hashUserPassword(user);
+        User savedUser = repository.save(hashedUser);
         return completedFuture(savedUser);
     }
 
@@ -94,8 +98,9 @@ public class UserService {
         mapper.getConfiguration().setSkipNullEnabled(true);
 
         user.setId(null);
+        User hashedUser = hashUserPassword(user);
         User savedUser = getUserById(id).join();
-        mapper.map(user, savedUser);
+        mapper.map(hashedUser, savedUser);
 
         repository.save(savedUser);
         return completedFuture(savedUser);

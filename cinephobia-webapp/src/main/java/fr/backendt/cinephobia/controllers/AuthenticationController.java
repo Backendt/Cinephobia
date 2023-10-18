@@ -47,12 +47,10 @@ public class AuthenticationController {
             return "register";
         }
 
-        User rawUser = mapper.map(dto, User.class);
-        User user = service.hashUserPassword(rawUser);
-        user.setRole("USER");
+        User user = mapper.map(dto, User.class);
 
         try {
-            service.createUser(user).join();
+            service.createUser(user).join(); // TODO Use CompletableFuture#exceptionally
         } catch(CompletionException exception) {
             if(exception.getCause() instanceof EntityException) {
                 model.addAttribute("user", dto);
