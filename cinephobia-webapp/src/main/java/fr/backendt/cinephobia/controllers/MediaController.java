@@ -6,16 +6,15 @@ import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.jboss.logging.Logger;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.data.domain.Sort.Direction;
@@ -24,6 +23,8 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 @Controller
 @RequestMapping("/media")
 public class MediaController { // TODO Add tests
+
+    private static final Logger LOGGER = Logger.getLogger(MediaController.class);
 
     private final MediaService service;
     private final MediaMapper mapper;
@@ -48,7 +49,11 @@ public class MediaController { // TODO Add tests
         }
 
         Media media = mapper.toEntity(mediaDTO);
-        return service.createMedia(media) // TODO Catch exceptions
+        return service.createMedia(media)
+                .exceptionally(exception -> { // TODO
+                    LOGGER.error("Could not create media", exception);
+                    return null;
+                })
                 .thenApply(mapper::toDTO)
                 .thenApply(savedDto -> {
                     model.addObject("media", savedDto);
@@ -75,12 +80,15 @@ public class MediaController { // TODO Add tests
                 .thenApply(mediaPage -> mediaPage.map(mapper::toDTO));
 
         ModelAndView model = new ModelAndView("fragments :: mediaList");
-        return pageFuture.thenApply(mediaPage -> { // TODO Catch exceptions
-                    model.addObject("numberOfPages", mediaPage.getTotalPages());
-                    model.addObject("medias", mediaPage.getContent());
-                    return model;
-                }
-        );
+        return pageFuture.thenApply(mediaPage -> {
+            model.addObject("numberOfPages", mediaPage.getTotalPages());
+            model.addObject("medias", mediaPage.getContent());
+            return model;
+        }).exceptionally(exception -> { // TODO
+            LOGGER.error("Could not get media page", exception);
+            model.addObject("medias", new PageImpl<>(new ArrayList<>(0)));
+            return model;
+        });
     }
 
 }
