@@ -41,15 +41,14 @@ public class MediaController {
                                                      @RequestParam(defaultValue = "0", required = false) Integer page,
                                                      @RequestParam(defaultValue = "50", required = false) Integer size,
                                                      @RequestParam(defaultValue = "id", required = false) String sortBy,
-                                                     @RequestParam(required = false) String order) {
-        Sort sort = Sort.unsorted();
-        if(sortBy != null && !sortBy.isBlank()) {
-            Direction direction = Direction.fromOptionalString(order)
-                    .orElse(Direction.DESC);
-            sort = Sort.by(direction, sortBy);
-        }
+                                                     @RequestParam(defaultValue = "desc", required = false) String order) {
+        if(page < 0) page = 0;
+        if(size < 1) size = 1;
 
+        Direction direction = Direction.fromOptionalString(order).orElse(Direction.DESC);
+        Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
+
         CompletableFuture<Page<MediaDTO>> pageFuture = service.getMediaPage(search, pageable)
                 .thenApply(mediaPage -> mediaPage.map(mapper::toDTO));
 
@@ -60,7 +59,6 @@ public class MediaController {
             return model;
         }).exceptionally(exception -> {
             LOGGER.error("Could not get media page.", exception.getCause());
-            LOGGER.debugf("Search: {}\nPage: {}\nSize: {}\nSort: {}\nOrder: {}\nPageRequest: {}\n", search, page, size, sortBy, order, pageable);
 
             return new ModelAndView("error")
                     .addObject("err", "Could not get medias.");
