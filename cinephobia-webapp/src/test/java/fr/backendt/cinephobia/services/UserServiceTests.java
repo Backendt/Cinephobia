@@ -153,6 +153,39 @@ class UserServiceTests {
     }
 
     @Test
+    void getUserIdByEmailTest() {
+        // GIVEN
+        String userEmail = testUser.getEmail().toUpperCase();
+        long userId = 1L;
+        Long result;
+
+        when(repository.findIdByEmailIgnoreCase(any()))
+                .thenReturn(Optional.of(userId));
+        // WHEN
+        result = service.getUserIdByEmail(userEmail).join();
+
+        // THEN
+        verify(repository).findIdByEmailIgnoreCase(userEmail);
+        assertThat(result).isEqualTo(userId);
+    }
+
+    @Test
+    void getUnknownUserIdByEmailTest() {
+        // GIVEN
+        String unknownEmail = "unknown@test.com";
+
+        when(repository.findIdByEmailIgnoreCase(any()))
+                .thenReturn(Optional.empty());
+        // WHEN
+        // THEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.getUserIdByEmail(unknownEmail).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
+
+        verify(repository).findIdByEmailIgnoreCase(unknownEmail);
+    }
+
+    @Test
     void updateUserByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long userId = 1L;

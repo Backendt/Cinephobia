@@ -59,11 +59,11 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<Long> getUserIdByEmail(String email) throws EntityNotFoundException { // TODO Write tests
+    public CompletableFuture<Long> getUserIdByEmail(String email) throws EntityNotFoundException {
         return repository.findIdByEmailIgnoreCase(email)
                 .map(CompletableFuture::completedFuture)
                 .orElse(
-                        failedFuture(new EntityException("No user found with the given email"))
+                        failedFuture(new EntityNotFoundException("No user found with the given email"))
                 );
     }
 
