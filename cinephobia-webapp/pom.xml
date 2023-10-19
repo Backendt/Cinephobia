@@ -102,11 +102,6 @@
 		</dependency>
 		<dependency>
 			<groupId>io.github.wimdeblauwe</groupId>
-			<artifactId>htmx-spring-boot</artifactId>
-			<version>3.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.github.wimdeblauwe</groupId>
 			<artifactId>htmx-spring-boot-thymeleaf</artifactId>
 			<version>3.0.0</version>
 		</dependency>
