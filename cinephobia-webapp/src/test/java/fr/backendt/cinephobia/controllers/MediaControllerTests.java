@@ -16,16 +16,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.*;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -88,22 +88,22 @@ class MediaControllerTests {
         Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
         Pageable expectedPageable = PageRequest.of(0, 50, defaultSort);
 
-        ModelAndView result;
-
         when(service.getMediaPage(any(), any()))
                 .thenReturn(completedFuture(returnedPage));
+
+        MvcResult result;
         // WHEN
-        result = (ModelAndView) mvc.perform(request)
-        // THEN
+        result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andReturn().getAsyncResult();
-
-        assertThat(result).isNotNull();
-        assertThat(result.getViewName()).isEqualTo("fragments :: mediaList");
-        assertThat(result.getModelMap()).containsKeys("numberOfPages", "medias");
-        assertThat(result.getModelMap()).containsEntry("medias", dtoList);
-        assertThat(result.getModelMap()).hasSize(2);
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attributeExists("numberOfPages", "medias"))
+                .andExpect(model().attribute("medias", dtoList));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
@@ -120,22 +120,22 @@ class MediaControllerTests {
         Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
         Pageable expectedPageable = PageRequest.of(0, 50, defaultSort);
 
-        ModelAndView result;
+        MvcResult result;
 
         when(service.getMediaPage(any(), any()))
                 .thenReturn(completedFuture(returnedPage));
         // WHEN
-        result = (ModelAndView) mvc.perform(request)
-                // THEN
+        result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andReturn().getAsyncResult();
-
-        assertThat(result).isNotNull();
-        assertThat(result.getViewName()).isEqualTo("fragments :: mediaList");
-        assertThat(result.getModelMap()).containsKeys("numberOfPages", "medias");
-        assertThat(result.getModelMap()).containsEntry("medias", dtoList);
-        assertThat(result.getModelMap()).hasSize(2);
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attributeExists("numberOfPages", "medias"))
+                .andExpect(model().attribute("medias", dtoList));
 
         verify(service).getMediaPage(search, expectedPageable);
     }
@@ -156,22 +156,22 @@ class MediaControllerTests {
         Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
         Pageable expectedPageable = PageRequest.of(0, expectedSizeLimit, defaultSort);
 
-        ModelAndView result;
+        MvcResult result;
 
         when(service.getMediaPage(any(), any()))
                 .thenReturn(completedFuture(returnedPage));
         // WHEN
-        result = (ModelAndView) mvc.perform(request)
-                // THEN
+        result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andReturn().getAsyncResult();
-
-        assertThat(result).isNotNull();
-        assertThat(result.getViewName()).isEqualTo("fragments :: mediaList");
-        assertThat(result.getModelMap()).containsKeys("numberOfPages", "medias");
-        assertThat(result.getModelMap()).containsEntry("medias", dtoList);
-        assertThat(result.getModelMap()).hasSize(2);
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attributeExists("numberOfPages", "medias"))
+                .andExpect(model().attribute("medias", dtoList));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
@@ -190,22 +190,22 @@ class MediaControllerTests {
         Sort expectedSort = Sort.by(Sort.Direction.DESC, sortBy);
         Pageable expectedPageable = PageRequest.of(0, 50, expectedSort);
 
-        ModelAndView result;
+        MvcResult result;
 
         when(service.getMediaPage(any(), any()))
                 .thenReturn(completedFuture(returnedPage));
         // WHEN
-        result = (ModelAndView) mvc.perform(request)
-                // THEN
+        result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andReturn().getAsyncResult();
-
-        assertThat(result).isNotNull();
-        assertThat(result.getViewName()).isEqualTo("fragments :: mediaList");
-        assertThat(result.getModelMap()).containsKeys("numberOfPages", "medias");
-        assertThat(result.getModelMap()).containsEntry("medias", dtoList);
-        assertThat(result.getModelMap()).hasSize(2);
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attributeExists("numberOfPages", "medias"))
+                .andExpect(model().attribute("medias", dtoList));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
@@ -224,22 +224,22 @@ class MediaControllerTests {
         Page<Media> returnedPage = new PageImpl<>(mediaList);
         Pageable expectedPageable = PageRequest.of(0, 50, Sort.by(Sort.Direction.fromString(expectedOrder), defaultSort));
 
-        ModelAndView result;
+        MvcResult result;
 
         when(service.getMediaPage(any(), any()))
                 .thenReturn(completedFuture(returnedPage));
         // WHEN
-        result = (ModelAndView) mvc.perform(request)
-                // THEN
+        result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andReturn().getAsyncResult();
-
-        assertThat(result).isNotNull();
-        assertThat(result.getViewName()).isEqualTo("fragments :: mediaList");
-        assertThat(result.getModelMap()).containsKeys("numberOfPages", "medias");
-        assertThat(result.getModelMap()).containsEntry("medias", dtoList);
-        assertThat(result.getModelMap()).hasSize(2);
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attributeExists("numberOfPages", "medias"))
+                .andExpect(model().attribute("medias", dtoList));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
@@ -258,22 +258,22 @@ class MediaControllerTests {
         Sort expectedSort = Sort.by(Sort.Direction.DESC, "id");
         Pageable expectedPageable = PageRequest.of(expectedIndex, 50, expectedSort);
 
-        ModelAndView result;
+        MvcResult result;
 
         when(service.getMediaPage(any(), any()))
                 .thenReturn(completedFuture(returnedPage));
         // WHEN
-        result = (ModelAndView) mvc.perform(request)
-                // THEN
+        result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
-                .andReturn().getAsyncResult();
-
-        assertThat(result).isNotNull();
-        assertThat(result.getViewName()).isEqualTo("fragments :: mediaList");
-        assertThat(result.getModelMap()).containsKeys("numberOfPages", "medias");
-        assertThat(result.getModelMap()).containsEntry("medias", dtoList);
-        assertThat(result.getModelMap()).hasSize(2);
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attributeExists("numberOfPages", "medias"))
+                .andExpect(model().attribute("medias", dtoList));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
