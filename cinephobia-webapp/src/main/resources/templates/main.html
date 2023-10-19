@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,7 +10,7 @@
   <title>Cinéphobia</title>
 </head>
 <body>
-  <header class="navbar navbar-expand-lg bd-navbar sticky-top bg-body-tertiary"> <!-- Change colors -->
+  <header class="navbar navbar-expand-lg bd-navbar sticky-top bg-body-tertiary"> <!-- TODO Change colors -->
     <nav class="container-xxl">
       <a class="navbar-brand" href="/">Cinéphobia</a>
       <!-- Collapsable menu button -->
@@ -23,7 +23,7 @@
         <div class="container-fluid p-0">
           <ul class="navbar-nav flex-wrap">
             <li class="nav-item">
-              <a class="nav-link" href="/">Home</a> <!-- TODO Set current page with .active and aria-current="page" -->
+              <a class="nav-link" href="/">Home</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/media">Medias</a>
@@ -43,6 +43,19 @@
               <li class="nav-item">
                 <a class="nav-link" href="/profile">Profile</a>
               </li>
+              <th:block sec:authorize="hasRole('ADMIN')"> <!-- Admin buttons -->
+                <div class="dropdown nav-item">
+                  <button class="dropdown-toggle nav-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Admin
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="/admin/user">Users</a></li>
+                    <li><a class="dropdown-item" href="/admin/media">Medias</a></li>
+                    <li><a class="dropdown-item" href="/admin/platform">Platforms</a></li>
+                    <li><a class="dropdown-item" href="/admin/trigger">Triggers</a></li>
+                  </ul>
+                </div>
+              </th:block>
             </th:block>
           </ul>
         </div>

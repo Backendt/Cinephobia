@@ -34,11 +34,12 @@ public class SpringSecurityConfig {
         http
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/register", "/login", "/webjars/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(login -> login
                         .loginPage("/login")
                         .usernameParameter("email")
-                        .defaultSuccessUrl("/", true))
+                        .defaultSuccessUrl("/"))
                 .logout(LogoutConfigurer::permitAll)
                 .exceptionHandling(exception -> exception // Full page refresh on auth timeout
                         .defaultAuthenticationEntryPointFor(hxAuthEntry, htmxHeaderMatcher));

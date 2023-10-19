@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{main.html}" xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Users - Cinéphobia Admin</title>
+</head>
+<body>
+  <section layout:fragment="content">
+    <table class="container-xxl">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Edit</th>
+      </tr>
+      <th:block th:each="user : ${users}">
+        <tr>
+          <td th:text="${user.displayName}">John doe</td>
+          <td th:text="${user.email}">john.doe@example.com</td>
+          <td th:text="${user.role}">USER</td>
+          <td><a class="btn btn-secondary" th:href="@{/admin/user/{id}(id=${user.id})}">Edit</a></td>
+        </tr>
+      </th:block>
+    </table>
+  </section>
+</body>
+</html>
