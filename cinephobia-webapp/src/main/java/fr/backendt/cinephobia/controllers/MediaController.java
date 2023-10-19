@@ -1,28 +1,26 @@
 package fr.backendt.cinephobia.controllers;
 
 import fr.backendt.cinephobia.mappers.MediaMapper;
-import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
-import io.github.wimdeblauwe.htmx.spring.boot.mvc.HxRequest;
-import jakarta.validation.Valid;
 import org.jboss.logging.Logger;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.data.domain.Sort.Direction;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @Controller
 @RequestMapping("/media")
-public class MediaController { // TODO Add tests
+public class MediaController {
 
     private static final Logger LOGGER = Logger.getLogger(MediaController.class);
 
@@ -34,35 +32,11 @@ public class MediaController { // TODO Add tests
     }
 
     @GetMapping
-    public String getMediaPage(Model model) {
-        MediaDTO media = new MediaDTO(null, null, null, null);
-        model.addAttribute("media", media);
+    public String getMediaPage() {
         return "medias";
     }
 
-    @PostMapping
-    public CompletableFuture<ModelAndView> addMedia(@Valid @ModelAttribute("media") MediaDTO mediaDTO, BindingResult results) {
-        ModelAndView model = new ModelAndView("fragments :: media");
-        if(results.hasErrors()) {
-            model.addObject("media", mediaDTO);
-            return completedFuture(model);
-        }
-
-        Media media = mapper.toEntity(mediaDTO);
-        return service.createMedia(media)
-                .exceptionally(exception -> { // TODO
-                    LOGGER.error("Could not create media", exception);
-                    return null;
-                })
-                .thenApply(mapper::toDTO)
-                .thenApply(savedDto -> {
-                    model.addObject("media", savedDto);
-                    return model;
-                });
-    }
-
-    @HxRequest
-    @GetMapping
+    @GetMapping(headers = "Hx-Request")
     public CompletableFuture<ModelAndView> getMedias(@RequestParam(required = false) String search,
                                                      @RequestParam(defaultValue = "0", required = false) Integer page,
                                                      @RequestParam(defaultValue = "50", required = false) Integer size,
@@ -84,10 +58,12 @@ public class MediaController { // TODO Add tests
             model.addObject("numberOfPages", mediaPage.getTotalPages());
             model.addObject("medias", mediaPage.getContent());
             return model;
-        }).exceptionally(exception -> { // TODO
-            LOGGER.error("Could not get media page", exception);
-            model.addObject("medias", new PageImpl<>(new ArrayList<>(0)));
-            return model;
+        }).exceptionally(exception -> {
+            LOGGER.error("Could not get media page.", exception.getCause());
+            LOGGER.debugf("Search: {}\nPage: {}\nSize: {}\nSort: {}\nOrder: {}\nPageRequest: {}\n", search, page, size, sortBy, order, pageable);
+
+            return new ModelAndView("error")
+                    .addObject("err", "Could not get medias.");
         });
     }
 
