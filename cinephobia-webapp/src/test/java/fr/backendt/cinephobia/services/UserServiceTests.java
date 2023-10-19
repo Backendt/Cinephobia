@@ -6,18 +6,17 @@ import fr.backendt.cinephobia.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
-
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static org.mockito.Mockito.*;
 
 class UserServiceTests {
@@ -25,14 +24,18 @@ class UserServiceTests {
     private UserRepository repository;
     private UserService service;
 
+    private PasswordEncoder passwordEncoder;
+
     private User testUser;
 
     @BeforeEach
     void initTests() {
         this.repository = Mockito.mock(UserRepository.class);
-        this.service = new UserService(repository, new BCryptPasswordEncoder());
+        this.passwordEncoder = Mockito.mock(PasswordEncoder.class);
+        this.service = new UserService(repository, passwordEncoder);
 
-        testUser = new User("Jane Doe", "jane.doe@test.com", "myPassword1234", "USER");
+        testUser = new User("Jane Doe", "jane.doe@test.com", "myPassword1234", null);
+        when(passwordEncoder.encode(any())).thenReturn("HASHED");
     }
 
     @Test
@@ -42,6 +45,10 @@ class UserServiceTests {
         testUserWithId.setId(1L);
         User result;
 
+        User expectedUser = new User(testUser);
+        expectedUser.setPassword("HASHED");
+        expectedUser.setRole("USER");
+
         when(repository.existsByEmailIgnoreCase(any()))
                 .thenReturn(false);
         when(repository.save(any())).thenReturn(testUserWithId);
@@ -50,7 +57,8 @@ class UserServiceTests {
 
         // THEN
         verify(repository).existsByEmailIgnoreCase(testUser.getEmail());
-        verify(repository).save(testUser);
+        verify(passwordEncoder).encode(testUser.getPassword());
+        verify(repository).save(expectedUser);
         assertThat(result).isNotNull();
     }
 
@@ -252,64 +260,6 @@ class UserServiceTests {
     }
 
     @Test
-    void replaceUserByIdTest() throws EntityNotFoundException {
-        // GIVEN
-        Long userId = 1L;
-        User newUser = new User("New User", "user@test.com", "newpassword", "USER");
-        User expectedUser = new User(newUser);
-        expectedUser.setId(userId);
-
-        User result;
-
-        when(repository.existsById(any())).thenReturn(true);
-        when(repository.findIdByEmailIgnoreCase(any()))
-                .thenReturn(Optional.empty());
-        when(repository.save(any())).thenReturn(expectedUser);
-        // WHEN
-        result = service.replaceUserById(userId, newUser).join();
-
-        // THEN
-        verify(repository).existsById(userId);
-        verify(repository).findIdByEmailIgnoreCase(newUser.getEmail());
-        verify(repository).save(expectedUser);
-        assertThat(result).isEqualTo(expectedUser);
-    }
-
-    @Test
-    void replaceUnknownUserByIdTest() {
-        // GIVEN
-        Long userId = 1L;
-
-        when(repository.existsById(any())).thenReturn(false);
-        // WHEN
-        // THEN
-        assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.replaceUserById(userId, testUser).join())
-                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
-        verify(repository).existsById(userId);
-        verify(repository, never()).save(any());
-    }
-
-    @Test
-    void replaceUserByIdToTakenEmailTest() {
-        // GIVEN
-        long userId = 1L;
-        long otherUserId = 2L;
-
-        when(repository.existsById(any())).thenReturn(true);
-        when(repository.findIdByEmailIgnoreCase(any()))
-                .thenReturn(Optional.of(otherUserId));
-        // WHEN
-        assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.replaceUserById(userId, testUser).join())
-                .withCauseExactlyInstanceOf(EntityException.class);
-        // THEN
-        verify(repository).findIdByEmailIgnoreCase(testUser.getEmail());
-        verify(repository).existsById(userId);
-        verify(repository, never()).save(any());
-    }
-
-    @Test
     void deleteUserByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long userId = 1L;
@@ -342,8 +292,9 @@ class UserServiceTests {
     @Test
     void hashUserPasswordTest() {
         // GIVEN
-        String rawPassword = testUser.getPassword();
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        service = new UserService(repository, passwordEncoder);
+        String rawPassword = testUser.getPassword();
         String resultPassword;
 
         // WHEN

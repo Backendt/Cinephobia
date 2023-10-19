@@ -36,7 +36,6 @@ public class UserService {
             );
         }
 
-        hashUserPassword(user);
         user.setId(null);
         user.setRole("USER");
         User hashedUser = hashUserPassword(user);
@@ -75,23 +74,6 @@ public class UserService {
                 .orElse(failedFuture(
                         new EntityNotFoundException("User not found")
                 ));
-    }
-
-    @Async
-    public CompletableFuture<User> replaceUserById(Long id, User user) throws EntityNotFoundException {
-        boolean replacedUserExists = repository.existsById(id);
-        if(!replacedUserExists) {
-            return failedFuture(new EntityNotFoundException("User not found"));
-        }
-        Optional<Long> userIdOfNewEmail = repository.findIdByEmailIgnoreCase(user.getEmail());
-        if (userIdOfNewEmail.isPresent() && !userIdOfNewEmail.get().equals(id)) {
-            return failedFuture(new EntityException("New email is already taken"));
-        }
-
-        user.setId(id);
-        User hashedUser = hashUserPassword(user);
-        User savedUser = repository.save(hashedUser);
-        return completedFuture(savedUser);
     }
 
     @Async
