@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{main.html}"
-      xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{main.html}">
 <head>
     <meta charset="UTF-8">
     <title>Medias - Cinéphobia</title>
@@ -11,16 +10,6 @@
             <div class="d-flex justify-content-center">
                 <span class="spinner-border" role="status"></span>
             </div>
-        </div>
-        <div class="future-modal"> <!-- TODO Make modal -->
-            <h1>Create media (tmp form)</h1>
-            <form hx-boost="true" hx-post="/media" hx-target="#mediaList" hx-swap="afterbegin" th:action="@{/media}" th:object="${media}" method="POST">
-                <input type="text" th:field="*{title}" placeholder="Title" required>
-                <input type="url" th:field="*{imageUrl}" placeholder="http://example.com/image.png" required>
-                <input type="number" th:field="*{platformsId}" required> <!-- TODO Make selectable platform list-->
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                <input type="submit" value="Submit">
-            </form>
         </div>
     </section>
 </body>
