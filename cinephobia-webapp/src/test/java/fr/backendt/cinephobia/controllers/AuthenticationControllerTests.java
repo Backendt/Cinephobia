@@ -63,16 +63,11 @@ class AuthenticationControllerTests {
         // GIVEN
         String userData = UrlEncodedFormSerializer.serialize(userDto);
 
-        User expected = new User(user);
-        expected.setRole("USER");
-
         RequestBuilder request = post("/register")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .content(userData)
                 .with(csrf());
 
-        when(service.hashUserPassword(any()))
-                .thenReturn(new User(user));
         when(service.createUser(any()))
                 .thenReturn(CompletableFuture.completedFuture(user));
         // WHEN
@@ -82,8 +77,7 @@ class AuthenticationControllerTests {
                 .andExpect(redirectedUrl("/login"))
                 .andExpect(model().hasNoErrors());
 
-        verify(service).hashUserPassword(user);
-        verify(service).createUser(expected);
+        verify(service).createUser(user);
     }
 
     @CsvSource(ignoreLeadingAndTrailingWhitespace = false,
@@ -126,16 +120,11 @@ class AuthenticationControllerTests {
         // GIVEN
         String userData = UrlEncodedFormSerializer.serialize(userDto);
 
-        User expected = new User(user);
-        expected.setRole("USER");
-
         RequestBuilder request = post("/register")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .content(userData)
                 .with(csrf());
 
-        when(service.hashUserPassword(any()))
-                .thenReturn(new User(user));
         when(service.createUser(any()))
                 .thenReturn(CompletableFuture.failedFuture(
                         new EntityException("Error")
@@ -146,8 +135,7 @@ class AuthenticationControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(model().attributeHasFieldErrorCode("user", "email", "email-taken"));
 
-        verify(service).hashUserPassword(user);
-        verify(service).createUser(expected);
+        verify(service).createUser(user);
     }
 
     @Test
