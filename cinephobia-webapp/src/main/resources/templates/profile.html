@@ -27,13 +27,12 @@
           <option value="USER">User</option>
           <option value="ADMIN">Admin</option>
         </select>
-        <p th:if="${#fields.hasErrors('role')}" th:errorclass="text-danger" th:errors="*{role}"></p>
       </th:block>
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
       <input type="submit" value="Submit">
     </form>
-    <a href="/logout"><button class="btn btn-outline-danger">Logout</button></a>
-    <button class="btn btn-danger" hx-delete="#" hx:headers='${ {_csrf.headerName: _csrf.token} }' hx-confirm="Are you sure you want to delete the account?">Delete account</button>
+    <button class="btn btn-outline-danger" hx-target="body" hx-post="/logout" hx:headers='${ {_csrf.headerName: _csrf.token} }'>Logout</button> <!-- TODO Doesn't update url -->
+    <button class="btn btn-danger" hx-target="body" hx-delete="#" hx:headers='${ {_csrf.headerName: _csrf.token} }' hx-confirm="Are you sure you want to delete the account?">Delete account</button>
   </div>
 </section>
 </body>
