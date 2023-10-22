@@ -5,11 +5,13 @@ import fr.backendt.cinephobia.models.dto.FullUserDTO;
 import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -27,9 +29,11 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class UserController {
 
     private final UserService service;
+    private final SessionRegistry sessions;
 
-    public UserController(UserService service) {
+    public UserController(UserService service, SessionRegistry sessions) {
         this.service = service;
+        this.sessions = sessions;
     }
 
     @GetMapping("/admin/user")
@@ -135,24 +139,20 @@ public class UserController {
     }
 
     @DeleteMapping("/profile")
-    public CompletableFuture<HtmxResponse> deleteUser(HttpServletRequest request) { // TODO Return 403 and doesn't redirect to /login
-        String userEmail = request.getRemoteUser();
-        try {
-            request.logout();
-        } catch(ServletException exception) {
-            throw new RuntimeException("Could not logout user", exception);
-        }
+    public CompletableFuture<Void> deleteUser(@AuthenticationPrincipal UserDetails currentUser) {
+        // Logout user sessions
+        sessions.getAllSessions(currentUser, false)
+                .forEach(SessionInformation::expireNow);
 
-        return service.getUserIdByEmail(userEmail)
+        return service.getUserIdByEmail(currentUser.getUsername())
                 .thenAccept(service::deleteUserById)
-                .thenApply(future -> new HtmxResponse().browserRedirect("/login"))
                 .exceptionally(exception -> {
                     throw new ResponseStatusException(NOT_FOUND, "User not found");
                 });
     }
 
     @DeleteMapping("/admin/user/{id}")
-    public HtmxResponse deleteUser(@PathVariable Long id) { // TODO Target user is not logged out?
+    public HtmxResponse deleteUser(@PathVariable Long id) { // TODO Log out users
         service.deleteUserById(id);
         return new HtmxResponse()
                 .browserRedirect("/admin/user")

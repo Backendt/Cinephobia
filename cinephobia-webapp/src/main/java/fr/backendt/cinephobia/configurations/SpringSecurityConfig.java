@@ -5,9 +5,10 @@ import io.github.wimdeblauwe.htmx.spring.boot.security.HxRefreshHeaderAuthentica
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -17,7 +18,6 @@ import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(jsr250Enabled = true)
 public class SpringSecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
@@ -32,16 +32,25 @@ public class SpringSecurityConfig {
         RequestMatcher htmxHeaderMatcher = new RequestHeaderRequestMatcher("HX-Request");
         http
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/register", "/login", "/webjars/**").permitAll()
+                        .requestMatchers("/register", "/login", "/webjars/**", "/", "/media**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(login -> login
                         .loginPage("/login")
                         .usernameParameter("email")
                         .defaultSuccessUrl("/"))
-                .exceptionHandling(exception -> exception // Full page refresh on auth timeout
-                        .defaultAuthenticationEntryPointFor(hxAuthEntry, htmxHeaderMatcher));
+                .exceptionHandling(exception -> exception // Full page refresh when missing authentication
+                        .defaultAuthenticationEntryPointFor(hxAuthEntry, htmxHeaderMatcher))
+                .sessionManagement(sessions -> sessions
+                        .maximumSessions(-1)
+                        .sessionRegistry(sessionRegistry())
+                        .expiredUrl("/login"));
         return http.build();
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
     }
 
     @Bean
