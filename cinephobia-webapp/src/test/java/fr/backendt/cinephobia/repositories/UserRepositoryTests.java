@@ -146,6 +146,35 @@ class UserRepositoryTests {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    void getEmailByUserIdTest() {
+        // GIVEN
+        long userId = 1L;
+        String expectedEmail = "john.doe@test.com";
+        Optional<String> result;
+
+        // WHEN
+        result = repository.findEmailById(userId);
+
+        // THEN
+        assertThat(result).contains(expectedEmail);
+    }
+
+    @CsvSource({
+            "0", "200", "-1"
+    })
+    @ParameterizedTest
+    void getEmailByUnknownUserIdTest(Long userId) {
+        // GIVEN
+        Optional<String> result;
+
+        // WHEN
+        result = repository.findEmailById(userId);
+
+        // THEN
+        assertThat(result).isEmpty();
+    }
+
     @CsvSource({
             "John.doe@test.com",
             "john.doe@TEST.COM"

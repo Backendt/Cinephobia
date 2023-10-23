@@ -58,7 +58,7 @@ public class UserService {
                 ));
     }
 
-    public CompletableFuture<String> getUserEmailById(Long id) { // TODO Write tests
+    public CompletableFuture<String> getUserEmailById(Long id) {
         return repository.findEmailById(id)
                 .map(CompletableFuture::completedFuture)
                 .orElse(
