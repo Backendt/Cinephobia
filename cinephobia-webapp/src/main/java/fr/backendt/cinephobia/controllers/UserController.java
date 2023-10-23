@@ -139,16 +139,20 @@ public class UserController {
     }
 
     @DeleteMapping("/profile")
-    public CompletableFuture<Void> deleteUser(@AuthenticationPrincipal UserDetails currentUser) {
+    public HtmxResponse deleteUser(@AuthenticationPrincipal UserDetails currentUser) {
         // Logout user sessions
         sessions.getAllSessions(currentUser, false)
                 .forEach(SessionInformation::expireNow);
 
         return service.getUserIdByEmail(currentUser.getUsername())
                 .thenAccept(service::deleteUserById)
+                .thenApply(future -> HtmxResponse.builder()
+                        .redirect("/")
+                        .build())
                 .exceptionally(exception -> {
                     throw new ResponseStatusException(NOT_FOUND, "User not found");
-                });
+                })
+                .join();
     }
 
     @DeleteMapping("/admin/user/{id}")

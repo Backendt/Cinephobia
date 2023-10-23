@@ -7,13 +7,18 @@ import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
 import fr.backendt.cinephobia.utils.UrlEncodedFormSerializer;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -26,6 +31,7 @@ import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WithMockUser
@@ -37,6 +43,11 @@ class UserControllerTests {
 
     @MockBean
     private UserService service;
+
+    @MockBean
+    private SessionRegistry sessions;
+    private UserDetails principal;
+    private SessionInformation session;
 
     private static List<User> userList;
     private static List<FullUserDTO> dtoList;
@@ -54,6 +65,15 @@ class UserControllerTests {
                 new FullUserDTO(2L, "User Two", "user.two@test.com", "Password", "USER"),
                 new FullUserDTO(3L, "User Three", "user.three@test.com", "Password", "ADMIN")
         );
+    }
+
+    @BeforeEach
+    void initTests() {
+        principal = Mockito.mock(UserDetails.class);
+        session = Mockito.mock(SessionInformation.class);
+
+        when(sessions.getAllPrincipals()).thenReturn(List.of(principal));
+        when(sessions.getAllSessions(any(), anyBoolean())).thenReturn(List.of(session));
     }
 
     @Test
@@ -351,24 +371,99 @@ class UserControllerTests {
     }
 
 
+    @WithMockUser(username = "user@test.com")
     @Test
-    void deleteUserProfileTest() {
-        // TODO
+    void deleteUserProfileTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
+        String userEmail = "user@test.com";
+        RequestBuilder request = delete("/profile")
+                .with(csrf());
+
+        when(service.getUserIdByEmail(any()))
+                .thenReturn(completedFuture(userId));
+        // WHEN
+        mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(header().string("Hx-Redirect", "/"));
+
+        verify(sessions).getAllSessions(any(), eq(false));
+        verify(session).expireNow();
+
+        verify(service).getUserIdByEmail(userEmail);
+        verify(service).deleteUserById(userId);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void deleteExpiredUserProfileTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
+        String userEmail = "user@test.com";
+        RequestBuilder request = delete("/profile")
+                .with(csrf());
+
+        when(service.getUserIdByEmail(any()))
+                .thenReturn(
+                        failedFuture(new EntityException.EntityNotFoundException("User not found"))
+                );
+        // WHEN
+        mvc.perform(request)
+                .andExpect(status().isNotFound());
+
+        verify(sessions).getAllSessions(any(), eq(false));
+        verify(session).expireNow();
+
+        verify(service).getUserIdByEmail(userEmail);
+        verify(service, never()).deleteUserById(userId);
     }
 
     @Test
-    void deleteExpiredUserProfileTest() {
-        // TODO
+    void deleteUserTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
+        String userEmail = "user@test.com";
+
+        RequestBuilder request = delete("/admin/user/" + userId)
+                .with(csrf());
+
+        when(service.getUserEmailById(any())).thenReturn(completedFuture(userEmail));
+        when(principal.getUsername()).thenReturn(userEmail);
+        when(service.deleteUserById(any())).thenReturn(completedFuture(null));
+        // WHEN
+        mvc.perform(request)
+        // THEN
+                .andExpect(status().isOk())
+                .andExpect(header().string("Hx-Redirect", "/admin/user"));
+
+        verify(service).getUserEmailById(userId);
+        verify(sessions).getAllPrincipals();
+        verify(principal).getUsername();
+        verify(sessions).getAllSessions(principal, false);
+        verify(session).expireNow();
+
+        verify(service).deleteUserById(userId);
     }
 
     @Test
-    void deleteUserTest() {
-        // TODO
-    }
+    void deleteUnknownUserTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
 
-    @Test
-    void deleteUnknownUserTest() {
-        // TODO
+        RequestBuilder request = delete("/admin/user/" + userId)
+                .with(csrf());
+
+        when(service.getUserEmailById(any()))
+                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found"))); // This error is ignored in controller
+
+        when(service.deleteUserById(any()))
+                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found")));
+        // WHEN
+        mvc.perform(request)
+        // THEN
+                .andExpect(status().isNotFound());
+
+        verify(service).deleteUserById(userId);
     }
 
 }
