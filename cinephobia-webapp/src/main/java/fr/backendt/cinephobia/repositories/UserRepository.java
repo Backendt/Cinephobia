@@ -14,6 +14,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT id FROM User u WHERE UPPER(u.email) = UPPER(?1)")
     Optional<Long> findIdByEmailIgnoreCase(String email);
+
+    @Query("SELECT email FROM User u WHERE u.id = ?1")
+    Optional<String> findEmailById(Long id); // TODO Write tests
+
     boolean existsByEmailIgnoreCase(String email);
 
 }

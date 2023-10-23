@@ -152,10 +152,18 @@ public class UserController {
     }
 
     @DeleteMapping("/admin/user/{id}")
-    public HtmxResponse deleteUser(@PathVariable Long id) { // TODO Log out users
-        service.deleteUserById(id);
-        return new HtmxResponse()
-                .browserRedirect("/admin/user")
-                .browserRefresh(true);
+    public HtmxResponse deleteUser(@PathVariable Long id) {
+        service.getUserEmailById(id)
+                .thenAccept(userEmail -> sessions.getAllPrincipals().stream()
+                        .filter(principal -> ((UserDetails) principal).getUsername().equals(userEmail)) // Get the target user principal
+                        .map(principal -> sessions.getAllSessions(principal, false)) // Should only return 1 sessions list
+                        .forEach(userSessions -> userSessions.forEach(SessionInformation::expireNow)) // Expires all sessions
+                );
+
+        return service.deleteUserById(id)
+                .thenApply(future -> HtmxResponse.builder()
+                        .redirect("/admin/user")
+                        .build())
+                .join(); // HtmxResponse doesn't seem to work when passed as a future
     }
 }

@@ -58,6 +58,14 @@ public class UserService {
                 ));
     }
 
+    public CompletableFuture<String> getUserEmailById(Long id) { // TODO Write tests
+        return repository.findEmailById(id)
+                .map(CompletableFuture::completedFuture)
+                .orElse(
+                        failedFuture(new EntityNotFoundException("No user found with the given id"))
+                );
+    }
+
     @Async
     public CompletableFuture<Long> getUserIdByEmail(String email) throws EntityNotFoundException {
         return repository.findIdByEmailIgnoreCase(email)
@@ -117,5 +125,4 @@ public class UserService {
         }
         return hashedUser;
     }
-
 }
