@@ -6,7 +6,6 @@ import fr.backendt.cinephobia.repositories.PlatformRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +14,6 @@ import java.util.concurrent.CompletionException;
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class PlatformServiceTests {

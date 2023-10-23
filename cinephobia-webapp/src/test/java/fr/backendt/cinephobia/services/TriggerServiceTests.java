@@ -6,7 +6,6 @@ import fr.backendt.cinephobia.repositories.TriggerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +15,6 @@ import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundEx
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class TriggerServiceTests {

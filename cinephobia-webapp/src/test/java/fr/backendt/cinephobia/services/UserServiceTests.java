@@ -16,7 +16,6 @@ import java.util.concurrent.CompletionException;
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class UserServiceTests {
