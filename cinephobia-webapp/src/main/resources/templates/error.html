@@ -5,7 +5,9 @@
     <title>An error occurred</title>
 </head>
 <body>
-    <h1>Oh no!</h1>
-    <p th:text="${err}"></p>
+    <h1>Oops!</h1>
+    <h1 th:text="|Error ${status} (${error})|">Error 500 (Internal Server Exception)</h1>
+    <p th:text="${message}">An unexpected error occurred</p>
+    <a href="/">Go Home</a>
 </body>
 </html>
