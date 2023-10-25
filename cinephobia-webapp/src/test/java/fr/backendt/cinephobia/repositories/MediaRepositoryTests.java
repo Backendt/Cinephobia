@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -50,17 +51,6 @@ class MediaRepositoryTests {
         // THEN
         assertThat(result.getId()).isNotNull();
         assertThat(result).hasNoNullFieldsOrProperties();
-    }
-
-    @Test
-    void failToCreateDuplicateMediaTest() {
-        // GIVEN
-        Media media = new Media("Cinephobia: The Revenge", "https://example.com/hey.png");
-
-        // WHEN
-        // THEN
-        assertThatExceptionOfType(DataIntegrityViolationException.class)
-                .isThrownBy(() -> repository.save(media));
     }
 
     @Test
@@ -149,34 +139,36 @@ class MediaRepositoryTests {
         assertThat(resultAfter).isEmpty();
     }
 
-    @CsvSource({
-            "Cinephobia: The Revenge",
-            "cinephobia: The revenge"
-    })
-    @ParameterizedTest
-    void existsByTitleTest(String title) {
+    @Test
+    void existsTest() {
         // GIVEN
+        Media media = new Media("Cinephobia: The Revenge", "https://example.com/cinephobia.png");
+        Example<Media> exampleMedia = Example.of(media);
         boolean result;
 
         // WHEN
-        result = repository.existsByTitleIgnoreCase(title);
+        result = repository.exists(exampleMedia);
 
         // THEN
         assertThat(result).isTrue();
     }
 
     @CsvSource({
-            "Cinephobia: The revengee",
-            "Cinephobia the revenge",
-            "Ci nephobia: The Revenge"
+            "Cinephobia: The revengee,https://example.com/cinephobia.png",
+            "Cinephobia the revenge,https://example.com/cinephobia.png",
+            "Ci nephobia: The Revenge,https://example.com/cinephobia.png",
+            "Cinephobia: The Revenge,https://example.com/cinephobi",
+            "Cinephobia: The Revenge,https://example.com/cinephobaa.png"
     })
     @ParameterizedTest
-    void existsByUnknownTitleTest(String unknownTitle) {
+    void doesNotExistTest(String title, String url) {
         // GIVEN
+        Media media = new Media(title, url);
+        Example<Media> exampleMedia = Example.of(media);
         boolean result;
 
         // WHEN
-        result = repository.existsByTitleIgnoreCase(unknownTitle);
+        result = repository.exists(exampleMedia);
 
         // THEN
         assertThat(result).isFalse();

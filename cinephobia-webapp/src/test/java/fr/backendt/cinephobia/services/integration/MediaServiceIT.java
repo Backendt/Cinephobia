@@ -42,7 +42,7 @@ class MediaServiceIT {
     @Test
     void createDuplicateMediaTest() {
         // GIVEN
-        Media duplicateMedia = new Media("Cinephobia: The Revenge", "https://example.com/media.png");
+        Media duplicateMedia = new Media("Cinephobia: The Revenge", "https://example.com/cinephobia.png");
 
         // WHEN
         // THEN

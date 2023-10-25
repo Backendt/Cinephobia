@@ -3,13 +3,13 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.repositories.MediaRepository;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
@@ -27,7 +27,7 @@ public class MediaService {
 
     @Async
     public CompletableFuture<Media> createMedia(Media media) throws EntityException {
-        boolean mediaAlreadyExists = repository.existsByTitleIgnoreCase(media.getTitle());
+        boolean mediaAlreadyExists = repository.exists(Example.of(media));
         if(mediaAlreadyExists) {
             return failedFuture(
                     new EntityException("Media already exists")

@@ -10,5 +10,4 @@ import org.springframework.stereotype.Repository;
 public interface MediaRepository extends JpaRepository<Media, Long> {
 
     Page<Media> findAllByTitleContainingIgnoreCase(String title, Pageable pageable);
-    boolean existsByTitleIgnoreCase(String title);
 }

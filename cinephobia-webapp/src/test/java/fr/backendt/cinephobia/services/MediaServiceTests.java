@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -41,13 +42,13 @@ class MediaServiceTests {
         Media expected = new Media(testMedia);
         testMedia.setId(1L);
 
-        when(repository.existsByTitleIgnoreCase(any()))
+        when(repository.exists(any()))
                 .thenReturn(false);
         // WHEN
         service.createMedia(testMedia).join();
 
         // THEN
-        verify(repository).existsByTitleIgnoreCase(testMedia.getTitle());
+        verify(repository).exists(Example.of(testMedia));
         verify(repository).save(expected); // "expected" has null id
     }
 
@@ -57,7 +58,7 @@ class MediaServiceTests {
         when(repository.save(any()))
                 .thenThrow(DataIntegrityViolationException.class);
 
-        when(repository.existsByTitleIgnoreCase(any()))
+        when(repository.exists(any()))
                 .thenReturn(true);
         // THEN
         // WHEN
@@ -65,7 +66,7 @@ class MediaServiceTests {
                 .isThrownBy(() -> service.createMedia(testMedia).join())
                 .withCauseExactlyInstanceOf(EntityException.class);
 
-        verify(repository).existsByTitleIgnoreCase(testMedia.getTitle());
+        verify(repository).exists(Example.of(testMedia));
         verify(repository, never()).save(any());
     }
 
