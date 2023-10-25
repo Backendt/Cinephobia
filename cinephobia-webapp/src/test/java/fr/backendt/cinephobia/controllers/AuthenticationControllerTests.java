@@ -15,14 +15,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
 
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WithMockUser
@@ -67,11 +67,17 @@ class AuthenticationControllerTests {
                 .content(userData)
                 .with(csrf());
 
+        MvcResult result;
+
         when(service.createUser(any()))
                 .thenReturn(CompletableFuture.completedFuture(user));
         // WHEN
-        mvc.perform(request)
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
         // THEN
+        mvc.perform(asyncDispatch(result))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login"))
                 .andExpect(model().hasNoErrors());
@@ -102,11 +108,17 @@ class AuthenticationControllerTests {
                 .content(userData)
                 .with(csrf());
 
+        MvcResult result;
+
         when(service.hashUserPassword(any()))
                 .thenReturn(user);
         // WHEN
-        mvc.perform(request)
-       // THEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andExpect(model().hasErrors());
 
@@ -124,13 +136,19 @@ class AuthenticationControllerTests {
                 .content(userData)
                 .with(csrf());
 
+        MvcResult result;
+
         when(service.createUser(any()))
                 .thenReturn(CompletableFuture.failedFuture(
                         new EntityException("Error")
                 ));
         // WHEN
-        mvc.perform(request)
-                // THEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeHasFieldErrorCode("user", "email", "email-taken"));
 
