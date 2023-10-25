@@ -2,22 +2,26 @@ package fr.backendt.cinephobia.models.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Generated;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.URL;
 
-import java.util.List;
+@Data
+@Generated
+@AllArgsConstructor
+@NoArgsConstructor
+public class MediaDTO {
 
-public record MediaDTO (
-
-    Long id,
+    private Long id;
 
     @NotBlank(message = "The title is required")
     @Size(min = 2, max = 30, message = "The title must be between 2 and 30 characters")
-    String title,
+    private String title;
 
     @URL(protocol = "https", message = "The image url must be a valid https url")
     @NotBlank(message = "The image url is required")
-    String imageUrl,
+    private String imageUrl;
 
-    @Size(max = 10, message = "There must be less than 10 platforms")
-    List<Long> platformsId
-) {}
+}

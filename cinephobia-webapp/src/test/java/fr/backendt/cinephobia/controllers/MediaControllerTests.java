@@ -1,12 +1,9 @@
 package fr.backendt.cinephobia.controllers;
 
-import fr.backendt.cinephobia.mappers.MediaMapper;
 import fr.backendt.cinephobia.models.Media;
-import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -39,31 +36,21 @@ class MediaControllerTests {
     @MockBean
     private MediaService service;
 
-    @MockBean
-    private MediaMapper mapper;
-
     private static List<Media> mediaList;
     private static List<MediaDTO> dtoList;
 
     @BeforeAll
     static void initTests() {
-        Platform platform = new Platform(1L, "CinephobiaTV");
 
         mediaList = List.of(
-                new Media(1L, "Ut et ligula condimentum", "https://lorem.com", List.of(platform)),
-                new Media(2L, "Nam ipsum sapien, aliquet", "https://ipsum.com", List.of())
+                new Media(1L, "Ut et ligula condimentum", "https://lorem.com"),
+                new Media(2L, "Nam ipsum sapien, aliquet", "https://ipsum.com")
         );
 
         dtoList = List.of(
-                new MediaDTO(1L, "Ut et ligula condimentum", "https://lorem.com", List.of(1L)),
-                new MediaDTO(2L, "Nam ipsum sapien, aliquet", "https://ipsum.com", List.of())
+                new MediaDTO(1L, "Ut et ligula condimentum", "https://lorem.com"),
+                new MediaDTO(2L, "Nam ipsum sapien, aliquet", "https://ipsum.com")
         );
-    }
-
-    @BeforeEach
-    void initMocks() {
-        when(mapper.toDTO(any())).thenCallRealMethod();
-        when(mapper.toEntity(any())).thenCallRealMethod();
     }
 
     @Test
@@ -177,7 +164,7 @@ class MediaControllerTests {
     }
 
     @CsvSource({
-            "id", "platformsId", "title"
+            "id", "title"
     })
     @ParameterizedTest
     void getMediasWithSortingTest(String sortBy) throws Exception {

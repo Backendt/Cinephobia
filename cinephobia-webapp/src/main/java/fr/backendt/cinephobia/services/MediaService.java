@@ -52,7 +52,6 @@ public class MediaService {
         Page<Media> page = search == null ?
                 repository.findAll(pageable) :
                 repository.findAllByTitleContainingIgnoreCase(search, pageable);
-        page.forEach(media -> media.setPlatforms(List.of()));
         return completedFuture(page);
     }
 

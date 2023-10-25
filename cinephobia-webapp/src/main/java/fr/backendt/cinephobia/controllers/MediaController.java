@@ -1,9 +1,9 @@
 package fr.backendt.cinephobia.controllers;
 
-import fr.backendt.cinephobia.mappers.MediaMapper;
 import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
 import org.jboss.logging.Logger;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,10 +25,9 @@ public class MediaController {
     private static final Logger LOGGER = Logger.getLogger(MediaController.class);
 
     private final MediaService service;
-    private final MediaMapper mapper;
-    public MediaController(MediaService service, MediaMapper mapper) {
+
+    public MediaController(MediaService service) {
         this.service = service;
-        this.mapper = mapper;
     }
 
     @GetMapping
@@ -49,8 +48,9 @@ public class MediaController {
         Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
+        ModelMapper mapper = new ModelMapper();
         CompletableFuture<Page<MediaDTO>> pageFuture = service.getMediaPage(search, pageable)
-                .thenApply(mediaPage -> mediaPage.map(mapper::toDTO));
+                .thenApply(mediaPage -> mediaPage.map(media -> mapper.map(media, MediaDTO.class)));
 
         ModelAndView model = new ModelAndView("fragments :: mediaList");
         return pageFuture.thenApply(mediaPage -> {

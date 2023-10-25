@@ -2,7 +2,6 @@ package fr.backendt.cinephobia.services.integration;
 
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
-import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.services.MediaService;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -29,10 +28,7 @@ class MediaServiceIT {
     @Test
     void createMediaTest() throws EntityException {
         // GIVEN
-        Platform platform = new Platform();
-        platform.setId(1L);
-
-        Media media = new Media("NewMedia", "https://example.com/media.png", List.of(platform));
+        Media media = new Media("NewMedia", "https://example.com/media.png");
         Media result;
 
         // WHEN
@@ -41,15 +37,12 @@ class MediaServiceIT {
         // THEN
         assertThat(result).isNotNull()
                 .hasNoNullFieldsOrProperties();
-        assertThat(result.getPlatforms()).isNotEmpty();
     }
 
     @Test
     void createDuplicateMediaTest() {
         // GIVEN
-        Platform platform = new Platform();
-        platform.setId(1L);
-        Media duplicateMedia = new Media("Cinephobia: The Revenge", "https://example.com/media.png", List.of(platform));
+        Media duplicateMedia = new Media("Cinephobia: The Revenge", "https://example.com/media.png");
 
         // WHEN
         // THEN

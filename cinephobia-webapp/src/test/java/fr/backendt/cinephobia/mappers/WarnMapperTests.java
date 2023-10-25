@@ -38,7 +38,7 @@ class WarnMapperTests {
         triggerService = Mockito.mock(TriggerService.class);
         mapper = new WarnMapper(mediaService, triggerService);
 
-        mediaTest = new Media(2L, "Media test", "Description test", List.of());
+        mediaTest = new Media(2L, "Media test", "Description test");
         triggerTest = new Trigger(3L, "Trigger test", "Description test");
         warnTest = new Warn(triggerTest, mediaTest, 6);
         warnDTOTest = new WarnDTO(null, 2L, 3L, 6);

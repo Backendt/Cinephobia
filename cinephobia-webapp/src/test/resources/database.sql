@@ -5,24 +5,11 @@ CREATE TABLE IF NOT EXISTS triggr(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS platform(
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    name VARCHAR(20) NOT NULL UNIQUE,
-    PRIMARY KEY (id)
-);
-
 CREATE TABLE IF NOT EXISTS media(
     id BIGINT NOT NULL AUTO_INCREMENT,
     title VARCHAR(30) NOT NULL UNIQUE,
     image_url VARCHAR(255) NOT NULL,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS media_platforms(
-    platform_id BIGINT NOT NULL,
-    media_id BIGINT NOT NULL,
-    FOREIGN KEY (platform_id) REFERENCES platform(id),
-    FOREIGN KEY (media_id) REFERENCES media(id)
 );
 
 CREATE TABLE IF NOT EXISTS warn(
@@ -51,9 +38,7 @@ CREATE TABLE IF NOT EXISTS users_warns(
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-INSERT INTO platform(name) VALUES ('Netflix'), ('Prime Video'), ('Disney+'), ('Cinema'), ('Other');
 INSERT INTO media(title, image_url) VALUES ('Cinephobia: The Revenge', 'https://example.com/cinephobia.png'), ('Lorem ipsum', 'https://example.com/'), ('More lorem, less ipsum', 'https://example.com');
-INSERT INTO media_platforms(platform_id, media_id) VALUES (1, 1);
 INSERT INTO triggr(name, description) VALUES ('Testphobia', 'Fear of unit tests failing'), ('Bugphobia', 'Fear of software bugs');
 INSERT INTO warn(triggr_id, media_id, exposition_level) VALUES (2, 1, 9);
 INSERT INTO users(display_name, email, password, role) VALUES ('John Doe', 'john.doe@test.com', 'John1234', 'USER');

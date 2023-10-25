@@ -1,7 +1,6 @@
 package fr.backendt.cinephobia.repositories;
 
 import fr.backendt.cinephobia.models.Media;
-import fr.backendt.cinephobia.models.Platform;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,14 +25,10 @@ class MediaRepositoryTests {
     @Autowired
     private MediaRepository repository;
 
-    @Autowired
-    private PlatformRepository platformRepository;
-
     @Test
     void createMediaTest() {
         // GIVEN
-        Platform savedPlatform = platformRepository.findById(1L).orElseThrow();
-        Media unsavedMedia = new Media("Java Testing: 2", "https://example.com/hello.png", List.of(savedPlatform));
+        Media unsavedMedia = new Media("Java Testing: 2", "https://example.com/hello.png");
         Media result;
 
         // WHEN
@@ -46,7 +41,7 @@ class MediaRepositoryTests {
     @Test
     void createMediaWithoutPlatformTest() {
         // GIVEN
-        Media unsavedMedia = new Media("Java Testing: The return", "https://example.com/hello.png", List.of());
+        Media unsavedMedia = new Media("Java Testing: The return", "https://example.com/hello.png");
         Media result;
 
         // WHEN
@@ -58,29 +53,9 @@ class MediaRepositoryTests {
     }
 
     @Test
-    void failToSaveMediaPlatformTest() {
-        // GIVEN
-        Platform unsavedPlatform = new Platform("UnsavedPlatformTM");
-        Media media = new Media("Oh no!", "https://example.com/oops.png", List.of(unsavedPlatform));
-        Media result;
-        int platformsSizeBefore;
-        int platformsSizeAfter;
-
-        // WHEN
-        platformsSizeBefore = platformRepository.findAll().size();
-        result = repository.save(media);
-        platformsSizeAfter = platformRepository.findAll().size();
-
-        // THEN
-        assertThat(platformsSizeBefore).isEqualTo(platformsSizeAfter);
-        assertThat(result.getPlatforms().get(0).getId()).isNull();
-    }
-
-    @Test
     void failToCreateDuplicateMediaTest() {
         // GIVEN
-        Platform platform = platformRepository.findById(1L).orElseThrow();
-        Media media = new Media("Cinephobia: The Revenge", "https://example.com/hey.png", List.of(platform));
+        Media media = new Media("Cinephobia: The Revenge", "https://example.com/hey.png");
 
         // WHEN
         // THEN
@@ -91,8 +66,7 @@ class MediaRepositoryTests {
     @Test
     void failToCreateMediaWithHttpUrlTest() {
         // GIVEN
-        Platform savedPlatform = platformRepository.findById(1L).orElseThrow();
-        Media unsavedMedia = new Media("Oh no! 2", "http://example.com/hello.png", List.of(savedPlatform));
+        Media unsavedMedia = new Media("Oh no! 2", "http://example.com/hello.png");
 
         // WHEN
         // THEN
@@ -125,7 +99,6 @@ class MediaRepositoryTests {
         // THEN
         assertThat(result).isNotEmpty();
         assertThat(result.get()).hasNoNullFieldsOrProperties();
-        assertThat(result.get().getPlatforms()).isNotEmpty();
     }
 
     @Test

@@ -1,6 +1,9 @@
 package fr.backendt.cinephobia.models;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -8,9 +11,6 @@ import lombok.Data;
 import lombok.Generated;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.URL;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -31,21 +31,14 @@ public class Media {
     @NotBlank(message = "The image url is required")
     private String imageUrl;
 
-    @Size(max = 10, message = "There must be less than 10 platforms")
-    @ManyToMany
-    @JoinTable(inverseJoinColumns = @JoinColumn(name = "platform_id"))
-    private List<Platform> platforms;
-
-    public Media(String title, String imageUrl, List<Platform> platforms) {
+    public Media(String title, String imageUrl) {
         this.title = title;
         this.imageUrl = imageUrl;
-        this.platforms = platforms;
     }
 
     public Media(Media media) {
         this.id = media.id;
         this.title = media.title;
         this.imageUrl = media.imageUrl;
-        this.platforms = new ArrayList<>(media.platforms);
     }
 }

@@ -2,7 +2,6 @@ package fr.backendt.cinephobia.services;
 
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
-import fr.backendt.cinephobia.models.Platform;
 import fr.backendt.cinephobia.repositories.MediaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,8 +31,7 @@ class MediaServiceTests {
         repository = Mockito.mock(MediaRepository.class);
         service = new MediaService(repository);
 
-        Platform platform = new Platform("Testflix");
-        testMedia = new Media("Media service: The movie", "https://example.com/media.png", List.of(platform));
+        testMedia = new Media("Media service: The movie", "https://example.com/media.png");
     }
 
 

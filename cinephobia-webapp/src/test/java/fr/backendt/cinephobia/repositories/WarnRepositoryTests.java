@@ -75,7 +75,7 @@ class WarnRepositoryTests {
     void failToCreateWarnWithInvalidMediaTest() {
         // GIVEN
         Trigger trigger = triggerRepository.findById(1L).orElseThrow();
-        Media media = new Media(1337L, "Not saved", "https://example.com/hey.png", List.of());
+        Media media = new Media(1337L, "Not saved", "https://example.com/hey.png");
         Warn warn = new Warn(trigger, media, 9);
 
         // THEN

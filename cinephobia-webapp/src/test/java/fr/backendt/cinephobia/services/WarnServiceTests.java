@@ -36,7 +36,7 @@ class WarnServiceTests {
         service = new WarnService(repository);
 
         Trigger testTrigger = new Trigger("Trigger", "Trigger");
-        Media testMedia = new Media("Media", "https://example.com/media.png", List.of());
+        Media testMedia = new Media("Media", "https://example.com/media.png");
         testWarn = new Warn(1L, testTrigger, testMedia, 9);
     }
 
