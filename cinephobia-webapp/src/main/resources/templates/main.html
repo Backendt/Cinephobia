@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" th:href="@{/webjars/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css}" rel="stylesheet" />
-  <link href="/css/style.css" th:href="@{/css/style.css}" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}" defer></script>
+  <link th:href="@{/webjars/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css}" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+  <link th:href="@{/css/style.css}" href="/Cinephobia/cinephobia-webapp/src/main/resources/static/css/style.css" rel="stylesheet" />
+  <script th:src="@{/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
   <script th:src="@{/webjars/htmx.org/1.9.6/dist/htmx.min.js}" defer></script>
+  <script th:src="@{/js/theme-switcher.js}" src="/Cinephobia/cinephobia-webapp/src/main/resources/static/js/theme-switcher.js"></script>
   <title>Cinéphobia</title>
 </head>
-<body>
-  <header class="navbar navbar-expand-lg bd-navbar sticky-top bg-body-tertiary">
+<body class="d-flex flex-column min-vh-100">
+  <!-- Navigation bar -->
+  <header class="navbar navbar-expand-lg bd-navbar sticky-top bg-secondary navbar-dark">
     <nav class="container-xxl">
       <a class="navbar-brand" href="/">Cinéphobia</a>
       <!-- Collapsable menu button -->
@@ -18,7 +20,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <!-- Collapsable menu -->
-      <div id="navbarToggle" class="collapse navbar-collapse">
+      <div id="navbarToggle" class="collapse navbar-collapse text-center">
         <!-- Left menu -->
         <div class="container-fluid p-0">
           <ul class="navbar-nav flex-wrap">
@@ -29,7 +31,7 @@
               <a class="nav-link" href="/media">Medias</a>
             </li>
             <li class="nav-item"> <!-- Separator -->
-              <span class="vr d-none d-lg-flex h-100 mx-lg-2"></span>
+              <span class="vr d-none d-lg-flex h-100 mx-lg-2" style="color: white"></span>
             </li>
             <th:block sec:authorize="!isFullyAuthenticated()">
               <li class="nav-item">
@@ -44,7 +46,7 @@
                 <a class="nav-link" href="/profile">Profile</a>
               </li>
               <th:block sec:authorize="hasRole('ADMIN')"> <!-- Admin buttons -->
-                <div class="dropdown nav-item">
+                <div class="dropdown nav-item d-flex flex-column">
                   <button class="dropdown-toggle nav-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Admin
                   </button>
@@ -59,17 +61,35 @@
             </th:block>
           </ul>
         </div>
-        <!-- Right search bar -->
-        <form class="navbar-nav d-flex flex-row input-group flex-nowrap" role="search" action="/media" method="get">
-          <input class="form-control" type="search" title="Search media title" name="search" placeholder="Search Media" aria-label="Search">
-          <button class="btn btn-outline-success" title="Confirm media search" type="submit">
-            <span class="bi bi-search"></span>
+        <!-- Right menu -->
+        <div class="navbar-nav d-flex flex-row justify-content-end">
+          <!-- Light/Dark mode button -->
+          <button type="button" id="theme-toggler" class="nav-link btn btn-warning p-2 mx-2">
+            <span id="theme-toggler-icon" class-light="bi bi-sun" class-dark="bi bi-moon"></span>
           </button>
-        </form>
+          <!-- Search modal button -->
+          <button type="button" class="nav-link btn btn-warning p-2" data-bs-toggle="modal" data-bs-target="#searchModal">
+            <span class="bi bi-search" style="color: inherit"></span>
+          </button>
+        </div>
       </div>
     </nav>
   </header>
-  <section layout:fragment="content">
+  <!-- Search bar modal -->
+  <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <!-- Search bar -->
+        <form class="d-flex flex-row input-group flex-nowrap" role="search" action="/media" method="get">
+          <input class="form-control" type="search" title="Search media title" name="search" placeholder="Search Media" aria-label="Search">
+          <button class="btn btn-warning" title="Confirm media search" type="submit">
+            <span class="bi bi-search" style="color: white"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <section class="wrapper flex-grow-1" layout:fragment="content">
     <p>Content will be placed here</p>
   </section>
   <footer>
