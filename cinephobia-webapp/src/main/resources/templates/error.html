@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{main.html}">
 <head>
-    <meta charset="UTF-8">
-    <title>An error occurred</title>
+  <meta charset="UTF-8">
+  <title>Error | Cinéphobia</title>
 </head>
 <body>
-    <h1>Oops!</h1>
-    <h1 th:text="|Error ${status} (${error})|">Error 500 (Internal Server Exception)</h1>
-    <p th:text="${message}">An unexpected error occurred</p>
-    <a href="/">Go Home</a>
+<section layout:fragment="content">
+  <h1>Oops!</h1>
+  <h1 th:text="|Error ${status} (${error})|">Error 500 (Internal Server Exception)</h1>
+  <p th:text="${message}">An unexpected error occurred</p>
+  <a href="/">Go Home</a>
+</section>
 </body>
 </html>
