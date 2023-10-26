@@ -1,5 +1,6 @@
 .mvn/
 .env
+style.css
 
 HELP.md
 target/
