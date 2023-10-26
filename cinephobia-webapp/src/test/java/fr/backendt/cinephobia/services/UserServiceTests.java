@@ -6,6 +6,10 @@ import fr.backendt.cinephobia.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -80,14 +84,37 @@ class UserServiceTests {
     @Test
     void getUsersTest() {
         // GIVEN
-        List<User> results;
+        List<User> userList = List.of(testUser);
+        Pageable pageable = PageRequest.of(0, 50);
 
-        when(repository.findAll()).thenReturn(List.of(testUser));
+        Page<User> results;
+
+        when(repository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(userList));
         // WHEN
-        results = service.getUsers().join();
+        results = service.getUsers(null, pageable).join();
 
         // THEN
-        verify(repository).findAll();
+        verify(repository).findAll(pageable);
+        assertThat(results).containsExactly(testUser);
+    }
+
+    @Test
+    void getUsersWithSearchTest() {
+        // GIVEN
+        String nameSearch = "test search";
+        List<User> userList = List.of(testUser);
+        Pageable pageable = PageRequest.of(0, 50);
+
+        Page<User> results;
+
+        when(repository.findAllByDisplayNameContainingIgnoreCase(any(), any()))
+                .thenReturn(new PageImpl<>(userList));
+        // WHEN
+        results = service.getUsers(nameSearch, pageable).join();
+
+        // THEN
+        verify(repository).findAllByDisplayNameContainingIgnoreCase(nameSearch, pageable);
         assertThat(results).containsExactly(testUser);
     }
 

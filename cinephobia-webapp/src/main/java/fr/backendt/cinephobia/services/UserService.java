@@ -4,6 +4,9 @@ import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,8 +47,10 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<List<User>> getUsers() {
-        List<User> users = repository.findAll();
+    public CompletableFuture<Page<User>> getUsers(@Nullable String nameSearch, Pageable pageable) {
+        Page<User> users = nameSearch == null ?
+                repository.findAll(pageable) :
+                repository.findAllByDisplayNameContainingIgnoreCase(nameSearch, pageable);
         return completedFuture(users);
     }
 

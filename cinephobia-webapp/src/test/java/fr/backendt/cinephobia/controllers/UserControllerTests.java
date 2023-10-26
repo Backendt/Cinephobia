@@ -15,6 +15,10 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
@@ -76,15 +80,29 @@ class UserControllerTests {
         when(sessions.getAllSessions(any(), anyBoolean())).thenReturn(List.of(session));
     }
 
-    @Test
-    void getUsersTest() throws Exception {
+    @CsvSource({
+            "0,50,0,50",
+            "1,100,1,100",
+            "0,1,0,1",
+            "-1,50,0,50",
+            "0,0,0,1",
+            "0,600,0,500"
+    })
+    @ParameterizedTest
+    void getUsersTest(Integer pageIndex, Integer pageSize, Integer expectedIndex, Integer expectedSize) throws Exception {
         // GIVEN
-        RequestBuilder request = get("/admin/user");
+        RequestBuilder request = get("/admin/user")
+                .param("page", String.valueOf(pageIndex))
+                .param("size", String.valueOf(pageSize));
 
+        Page<User> userPage = new PageImpl<>(userList);
+
+        Pageable expectedPageRequest = PageRequest.of(expectedIndex, expectedSize);
+        int expectedPageAmount = userPage.getTotalPages();
         MvcResult result;
 
-        when(service.getUsers())
-                .thenReturn(completedFuture(userList));
+        when(service.getUsers(any(), any()))
+                .thenReturn(completedFuture(userPage));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -96,25 +114,26 @@ class UserControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/users"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("users", dtoList));
+                .andExpect(model().attribute("users", dtoList))
+                .andExpect(model().attribute("numberOfPages", expectedPageAmount));
 
-        verify(service).getUsers();
-        verify(service, never()).getUserByEmail(any());
+        verify(service).getUsers(null, expectedPageRequest);
     }
 
     @Test
-    void getUserWithEmailTest() throws Exception {
+    void getUsersWithSearchTest() throws Exception {
         // GIVEN
-        String userEmail = "user@test.com";
-        User user = userList.get(0);
-        FullUserDTO userDto = dtoList.get(0);
-
+        String nameSearch = "test search";
         RequestBuilder request = get("/admin/user")
-                .param("email", userEmail);
+                .param("search", nameSearch);
+
+        Pageable defaultPageRequest = PageRequest.of(0, 50);
 
         MvcResult result;
 
-        when(service.getUserByEmail(any())).thenReturn(completedFuture(user));
+        Page<User> userPage = new PageImpl<>(userList);
+        when(service.getUsers(any(), any()))
+                .thenReturn(completedFuture(userPage));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -124,12 +143,11 @@ class UserControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("profile"))
+                .andExpect(view().name("admin/users"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("user", userDto));
+                .andExpect(model().attributeExists("numberOfPages", "users"));
 
-        verify(service).getUserByEmail(userEmail);
-        verify(service, never()).getUsers();
+        verify(service).getUsers(nameSearch, defaultPageRequest);
     }
 
     @Test

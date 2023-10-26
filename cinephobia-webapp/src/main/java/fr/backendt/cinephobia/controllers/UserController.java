@@ -5,7 +5,11 @@ import fr.backendt.cinephobia.models.dto.FullUserDTO;
 import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
+import org.jboss.logging.Logger;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,51 +23,53 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Controller
 public class UserController {
 
+    private static final Logger LOGGER = Logger.getLogger(UserController.class);
+
     private final UserService service;
     private final SessionRegistry sessions;
+    private final ModelMapper mapper;
 
     public UserController(UserService service, SessionRegistry sessions) {
         this.service = service;
         this.sessions = sessions;
+        this.mapper = new ModelMapper();
     }
 
     @GetMapping("/admin/user")
-    public CompletableFuture<ModelAndView> getUsers(@RequestParam(value = "email", required = false) String emailSearch) {
+    public CompletableFuture<ModelAndView> getUsers(@RequestParam(value = "search", required = false) String nameSearch,
+                                                    @RequestParam(value = "page", required = false, defaultValue = "0") Integer pageIndex,
+                                                    @RequestParam(value = "size", required = false, defaultValue = "50") Integer pageSize) {
+        if(pageSize < 1) pageSize = 1;
+        if(pageSize > 500) pageSize = 500;
+        if(pageIndex < 0) pageIndex = 0;
 
-        ModelMapper mapper = new ModelMapper();
-        if(emailSearch != null) {
-            return service.getUserByEmail(emailSearch)
-                    .thenApply(user -> {
-                        FullUserDTO dto = mapper.map(user, FullUserDTO.class);
-                        return new ModelAndView("profile").addObject("user", dto);
-                    })
-                    .exceptionally(exception -> {throw new ResponseStatusException(NOT_FOUND, "User not found");});
-        }
+        Pageable pageable = PageRequest.of(pageIndex, pageSize);
 
-        CompletableFuture<List<User>> userEntityList = service.getUsers();
-        CompletableFuture<List<FullUserDTO>> userList = userEntityList
-                .thenApplyAsync(users -> users.stream()
-                        .map(user -> mapper.map(user, FullUserDTO.class))
-                        .toList()
-                );
-
-        return userList.thenApply(users ->
-                new ModelAndView("admin/users").addObject("users", users));
+        return service.getUsers(nameSearch, pageable)
+                .thenApply(users -> {
+                    Page<FullUserDTO> userDTOs = users.map(user -> mapper.map(user, FullUserDTO.class));
+                    return new ModelAndView("admin/users")
+                            .addObject("numberOfPages", userDTOs.getTotalPages())
+                            .addObject("users", userDTOs.getContent());
+                })
+                .exceptionally(exception -> {
+                    LOGGER.error("Could not get users", exception.getCause());
+                    throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "Could not get users");
+                });
     }
 
     @GetMapping("/admin/user/{id}")
     public CompletableFuture<ModelAndView> getUserProfile(@PathVariable Long id) {
         ModelAndView template = new ModelAndView("profile");
-        ModelMapper mapper = new ModelMapper();
 
         return service.getUserById(id)
                 .thenApply(user -> {
@@ -76,7 +82,6 @@ public class UserController {
     @PostMapping("/admin/user/{id}")
     public CompletableFuture<ModelAndView> updateUser(@PathVariable Long id, @ModelAttribute("user") FullUserDTO userDTO) {
         ModelAndView template = new ModelAndView("profile");
-        ModelMapper mapper = new ModelMapper();
 
         User userUpdate = mapper.map(userDTO, User.class);
         CompletableFuture<User> updatedUser = service.updateUserById(id, userUpdate);
@@ -101,7 +106,6 @@ public class UserController {
 
         return service.getUserByEmail(userEmail)
                 .thenApply(user -> {
-                    ModelMapper mapper = new ModelMapper();
                     FullUserDTO userDto = mapper.map(user, FullUserDTO.class);
 
                     ModelAndView template = new ModelAndView("profile");
@@ -118,7 +122,6 @@ public class UserController {
             return completedFuture(template);
         }
 
-        ModelMapper mapper = new ModelMapper();
         User userUpdateEntity = mapper.map(userUpdate, User.class);
 
         String userEmail = authentication.getName();

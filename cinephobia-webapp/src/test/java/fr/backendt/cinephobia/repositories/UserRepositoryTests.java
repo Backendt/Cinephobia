@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,14 +62,33 @@ class UserRepositoryTests {
     @Test
     void getUsersTest() {
         // GIVEN
-        List<User> results;
+        Pageable pageable = PageRequest.of(0, 50);
+        Page<User> results;
 
         // WHEN
-        results = repository.findAll();
+        results = repository.findAll(pageable);
 
         // THEN
         assertThat(results).isNotEmpty();
-        assertThat(results.get(0)).hasNoNullFieldsOrProperties();
+        assertThat(results.getContent().get(0)).hasNoNullFieldsOrProperties();
+    }
+
+    @Test
+    void getUsersContainingInNameTest() {
+        // GIVEN
+        String nameSearch = "joh";
+        Pageable pageable = PageRequest.of(0, 50);
+
+        String expectedName = "John Doe";
+        Page<User> results;
+
+        // WHEN
+        results = repository.findAllByDisplayNameContainingIgnoreCase(nameSearch, pageable);
+
+        // THEN
+        assertThat(results).isNotEmpty();
+        assertThat(results.getContent().get(0)).hasNoNullFieldsOrProperties();
+        assertThat(results.getContent().get(0).getDisplayName()).isEqualTo(expectedName);
     }
 
     @Test
