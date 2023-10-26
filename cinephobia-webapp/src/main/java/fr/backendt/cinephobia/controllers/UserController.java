@@ -57,9 +57,7 @@ public class UserController {
         return service.getUsers(nameSearch, pageable)
                 .thenApply(users -> {
                     Page<FullUserDTO> userDTOs = users.map(user -> mapper.map(user, FullUserDTO.class));
-                    return new ModelAndView("admin/users")
-                            .addObject("numberOfPages", userDTOs.getTotalPages())
-                            .addObject("users", userDTOs.getContent());
+                    return new ModelAndView("admin/users").addObject("usersPage", userDTOs);
                 })
                 .exceptionally(exception -> {
                     LOGGER.error("Could not get users", exception.getCause());

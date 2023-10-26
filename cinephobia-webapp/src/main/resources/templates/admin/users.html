@@ -13,7 +13,7 @@
         <th>Role</th>
         <th>Edit</th>
       </tr>
-      <th:block th:each="user : ${users}">
+      <th:block th:each="user : ${usersPage.getContent()}">
         <tr>
           <td th:text="${user.displayName}">John doe</td>
           <td th:text="${user.email}">john.doe@example.com</td>
@@ -26,7 +26,12 @@
       </th:block>
     </table>
     <div class="container d-flex flex-row justify-content-center">
-      <a class="mx-1" th:each="pageNum : ${#numbers.sequence(0, numberOfPages - 1)}" th:text="${pageNum + 1}" th:href="@{/admin/user(page=${pageNum})}"></a>
+      <a class="btn mx-1"
+         th:each="pageNum : ${#numbers.sequence(0, usersPage.totalPages - 1)}"
+         th:text="${pageNum + 1}"
+         th:href="@{/admin/user(page=${pageNum})}"
+         th:classappend="${usersPage.number == pageNum ? 'btn-secondary' : 'btn-primary'}">
+      </a>
     </div>
   </section>
 </body>

@@ -96,9 +96,9 @@ class UserControllerTests {
                 .param("size", String.valueOf(pageSize));
 
         Page<User> userPage = new PageImpl<>(userList);
+        Page<FullUserDTO> expectedPage = new PageImpl<>(dtoList);
 
         Pageable expectedPageRequest = PageRequest.of(expectedIndex, expectedSize);
-        int expectedPageAmount = userPage.getTotalPages();
         MvcResult result;
 
         when(service.getUsers(any(), any()))
@@ -114,8 +114,7 @@ class UserControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/users"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("users", dtoList))
-                .andExpect(model().attribute("numberOfPages", expectedPageAmount));
+                .andExpect(model().attribute("usersPage", expectedPage));
 
         verify(service).getUsers(null, expectedPageRequest);
     }
@@ -145,7 +144,7 @@ class UserControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/users"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attributeExists("numberOfPages", "users"));
+                .andExpect(model().attributeExists("usersPage"));
 
         verify(service).getUsers(nameSearch, defaultPageRequest);
     }
