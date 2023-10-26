@@ -74,6 +74,7 @@ class MediaControllerTests {
         Page<Media> returnedPage = new PageImpl<>(mediaList);
         Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
         Pageable expectedPageable = PageRequest.of(0, 50, defaultSort);
+        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
 
         when(service.getMediaPage(any(), any()))
                 .thenReturn(completedFuture(returnedPage));
@@ -89,8 +90,7 @@ class MediaControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attributeExists("numberOfPages", "medias"))
-                .andExpect(model().attribute("medias", dtoList));
+                .andExpect(model().attribute("mediasPage", expectedPage));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
@@ -106,6 +106,7 @@ class MediaControllerTests {
         Page<Media> returnedPage = new PageImpl<>(mediaList);
         Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
         Pageable expectedPageable = PageRequest.of(0, 50, defaultSort);
+        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
 
         MvcResult result;
 
@@ -121,8 +122,7 @@ class MediaControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attributeExists("numberOfPages", "medias"))
-                .andExpect(model().attribute("medias", dtoList));
+                .andExpect(model().attribute("mediasPage", expectedPage));
 
         verify(service).getMediaPage(search, expectedPageable);
     }
@@ -145,6 +145,7 @@ class MediaControllerTests {
         Page<Media> returnedPage = new PageImpl<>(mediaList);
         Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
         Pageable expectedPageable = PageRequest.of(0, expectedSizeLimit, defaultSort);
+        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
 
         MvcResult result;
 
@@ -160,8 +161,7 @@ class MediaControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attributeExists("numberOfPages", "medias"))
-                .andExpect(model().attribute("medias", dtoList));
+                .andExpect(model().attribute("mediasPage", expectedPage));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
@@ -179,6 +179,7 @@ class MediaControllerTests {
         Page<Media> returnedPage = new PageImpl<>(mediaList);
         Sort expectedSort = Sort.by(Sort.Direction.DESC, sortBy);
         Pageable expectedPageable = PageRequest.of(0, 50, expectedSort);
+        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
 
         MvcResult result;
 
@@ -194,8 +195,7 @@ class MediaControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attributeExists("numberOfPages", "medias"))
-                .andExpect(model().attribute("medias", dtoList));
+                .andExpect(model().attribute("mediasPage", expectedPage));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
@@ -213,6 +213,7 @@ class MediaControllerTests {
         String defaultSort = "id";
         Page<Media> returnedPage = new PageImpl<>(mediaList);
         Pageable expectedPageable = PageRequest.of(0, 50, Sort.by(Sort.Direction.fromString(expectedOrder), defaultSort));
+        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
 
         MvcResult result;
 
@@ -228,8 +229,7 @@ class MediaControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attributeExists("numberOfPages", "medias"))
-                .andExpect(model().attribute("medias", dtoList));
+                .andExpect(model().attribute("mediasPage", expectedPage));
 
         verify(service).getMediaPage(null, expectedPageable);
     }
@@ -247,6 +247,7 @@ class MediaControllerTests {
         Page<Media> returnedPage = new PageImpl<>(mediaList);
         Sort expectedSort = Sort.by(Sort.Direction.DESC, "id");
         Pageable expectedPageable = PageRequest.of(expectedIndex, 50, expectedSort);
+        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
 
         MvcResult result;
 
@@ -262,8 +263,7 @@ class MediaControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attributeExists("numberOfPages", "medias"))
-                .andExpect(model().attribute("medias", dtoList));
+                .andExpect(model().attribute("mediasPage", expectedPage));
 
         verify(service).getMediaPage(null, expectedPageable);
     }

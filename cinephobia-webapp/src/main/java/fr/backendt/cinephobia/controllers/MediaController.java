@@ -53,17 +53,14 @@ public class MediaController {
         CompletableFuture<Page<MediaDTO>> pageFuture = service.getMediaPage(search, pageable)
                 .thenApply(mediaPage -> mediaPage.map(media -> mapper.map(media, MediaDTO.class)));
 
-        ModelAndView model = new ModelAndView("fragments :: mediaList");
-        return pageFuture.thenApply(mediaPage -> {
-            model.addObject("numberOfPages", mediaPage.getTotalPages());
-            model.addObject("medias", mediaPage.getContent());
-            return model;
-        }).exceptionally(exception -> {
-            LOGGER.error("Could not get media page.", exception.getCause());
-
-            return new ModelAndView("error")
-                    .addObject("err", "Could not get medias.");
-        });
+        return pageFuture
+                .thenApply(mediaPage -> new ModelAndView("fragments :: mediaList")
+                        .addObject("mediasPage", mediaPage))
+                .exceptionally(exception -> {
+                    LOGGER.error("Could not get media page.", exception.getCause());
+                    return new ModelAndView("error")
+                            .addObject("err", "Could not get medias.");
+                });
     }
 
 }

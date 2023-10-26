@@ -1,12 +1,22 @@
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:hx="http://htmx.org">
 
-<ul id="mediaList" th:fragment="mediaList(medias)">
-    <th:block th:each="media : ${medias}">
-        <li th:fragment="media(media)">
-            <p th:text="${media.title}"></p>
+<th:block th:fragment="mediaList(mediasPage)">
+    <th:block th:each="media : ${mediasPage.getContent()}">
+        <div th:fragment="media(media)" class="card m-3">
+            <p class="card-body" th:text="${media.title}"></p>
             <img loading="lazy" th:src="${media.imageUrl}">
-        </li>
+        </div>
     </th:block>
-</ul>
+    <span th:if="${mediasPage.hasNext()}"
+          hx-get="/media"
+          hx:vals='${ {"page": mediasPage.number + 1} }'
+          hx-include="#search"
+          hx-swap="outerHTML"
+          hx-trigger="revealed"
+          hx-replace-url="true"
+          class="spinner-border"
+          role="status">
+    </span>
+</th:block>
 
 </html>
