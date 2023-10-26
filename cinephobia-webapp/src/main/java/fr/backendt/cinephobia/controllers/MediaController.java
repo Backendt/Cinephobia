@@ -43,6 +43,7 @@ public class MediaController {
                                                      @RequestParam(defaultValue = "desc", required = false) String order) {
         if(page < 0) page = 0;
         if(size < 1) size = 1;
+        if(size > 500) size = 500;
 
         Direction direction = Direction.fromOptionalString(order).orElse(Direction.DESC);
         Sort sort = Sort.by(direction, sortBy);

@@ -130,7 +130,10 @@ class MediaControllerTests {
     @CsvSource({
             "2,2",
             "0,1",
-            "-2,1"
+            "-2,1",
+            "499,499",
+            "500,500",
+            "501,500"
     })
     @ParameterizedTest
     void getMediasWithSizeLimitTest(Integer sizeLimit, Integer expectedSizeLimit) throws Exception {
