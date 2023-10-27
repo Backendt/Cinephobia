@@ -65,8 +65,7 @@ public class MediaController {
     }
 
     @GetMapping("/media/{id}")
-    public CompletableFuture<ModelAndView> getMedia(@PathVariable Long id) { // TODO Write tests
-
+    public CompletableFuture<ModelAndView> getMedia(@PathVariable Long id) {
         return service.getMedia(id)
                 .thenApply(media -> {
                     MediaDTO dto = mapper.map(media, MediaDTO.class);

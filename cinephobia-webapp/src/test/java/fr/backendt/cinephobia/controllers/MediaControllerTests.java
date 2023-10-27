@@ -1,5 +1,6 @@
 package fr.backendt.cinephobia.controllers;
 
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.RequestBuilder;
 import java.util.List;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -266,5 +268,53 @@ class MediaControllerTests {
                 .andExpect(model().attribute("mediasPage", expectedPage));
 
         verify(service).getMediaPage(null, expectedPageable);
+    }
+
+    @Test
+    void getMediaTest() throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        Media media = mediaList.get(0);
+        MediaDTO expectedMediaDTO = dtoList.get(0);
+        RequestBuilder request = get("/media/" + mediaId);
+
+        MvcResult result;
+
+        when(service.getMedia(any())).thenReturn(completedFuture(media));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("media"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("media", expectedMediaDTO));
+
+        verify(service).getMedia(mediaId);
+    }
+
+    @Test
+    void getUnknownMediaTest() throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        RequestBuilder request = get("/media/" + mediaId);
+
+        MvcResult result;
+
+        when(service.getMedia(any()))
+                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("Media not found")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isNotFound());
+
+        verify(service).getMedia(mediaId);
     }
 }
