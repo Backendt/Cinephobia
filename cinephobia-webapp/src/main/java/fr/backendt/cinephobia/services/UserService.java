@@ -92,7 +92,8 @@ public class UserService {
     public CompletableFuture<User> updateUserById(Long id, User user) throws EntityNotFoundException {
         if(user.getEmail() != null) {
             Optional<Long> userIdOfNewEmail = repository.findIdByEmailIgnoreCase(user.getEmail());
-            if (userIdOfNewEmail.isPresent() && !userIdOfNewEmail.get().equals(id)) {
+            boolean newEmailIsTakenByOther = userIdOfNewEmail.isPresent() && !userIdOfNewEmail.get().equals(id);
+            if(newEmailIsTakenByOther) {
                return failedFuture(new EntityException("New email is already taken"));
             }
         }
@@ -101,12 +102,16 @@ public class UserService {
         mapper.getConfiguration().setSkipNullEnabled(true);
 
         user.setId(null);
-        User hashedUser = hashUserPassword(user);
-        User savedUser = getUserById(id).join();
-        mapper.map(hashedUser, savedUser);
-
-        repository.save(savedUser);
-        return completedFuture(savedUser);
+        User hashedUserUpdate = hashUserPassword(user);
+        return repository.findById(id)
+                .map(currentUser -> {
+                    mapper.map(hashedUserUpdate, currentUser);
+                    User savedUser = repository.save(currentUser);
+                    return completedFuture(savedUser);
+                })
+                .orElse(
+                        failedFuture(new EntityNotFoundException("User not found"))
+                );
     }
 
     @Async
