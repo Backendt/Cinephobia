@@ -19,14 +19,15 @@
           <td th:text="${user.email}">john.doe@example.com</td>
           <td th:text="${user.role}">USER</td>
           <td>
-            <a class="btn btn-secondary" th:href="@{/admin/user/{id}(id=${user.id})}">Edit</a>
-            <button class="btn btn-danger" hx-target="body" hx:delete="@{/admin/user/{id}(id=${user.id})}" hx:headers='${ {_csrf.headerName: _csrf.token} }' hx-confirm="Are you sure you want to delete the account?">Delete</button>
+            <a class="btn btn-secondary" role="button" th:href="@{/admin/user/{id}(id=${user.id})}">Edit</a>
+            <button class="btn btn-danger" type="button" hx-target="body" hx:delete="@{/admin/user/{id}(id=${user.id})}" hx:headers='${ {_csrf.headerName: _csrf.token} }' hx-confirm="Are you sure you want to delete the account?">Delete</button>
           </td>
         </tr>
       </th:block>
     </table>
     <div class="container d-flex flex-row justify-content-center">
       <a class="btn mx-1"
+         role="button"
          th:each="pageNum : ${#numbers.sequence(0, usersPage.totalPages - 1)}"
          th:text="${pageNum + 1}"
          th:href="@{/admin/user(page=${pageNum})}"
