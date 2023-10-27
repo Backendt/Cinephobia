@@ -8,10 +8,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.concurrent.CompletableFuture;
@@ -19,23 +21,24 @@ import java.util.concurrent.CompletableFuture;
 import static org.springframework.data.domain.Sort.Direction;
 
 @Controller
-@RequestMapping("/media")
 public class MediaController {
 
     private static final Logger LOGGER = Logger.getLogger(MediaController.class);
 
     private final MediaService service;
+    private final ModelMapper mapper;
 
     public MediaController(MediaService service) {
         this.service = service;
+        this.mapper = new ModelMapper();
     }
 
-    @GetMapping
+    @GetMapping("/media")
     public String getMediaPage() {
         return "medias";
     }
 
-    @GetMapping(headers = "Hx-Request")
+    @GetMapping(value = "/media", headers = "Hx-Request")
     public CompletableFuture<ModelAndView> getMedias(@RequestParam(required = false) String search,
                                                      @RequestParam(defaultValue = "0", required = false) Integer page,
                                                      @RequestParam(defaultValue = "50", required = false) Integer size,
@@ -49,7 +52,6 @@ public class MediaController {
         Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        ModelMapper mapper = new ModelMapper();
         CompletableFuture<Page<MediaDTO>> pageFuture = service.getMediaPage(search, pageable)
                 .thenApply(mediaPage -> mediaPage.map(media -> mapper.map(media, MediaDTO.class)));
 
@@ -58,8 +60,20 @@ public class MediaController {
                         .addObject("mediasPage", mediaPage))
                 .exceptionally(exception -> {
                     LOGGER.error("Could not get media page.", exception.getCause());
-                    return new ModelAndView("error")
-                            .addObject("err", "Could not get medias.");
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not get medias.");
+                });
+    }
+
+    @GetMapping("/media/{id}")
+    public CompletableFuture<ModelAndView> getMedia(@PathVariable Long id) { // TODO Write tests
+
+        return service.getMedia(id)
+                .thenApply(media -> {
+                    MediaDTO dto = mapper.map(media, MediaDTO.class);
+                    return new ModelAndView("media").addObject("media", dto);
+                })
+                .exceptionally(exception -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found.");
                 });
     }
 

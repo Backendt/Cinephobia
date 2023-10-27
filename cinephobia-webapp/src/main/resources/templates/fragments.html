@@ -2,10 +2,12 @@
 
 <th:block th:fragment="mediaList(mediasPage)">
     <th:block th:each="media : ${mediasPage.getContent()}">
-        <div th:fragment="media(media)" class="card m-3">
-            <p class="card-body" th:text="${media.title}"></p>
-            <img loading="lazy" th:src="${media.imageUrl}">
-        </div>
+        <a th:fragment="media(media)" th:href="@{/media/{id}(id=${media.id})}">
+            <div class="card m-3">
+                <p class="card-body" th:text="${media.title}"></p>
+                <img loading="lazy" th:src="${media.imageUrl}">
+            </div>
+        </a>
     </th:block>
     <span th:if="${mediasPage.hasNext()}"
           hx-get="/media"

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{main.html}" xmlns:th="http://thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${media.title} + ' | Cinéphobia'"></title>
+</head>
+<body>
+  <section layout:fragment="content">
+    <div class="container">
+      <h1 th:text="${media.title}"></h1>
+      <img src="" alt="Media image" th:src="${media.imageUrl}">
+    </div>
+    <th:block sec:authorize="hasRole('ADMIN')">
+      <!-- TODO Edit button -->
+      <!-- TODO Delete button -->
+    </th:block>
+    <div class="container">
+      <!-- TODO Get warns with htmx -->
+    </div>
+  </section>
+</body>
+</html>

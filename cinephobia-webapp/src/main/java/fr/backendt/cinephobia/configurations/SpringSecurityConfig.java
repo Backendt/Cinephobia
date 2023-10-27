@@ -32,7 +32,7 @@ public class SpringSecurityConfig {
         RequestMatcher htmxHeaderMatcher = new RequestHeaderRequestMatcher("HX-Request");
         http
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/register", "/login", "/webjars/**", "/css/*.css", "/js/*.js", "/", "/media**", "/favicon.ico", "/error").permitAll()
+                        .requestMatchers("/register", "/login", "/webjars/**", "/css/*.css", "/js/*.js", "/", "/media", "/media/*", "/favicon.ico", "/error").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(login -> login
