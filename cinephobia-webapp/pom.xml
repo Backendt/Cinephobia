@@ -172,6 +172,7 @@
 							<outputPath>${basedir}/src/main/resources/static/css/</outputPath>
 							<includePath>${project.build.directory}/webjars/META-INF/resources/webjars/bootstrap/5.3.2/scss/</includePath>
 							<outputStyle>compressed</outputStyle>
+							<generateSourceMap>false</generateSourceMap>
 						</configuration>
 					</plugin>
 				</plugins>
