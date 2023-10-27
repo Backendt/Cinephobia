@@ -3,6 +3,7 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.repositories.MediaRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -64,6 +65,23 @@ public class MediaService {
 
         repository.deleteById(id);
         return completedFuture(null);
+    }
+
+    @Async
+    public CompletableFuture<Media> updateMedia(Long id, Media mediaUpdate) { // TODO Write tests
+        ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration().setSkipNullEnabled(true);
+
+        mediaUpdate.setId(null);
+        return repository.findById(id)
+                .map(media -> {
+                    mapper.map(mediaUpdate, media);
+                    Media savedMedia = repository.save(media);
+                    return completedFuture(savedMedia);
+                })
+                .orElse(
+                        failedFuture(new EntityNotFoundException("Media not found"))
+                );
     }
 
 }

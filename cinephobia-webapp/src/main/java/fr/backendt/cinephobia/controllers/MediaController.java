@@ -1,8 +1,10 @@
 package fr.backendt.cinephobia.controllers;
 
+import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
+import jakarta.validation.Valid;
 import org.jboss.logging.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -11,10 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -84,6 +84,32 @@ public class MediaController {
                 .thenApply(future -> HtmxResponse.builder()
                         .redirect("/media")
                         .build())
+                .exceptionally(exception -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found");
+                }).join();
+    }
+
+    @PostMapping("/admin/media/{id}")
+    public HtmxResponse updateMedia(@PathVariable Long id, @ModelAttribute("media") @Valid MediaDTO mediaDTO, BindingResult results) { // TODO Write tests
+        if(results.hasErrors()) {
+            ModelAndView model = new ModelAndView("fragments :: mediaModal");
+            model.addObject("media", mediaDTO);
+            return HtmxResponse.builder()
+                    .view(model)
+                    .build();
+        }
+
+        Media mediaUpdate = mapper.map(mediaDTO, Media.class);
+        return service.updateMedia(id, mediaUpdate)
+                .thenApply(media -> {
+                    MediaDTO savedMediaDto = mapper.map(media, MediaDTO.class);
+                    ModelAndView model = new ModelAndView("fragments :: media")
+                            .addObject("media", savedMediaDto);
+
+                    return HtmxResponse.builder()
+                            .view(model)
+                            .build();
+                })
                 .exceptionally(exception -> {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found");
                 }).join();
