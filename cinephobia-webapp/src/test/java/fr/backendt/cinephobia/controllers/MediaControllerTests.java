@@ -24,8 +24,8 @@ import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WithMockUser
@@ -316,5 +316,37 @@ class MediaControllerTests {
                 .andExpect(status().isNotFound());
 
         verify(service).getMedia(mediaId);
+    }
+
+    @Test
+    void deleteMediaTest() throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        RequestBuilder request = delete("/admin/media/" + mediaId)
+                .with(csrf());
+
+        when(service.deleteMedia(any())).thenReturn(completedFuture(null));
+        // WHEN
+        mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(header().string("Hx-Redirect", "/media"));
+        // THEN
+        verify(service).deleteMedia(mediaId);
+    }
+
+    @Test
+    void deleteUnknownMediaTest() throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        RequestBuilder request = delete("/admin/media/" + mediaId)
+                .with(csrf());
+
+        when(service.deleteMedia(any()))
+                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("Media not found")));
+        // WHEN
+        mvc.perform(request)
+                .andExpect(status().isNotFound());
+        // THEN
+        verify(service).deleteMedia(mediaId);
     }
 }

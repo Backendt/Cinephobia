@@ -55,4 +55,15 @@ public class MediaService {
         return completedFuture(page);
     }
 
+    @Async
+    public CompletableFuture<Void> deleteMedia(Long id) throws EntityNotFoundException {
+        boolean mediaExists = repository.existsById(id);
+        if(!mediaExists) {
+            return failedFuture(new EntityNotFoundException("Media not found"));
+        }
+
+        repository.deleteById(id);
+        return completedFuture(null);
+    }
+
 }

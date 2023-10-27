@@ -118,5 +118,36 @@ class MediaServiceTests {
         assertThat(results).containsExactly(testMedia);
     }
 
+    @Test
+    void deleteMediaTest() {
+        // GIVEN
+        Long mediaId = 1L;
+
+        when(repository.existsById(any()))
+                .thenReturn(true);
+        // WHEN
+        service.deleteMedia(mediaId).join();
+
+        // THEN
+        verify(repository).existsById(mediaId);
+        verify(repository).deleteById(mediaId);
+    }
+
+    @Test
+    void deleteUnknownMediaTest() {
+        // GIVEN
+        Long mediaId = 1L;
+
+        when(repository.existsById(any()))
+                .thenReturn(false);
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.deleteMedia(mediaId).join())
+                .withCauseExactlyInstanceOf(EntityException.EntityNotFoundException.class);
+
+        // THEN
+        verify(repository).existsById(mediaId);
+        verify(repository, never()).deleteById(any());
+    }
 
 }
