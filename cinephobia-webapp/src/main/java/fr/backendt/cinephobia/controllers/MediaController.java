@@ -5,6 +5,7 @@ import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import org.jboss.logging.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -14,12 +15,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.concurrent.CompletableFuture;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.springframework.data.domain.Sort.Direction;
 
 @Controller
@@ -89,30 +92,37 @@ public class MediaController {
                 }).join();
     }
 
+    @GetMapping("/admin/media/{id}")
+    public CompletableFuture<ModelAndView> getMediaEditForm(@PathVariable Long id) {
+        ModelAndView model = new ModelAndView("fragments :: mediaForm");
+        return service.getMedia(id)
+                .thenApply(media -> {
+                    MediaDTO dto = mapper.map(media, MediaDTO.class);
+                    return model.addObject("media", dto);
+                })
+                .exceptionally(exception -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found");
+                });
+    }
+
     @PostMapping("/admin/media/{id}")
-    public HtmxResponse updateMedia(@PathVariable Long id, @ModelAttribute("media") @Valid MediaDTO mediaDTO, BindingResult results) { // TODO Write tests
+    public CompletableFuture<ModelAndView> updateMedia(@PathVariable Long id, @ModelAttribute("media") @Validated MediaDTO mediaDTO, BindingResult results) {
         if(results.hasErrors()) {
-            ModelAndView model = new ModelAndView("fragments :: mediaModal");
-            model.addObject("media", mediaDTO);
-            return HtmxResponse.builder()
-                    .view(model)
-                    .build();
+            ModelAndView model = new ModelAndView("fragments :: mediaForm")
+                    .addObject("media", mediaDTO);
+            return completedFuture(model);
         }
 
         Media mediaUpdate = mapper.map(mediaDTO, Media.class);
         return service.updateMedia(id, mediaUpdate)
                 .thenApply(media -> {
                     MediaDTO savedMediaDto = mapper.map(media, MediaDTO.class);
-                    ModelAndView model = new ModelAndView("fragments :: media")
+                    return new ModelAndView("media :: media")
                             .addObject("media", savedMediaDto);
-
-                    return HtmxResponse.builder()
-                            .view(model)
-                            .build();
                 })
                 .exceptionally(exception -> {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found");
-                }).join();
+                });
     }
 
 }

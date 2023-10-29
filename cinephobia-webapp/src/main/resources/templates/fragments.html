@@ -21,4 +21,17 @@
     </span>
 </th:block>
 
+<div th:fragment="mediaForm(media)">
+    <form th:object="${media}" hx-boost="true" hx:post="@{/admin/media/{id}(id=${media.id})}" hx-target="#media" hx-swap="innerHTML">
+        <label for="mediaTitle">Media title</label>
+        <input id="mediaTitle" type="text" placeholder="Title" th:field="*{title}">
+
+        <label for="mediaImage">Image url</label>
+        <input id="mediaImage" type="url" placeholder="Image HTTPS URL" th:field="*{imageUrl}">
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <input type="submit" value="Save">
+    </form>
+</div>
+
 </html>

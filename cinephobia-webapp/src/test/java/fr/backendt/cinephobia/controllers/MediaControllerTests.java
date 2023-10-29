@@ -4,6 +4,8 @@ import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.dto.MediaDTO;
 import fr.backendt.cinephobia.services.MediaService;
+import fr.backendt.cinephobia.utils.UrlEncodedFormSerializer;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.*;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -22,8 +25,7 @@ import java.util.List;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -319,6 +321,56 @@ class MediaControllerTests {
     }
 
     @Test
+    void getMediaEditForm() throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        RequestBuilder request = get("/admin/media/" + mediaId);
+
+        Media media = mediaList.get(0);
+        MediaDTO expectedMedia = dtoList.get(0);
+
+        MvcResult result;
+
+        when(service.getMedia(any())).thenReturn(completedFuture(media));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments :: mediaForm"))
+                .andExpect(model().attribute("media", expectedMedia));
+
+        verify(service).getMedia(mediaId);
+    }
+
+    @Test
+    void getUnknownMediaEditForm() throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        RequestBuilder request = get("/admin/media/" + mediaId);
+
+        MvcResult result;
+
+        when(service.getMedia(any()))
+                .thenReturn(failedFuture(new EntityNotFoundException("Media not found")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isNotFound());
+
+        verify(service).getMedia(mediaId);
+    }
+
+    @Test
     void deleteMediaTest() throws Exception {
         // GIVEN
         long mediaId = 1L;
@@ -348,5 +400,106 @@ class MediaControllerTests {
                 .andExpect(status().isNotFound());
         // THEN
         verify(service).deleteMedia(mediaId);
+    }
+
+    @Test
+    void updateMediaTest() throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        MediaDTO mediaUpdate = new MediaDTO(null, "New Name", "  "); // Empty string will be null
+        Media mediaUpdateEntity = new Media(null, "New Name", null);
+        String mediaUpdateData = UrlEncodedFormSerializer.serialize(mediaUpdate);
+
+        RequestBuilder request = post("/admin/media/" + mediaId)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .content(mediaUpdateData)
+                .with(csrf());
+
+        Media media = mediaList.get(0);
+        MediaDTO expectedResult = dtoList.get(0);
+
+        MvcResult result;
+
+        when(service.updateMedia(any(), any()))
+                .thenReturn(completedFuture(media));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(model().hasNoErrors())
+                .andExpect(view().name("media :: media"))
+                .andExpect(model().attribute("media", expectedResult));
+
+        verify(service).updateMedia(mediaId, mediaUpdateEntity);
+    }
+
+    @CsvSource({
+            "a,",
+            "too longaaaaaaaaaaaaaaaaaaaaaaa,",
+            ",http://nothttps.com",
+            ",notanurl"
+    })
+    @ParameterizedTest
+    void updateInvalidMediaTest(String title, String imageUrl) throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        MediaDTO mediaUpdate = new MediaDTO(null, title, imageUrl); // Empty string will be null
+        String mediaUpdateData = UrlEncodedFormSerializer.serialize(mediaUpdate);
+
+        RequestBuilder request = post("/admin/media/" + mediaId)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .content(mediaUpdateData)
+                .with(csrf());
+
+        MvcResult result;
+
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments :: mediaForm"))
+                .andExpect(model().hasErrors())
+                .andExpect(model().attribute("media", mediaUpdate));
+
+        verify(service, never()).updateMedia(any(), any());
+    }
+
+    @Test
+    void updateUnknownMediaTest() throws Exception {
+        // GIVEN
+        long mediaId = 1L;
+        MediaDTO mediaUpdate = new MediaDTO(null, "New Name", "  "); // Empty string will be null
+        Media mediaUpdateEntity = new Media(null, "New Name", null);
+        String mediaUpdateData = UrlEncodedFormSerializer.serialize(mediaUpdate);
+
+        RequestBuilder request = post("/admin/media/" + mediaId)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .content(mediaUpdateData)
+                .with(csrf());
+
+        MvcResult result;
+
+        when(service.updateMedia(any(), any()))
+                .thenReturn(failedFuture(new EntityNotFoundException("Media not found")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isNotFound());
+
+        verify(service).updateMedia(mediaId, mediaUpdateEntity);
     }
 }
