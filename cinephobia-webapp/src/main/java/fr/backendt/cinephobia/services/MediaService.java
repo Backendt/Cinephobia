@@ -68,7 +68,7 @@ public class MediaService {
     }
 
     @Async
-    public CompletableFuture<Media> updateMedia(Long id, Media mediaUpdate) { // TODO Write tests
+    public CompletableFuture<Media> updateMedia(Long id, Media mediaUpdate) {
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setSkipNullEnabled(true);
 

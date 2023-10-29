@@ -150,4 +150,42 @@ class MediaServiceTests {
         verify(repository, never()).deleteById(any());
     }
 
+    @Test
+    void updateMediaTest() {
+        // GIVEN
+        long mediaId = 1L;
+        Media mediaUpdate = new Media(null, "New title", null);
+        Media currentMedia = new Media(mediaId, "Old title", "https://wedontcare.com");
+
+        Media expectedResult = new Media(mediaId, "New title", "https://wedontcare.com");
+        Media result;
+
+        when(repository.findById(any())).thenReturn(Optional.of(currentMedia));
+        when(repository.save(any())).thenReturn(expectedResult);
+        // WHEN
+        result = service.updateMedia(mediaId, mediaUpdate).join();
+
+        // THEN
+        verify(repository).findById(mediaId);
+        verify(repository).save(expectedResult);
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    @Test
+    void updateUnknownMediaTest() {
+        // GIVEN
+        long mediaId = 1L;
+        Media mediaUpdate = new Media(null, "New title", null);
+
+        when(repository.findById(any())).thenReturn(Optional.empty());
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.updateMedia(mediaId, mediaUpdate).join())
+                .withCauseExactlyInstanceOf(EntityException.EntityNotFoundException.class);
+
+        // THEN
+        verify(repository).findById(mediaId);
+        verify(repository, never()).save(any());
+    }
+
 }
