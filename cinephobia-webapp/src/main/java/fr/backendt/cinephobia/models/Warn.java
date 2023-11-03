@@ -24,24 +24,23 @@ public class Warn {
     @NotNull(message = "The trigger is required")
     private Trigger trigger;
 
-    @ManyToOne
     @NotNull(message = "The media is required")
-    private Media media;
+    private Long mediaId;
 
     @NotNull(message = "The exposition level is required")
     @Range(min = 1, max = 10, message = "The exposition level must be between 0 and 10")
     private int expositionLevel;
 
-    public Warn(Trigger trigger, Media media, int expositionLevel) {
+    public Warn(Trigger trigger, Long mediaId, int expositionLevel) {
         this.trigger = trigger;
-        this.media = media;
+        this.mediaId = mediaId;
         this.expositionLevel = expositionLevel;
     }
 
     public Warn(Warn warn) {
         this.id = warn.id;
         this.trigger = warn.trigger;
-        this.media = warn.media;
+        this.mediaId = warn.mediaId;
         this.expositionLevel = warn.expositionLevel;
     }
 }
