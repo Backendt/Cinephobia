@@ -131,13 +131,22 @@ public class MediaRepository {
     }
 
     public SearchResults getPopularMovies(int page) {
-        return client.get()
+        SearchResults results = client.get()
                 .uri("/movie/popular?page={page}", page)
                 .headers(this::initHeaders)
                 .retrieve()
                 .bodyToMono(SearchResults.class)
                 .blockOptional(TIMEOUT_DURATION)
                 .orElseThrow(() -> new EntityException("Could not get popular movies"));
+
+        List<Media> newResults = results.getResults().stream()
+                .map(media -> {
+                    media.setType(MediaType.MOVIE);
+                    return media;
+                })
+                .toList();
+        results.setResults(newResults);
+        return results;
     }
 
 }

@@ -111,6 +111,7 @@ class MediaRepositoryTests {
         assertThat(result).hasNoNullFieldsOrProperties();
         assertThat(result.getCurrentPage()).isEqualTo(page);
         assertThat(result.getResults()).hasSizeGreaterThan(minResultSizeExpected);
+        assertThat(result.getResults().get(0)).hasNoNullFieldsOrPropertiesExcept("posterPath");
     }
 
 }
