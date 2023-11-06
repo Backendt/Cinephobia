@@ -1,19 +1,18 @@
 package fr.backendt.cinephobia.configurations;
 
-import info.movito.themoviedbapi.TmdbApi;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class TheMovieDBConfig {
 
-    @Value("${cinephobia.tmdb.apikey}")
-    private String apiKey;
+    public static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original/";
+    private static final String V3_API_URL = "https://api.themoviedb.org/3";
 
     @Bean
-    public TmdbApi tmdbApi() {
-        return new TmdbApi(apiKey);
+    public WebClient tmdbAPI() {
+        return WebClient.create(V3_API_URL);
     }
 
 }
