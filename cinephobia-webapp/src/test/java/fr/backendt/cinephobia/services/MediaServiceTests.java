@@ -2,15 +2,12 @@ package fr.backendt.cinephobia.services;
 
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
+import fr.backendt.cinephobia.models.MediaType;
+import fr.backendt.cinephobia.models.tmdb.SearchResults;
 import fr.backendt.cinephobia.repositories.MediaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,170 +19,121 @@ import static org.mockito.Mockito.*;
 
 class MediaServiceTests {
 
-    private MediaRepository repository;
     private MediaService service;
+    private MediaRepository repository;
 
-    private Media testMedia;
+    private Media movie;
+    private Media series;
 
     @BeforeEach
     void initTests() {
         repository = Mockito.mock(MediaRepository.class);
         service = new MediaService(repository);
 
-        testMedia = new Media("Media service: The movie", "https://example.com/media.png");
-    }
-
-
-    @Test
-    void createMediaTest() throws EntityException {
-        // GIVEN
-        Media expected = new Media(testMedia);
-        testMedia.setId(1L);
-
-        when(repository.exists(any()))
-                .thenReturn(false);
-        // WHEN
-        service.createMedia(testMedia).join();
-
-        // THEN
-        verify(repository).exists(Example.of(testMedia));
-        verify(repository).save(expected); // "expected" has null id
+        series = new Media(4321L, MediaType.TV, "4321 Series", "The 4321 series", "https://4312.com/poster");
+        movie = new Media(1234L, MediaType.MOVIE, "1234 Movie", "The 1234 Movie", "https://1234.com/poster");
     }
 
     @Test
-    void createExistingMediaTest() {
+    void getMovieTest() {
         // GIVEN
-        when(repository.save(any()))
-                .thenThrow(DataIntegrityViolationException.class);
+        long movieId = 1L;
 
-        when(repository.exists(any()))
-                .thenReturn(true);
-        // THEN
-        // WHEN
-        assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.createMedia(testMedia).join())
-                .withCauseExactlyInstanceOf(EntityException.class);
-
-        verify(repository).exists(Example.of(testMedia));
-        verify(repository, never()).save(any());
-    }
-
-    @Test
-    void getMediaByIdTest() throws EntityException.EntityNotFoundException {
-        // GIVEN
-        Long mediaId = 1L;
         Media result;
 
-        when(repository.findById(any())).thenReturn(Optional.of(testMedia));
+        when(repository.getMovie(any())).thenReturn(Optional.of(movie));
         // WHEN
-        result = service.getMedia(mediaId).join();
+        result = service.getMovie(movieId).join();
 
         // THEN
-        verify(repository).findById(mediaId);
-        assertThat(result).isEqualTo(testMedia);
+        verify(repository).getMovie(movieId);
+        assertThat(result).isEqualTo(movie);
     }
 
     @Test
-    void getUnknownMediaByIdTest() {
+    void getUnknownMovieTest() {
         // GIVEN
-        Long mediaId = 1L;
+        long movieId = 1L;
 
-        when(repository.findById(any())).thenReturn(Optional.empty());
+        when(repository.getMovie(any())).thenReturn(Optional.empty());
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.getMedia(mediaId).join())
+                .isThrownBy(() -> service.getMovie(movieId).join())
                 .withCauseExactlyInstanceOf(EntityException.EntityNotFoundException.class);
 
         // THEN
-        verify(repository).findById(mediaId);
+        verify(repository).getMovie(movieId);
     }
 
     @Test
-    void getMediaByTitleContainingStringTest() {
+    void getSeriesTest() {
         // GIVEN
-        String mediaTitlePart = "media";
-        PageRequest pageRequest = PageRequest.ofSize(99);
-        Page<Media> returnedPage = new PageImpl<>(List.of(testMedia));
-        Page<Media> results;
+        long seriesId = 1L;
 
-        when(repository.findAllByTitleContainingIgnoreCase(any(), any()))
-                .thenReturn(returnedPage);
-        // WHEN
-        results = service.getMediaPage(mediaTitlePart, pageRequest).join();
-
-        // THEN
-        verify(repository).findAllByTitleContainingIgnoreCase(mediaTitlePart, pageRequest);
-        assertThat(results).containsExactly(testMedia);
-    }
-
-    @Test
-    void deleteMediaTest() {
-        // GIVEN
-        Long mediaId = 1L;
-
-        when(repository.existsById(any()))
-                .thenReturn(true);
-        // WHEN
-        service.deleteMedia(mediaId).join();
-
-        // THEN
-        verify(repository).existsById(mediaId);
-        verify(repository).deleteById(mediaId);
-    }
-
-    @Test
-    void deleteUnknownMediaTest() {
-        // GIVEN
-        Long mediaId = 1L;
-
-        when(repository.existsById(any()))
-                .thenReturn(false);
-        // WHEN
-        assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.deleteMedia(mediaId).join())
-                .withCauseExactlyInstanceOf(EntityException.EntityNotFoundException.class);
-
-        // THEN
-        verify(repository).existsById(mediaId);
-        verify(repository, never()).deleteById(any());
-    }
-
-    @Test
-    void updateMediaTest() {
-        // GIVEN
-        long mediaId = 1L;
-        Media mediaUpdate = new Media(null, "New title", null);
-        Media currentMedia = new Media(mediaId, "Old title", "https://wedontcare.com");
-
-        Media expectedResult = new Media(mediaId, "New title", "https://wedontcare.com");
         Media result;
 
-        when(repository.findById(any())).thenReturn(Optional.of(currentMedia));
-        when(repository.save(any())).thenReturn(expectedResult);
+        when(repository.getSeries(any())).thenReturn(Optional.of(series));
         // WHEN
-        result = service.updateMedia(mediaId, mediaUpdate).join();
+        result = service.getSeries(seriesId).join();
 
         // THEN
-        verify(repository).findById(mediaId);
-        verify(repository).save(expectedResult);
-        assertThat(result).isEqualTo(expectedResult);
+        verify(repository).getSeries(seriesId);
+        assertThat(result).isEqualTo(series);
     }
 
     @Test
-    void updateUnknownMediaTest() {
+    void getUnknownSeriesTest() {
         // GIVEN
-        long mediaId = 1L;
-        Media mediaUpdate = new Media(null, "New title", null);
+        long seriesId = 1L;
 
-        when(repository.findById(any())).thenReturn(Optional.empty());
+        when(repository.getSeries(any())).thenReturn(Optional.empty());
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.updateMedia(mediaId, mediaUpdate).join())
+                .isThrownBy(() -> service.getSeries(seriesId).join())
                 .withCauseExactlyInstanceOf(EntityException.EntityNotFoundException.class);
 
         // THEN
-        verify(repository).findById(mediaId);
-        verify(repository, never()).save(any());
+        verify(repository).getSeries(seriesId);
+    }
+
+    @Test
+    void getMediasTest() {
+        // GIVEN
+        String mediaTitlePart = "my search";
+        int page = 1;
+
+        List<Media> searchMedias = List.of(movie, series);
+        SearchResults searchResults = new SearchResults(page, page, 2, searchMedias);
+        SearchResults result;
+
+        when(repository.searchMedias(any(), anyInt())).thenReturn(searchResults);
+        // WHEN
+        result = service.getMedias(mediaTitlePart, page).join();
+
+        // THEN
+        verify(repository).searchMedias(mediaTitlePart, page);
+        verify(repository, never()).getPopularMovies(anyInt());
+        assertThat(result).isEqualTo(searchResults);
+    }
+
+    @Test
+    void getMediasWithoutSearchTest() {
+        // GIVEN
+        String mediaTitlePart = "  ";
+        int page = 1;
+
+        List<Media> searchMedias = List.of(movie);
+        SearchResults searchResults = new SearchResults(page, page, 1, searchMedias);
+        SearchResults result;
+
+        when(repository.getPopularMovies(anyInt())).thenReturn(searchResults);
+        // WHEN
+        result = service.getMedias(mediaTitlePart, page).join();
+
+        // THEN
+        verify(repository).getPopularMovies(page);
+        verify(repository, never()).searchMedias(any(), anyInt());
+        assertThat(result).isEqualTo(searchResults);
     }
 
 }

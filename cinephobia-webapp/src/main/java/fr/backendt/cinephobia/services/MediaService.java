@@ -1,21 +1,19 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
+import fr.backendt.cinephobia.models.tmdb.SearchResults;
 import fr.backendt.cinephobia.repositories.MediaRepository;
-import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
+
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 @Service
 public class MediaService {
@@ -27,61 +25,26 @@ public class MediaService {
     }
 
     @Async
-    public CompletableFuture<Media> createMedia(Media media) throws EntityException {
-        boolean mediaAlreadyExists = repository.exists(Example.of(media));
-        if(mediaAlreadyExists) {
-            return failedFuture(
-                    new EntityException("Media already exists")
-            );
-        }
-        media.setId(null);
-        Media savedMedia = repository.save(media);
-        return completedFuture(savedMedia);
-    }
-
-    @Async
-    public CompletableFuture<Media> getMedia(Long id) throws EntityNotFoundException {
-        return repository.findById(id)
+    public CompletableFuture<Media> getMovie(Long id) {
+        return repository.getMovie(id)
                 .map(CompletableFuture::completedFuture)
-                .orElse(failedFuture(
-                        new EntityNotFoundException("Media not found")
-                ));
+                .orElse(failedFuture(new EntityNotFoundException("Movie not found")));
     }
 
     @Async
-    public CompletableFuture<Page<Media>> getMediaPage(@Nullable String search, Pageable pageable) {
-        Page<Media> page = search == null ?
-                repository.findAll(pageable) :
-                repository.findAllByTitleContainingIgnoreCase(search, pageable);
-        return completedFuture(page);
+    public CompletableFuture<Media> getSeries(Long id) {
+        return repository.getSeries(id)
+                .map(CompletableFuture::completedFuture)
+                .orElse(failedFuture(new EntityNotFoundException("Series not found")));
     }
 
     @Async
-    public CompletableFuture<Void> deleteMedia(Long id) throws EntityNotFoundException {
-        boolean mediaExists = repository.existsById(id);
-        if(!mediaExists) {
-            return failedFuture(new EntityNotFoundException("Media not found"));
-        }
-
-        repository.deleteById(id);
-        return completedFuture(null);
-    }
-
-    @Async
-    public CompletableFuture<Media> updateMedia(Long id, Media mediaUpdate) {
-        ModelMapper mapper = new ModelMapper();
-        mapper.getConfiguration().setSkipNullEnabled(true);
-
-        mediaUpdate.setId(null);
-        return repository.findById(id)
-                .map(media -> {
-                    mapper.map(mediaUpdate, media);
-                    Media savedMedia = repository.save(media);
-                    return completedFuture(savedMedia);
-                })
-                .orElse(
-                        failedFuture(new EntityNotFoundException("Media not found"))
-                );
+    public CompletableFuture<SearchResults> getMedias(@Nullable String searchString, int page) {
+        if(searchString != null && searchString.isBlank()) searchString = null;
+        SearchResults medias = Optional.ofNullable(searchString)
+                .map(search -> repository.searchMedias(search, page))
+                .orElseGet(() -> repository.getPopularMovies(page));
+        return completedFuture(medias);
     }
 
 }
