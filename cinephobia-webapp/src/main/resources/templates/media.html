@@ -9,7 +9,7 @@
     <div id="media" th:fragment="media(media)">
       <div class="container">
         <h1 th:text="${media.title}"></h1>
-        <img src="" alt="Media image" th:src="${media.imageUrl}">
+        <img src="" alt="Media image" th:src="${media.posterPath != null} ? ${media.getImageUrl()} : @{/images/placeholder.png}">
       </div>
     </div>
     <div class="container">
