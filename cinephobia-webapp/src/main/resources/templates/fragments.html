@@ -1,24 +1,25 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:hx="http://htmx.org">
 
+<!-- TODO Make all images the same size -->
 <th:block th:fragment="mediaList(mediasPage)">
-    <th:block th:each="media : ${mediasPage.getContent()}">
-        <a th:fragment="media(media)" th:href="@{/media/{id}(id=${media.id})}">
-            <div class="card m-3">
-                <p class="card-body" th:text="${media.title}"></p>
-                <img loading="lazy" th:src="${media.imageUrl}">
-            </div>
-        </a>
+    <th:block th:each="media : ${mediasPage.getResults()}">
+        <div class="col-2">
+            <a th:href="${media.getMediaUri()}" th:title="${media.title}" class="position-relative">
+                <h2 th:if="${media.posterPath == null}" th:text="${media.title}" class="carousel-caption"></h2>
+                <img loading="lazy" class="img-thumbnail p-0 my-2" th:src="${media.posterPath != null} ? ${media.getImageUrl(false)} : @{/images/placeholder.png}" th:alt="${media.title}">
+            </a>
+        </div>
     </th:block>
-    <span th:if="${mediasPage.hasNext()}"
-          hx-get="/media"
-          hx:vals='${ {"page": mediasPage.number + 1} }'
-          hx-include="#search"
-          hx-swap="outerHTML"
-          hx-trigger="revealed"
-          hx-replace-url="true"
-          class="spinner-border"
-          role="status">
-    </span>
+    <div th:if="${mediasPage.currentPage < mediasPage.totalPages}"
+         hx-get="/media"
+         hx:vals='${ {"page": mediasPage.currentPage + 1} }'
+         hx-include="#search"
+         hx-swap="outerHTML"
+         hx-trigger="revealed"
+         hx-replace-url="true"
+         class="d-flex justify-content-center w-100 py-4">
+        <span class="spinner-border" role="status"></span>
+    </div>
 </th:block>
 
 </html>
