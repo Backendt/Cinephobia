@@ -3,7 +3,7 @@
 <!-- TODO Make all images the same size -->
 <th:block th:fragment="mediaList(mediasPage)">
     <th:block th:each="media : ${mediasPage.getResults()}">
-        <div class="col-2">
+        <div class="col-md-2 col-6">
             <a th:href="${media.getMediaUri()}" th:title="${media.title}" class="position-relative">
                 <h2 th:if="${media.posterPath == null}" th:text="${media.title}" class="position-absolute translate-middle top-50 start-50 text-light text-center"></h2>
                 <img loading="lazy" class="img-thumbnail p-0 my-2" th:src="${media.posterPath != null} ? ${media.getImageUrl(false)} : @{/images/placeholder.png}" th:alt="${media.title}">
