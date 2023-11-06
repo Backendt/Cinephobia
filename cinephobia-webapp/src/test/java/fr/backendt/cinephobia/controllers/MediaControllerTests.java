@@ -1,20 +1,13 @@
 package fr.backendt.cinephobia.controllers;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Media;
-import fr.backendt.cinephobia.models.dto.MediaDTO;
+import fr.backendt.cinephobia.models.tmdb.SearchResults;
 import fr.backendt.cinephobia.services.MediaService;
-import fr.backendt.cinephobia.utils.UrlEncodedFormSerializer;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.*;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -22,12 +15,13 @@ import org.springframework.test.web.servlet.RequestBuilder;
 
 import java.util.List;
 
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WithMockUser
@@ -41,19 +35,12 @@ class MediaControllerTests {
     private MediaService service;
 
     private static List<Media> mediaList;
-    private static List<MediaDTO> dtoList;
 
     @BeforeAll
     static void initTests() {
-
         mediaList = List.of(
-                new Media(1L, "Ut et ligula condimentum", "https://lorem.com"),
-                new Media(2L, "Nam ipsum sapien, aliquet", "https://ipsum.com")
-        );
-
-        dtoList = List.of(
-                new MediaDTO(1L, "Ut et ligula condimentum", "https://lorem.com"),
-                new MediaDTO(2L, "Nam ipsum sapien, aliquet", "https://ipsum.com")
+                new Media(1L, fr.backendt.cinephobia.models.MediaType.TV, "Ut et ligula condimentum", "Description one", "/lorem"),
+                new Media(2L, fr.backendt.cinephobia.models.MediaType.MOVIE, "Nam ipsum sapien, aliquet", "Description two", "/ipsum")
         );
     }
 
@@ -69,294 +56,183 @@ class MediaControllerTests {
                 .andExpect(view().name("medias"))
                 .andExpect(model().hasNoErrors());
     }
+
     @Test
-    void getMediasWithoutParametersTest() throws Exception {
+    void getMediasTest() throws Exception {
         // GIVEN
         RequestBuilder request = get("/media")
                 .header("Hx-Request", "true");
 
-        Page<Media> returnedPage = new PageImpl<>(mediaList);
-        Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
-        Pageable expectedPageable = PageRequest.of(0, 50, defaultSort);
-        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
+        int defaultPage = 1;
+        SearchResults searchResults = new SearchResults(defaultPage, 1, mediaList.size(), mediaList);
 
-        when(service.getMediaPage(any(), any()))
-                .thenReturn(completedFuture(returnedPage));
-
+        when(service.getMedias(any(), anyInt())).thenReturn(completedFuture(searchResults));
         MvcResult result;
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
                 .andReturn();
+
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("mediasPage", expectedPage));
+                .andExpect(model().attribute("mediasPage", searchResults));
 
-        verify(service).getMediaPage(null, expectedPageable);
+        verify(service).getMedias(null, defaultPage);
     }
 
     @Test
     void getMediasWithSearchTest() throws Exception {
         // GIVEN
-        String search = "My media search";
+        String search = "java";
+
         RequestBuilder request = get("/media")
                 .header("Hx-Request", "true")
                 .param("search", search);
 
-        Page<Media> returnedPage = new PageImpl<>(mediaList);
-        Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
-        Pageable expectedPageable = PageRequest.of(0, 50, defaultSort);
-        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
+        int defaultPage = 1;
+        SearchResults searchResults = new SearchResults(defaultPage, 1, mediaList.size(), mediaList);
 
+        when(service.getMedias(any(), anyInt())).thenReturn(completedFuture(searchResults));
         MvcResult result;
-
-        when(service.getMediaPage(any(), any()))
-                .thenReturn(completedFuture(returnedPage));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
                 .andReturn();
+
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
                 .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("mediasPage", expectedPage));
+                .andExpect(model().attribute("mediasPage", searchResults));
 
-        verify(service).getMediaPage(search, expectedPageable);
-    }
-
-    @CsvSource({
-            "2,2",
-            "0,1",
-            "-2,1",
-            "499,499",
-            "500,500",
-            "501,500"
-    })
-    @ParameterizedTest
-    void getMediasWithSizeLimitTest(Integer sizeLimit, Integer expectedSizeLimit) throws Exception {
-        // GIVEN
-        RequestBuilder request = get("/media")
-                .header("Hx-Request", "true")
-                .param("size", String.valueOf(sizeLimit));
-
-        Page<Media> returnedPage = new PageImpl<>(mediaList);
-        Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
-        Pageable expectedPageable = PageRequest.of(0, expectedSizeLimit, defaultSort);
-        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
-
-        MvcResult result;
-
-        when(service.getMediaPage(any(), any()))
-                .thenReturn(completedFuture(returnedPage));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaList"))
-                .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("mediasPage", expectedPage));
-
-        verify(service).getMediaPage(null, expectedPageable);
-    }
-
-    @CsvSource({
-            "id", "title"
-    })
-    @ParameterizedTest
-    void getMediasWithSortingTest(String sortBy) throws Exception {
-        // GIVEN
-        RequestBuilder request = get("/media")
-                .header("Hx-Request", "true")
-                .param("sortBy", sortBy);
-
-        Page<Media> returnedPage = new PageImpl<>(mediaList);
-        Sort expectedSort = Sort.by(Sort.Direction.DESC, sortBy);
-        Pageable expectedPageable = PageRequest.of(0, 50, expectedSort);
-        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
-
-        MvcResult result;
-
-        when(service.getMediaPage(any(), any()))
-                .thenReturn(completedFuture(returnedPage));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaList"))
-                .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("mediasPage", expectedPage));
-
-        verify(service).getMediaPage(null, expectedPageable);
-    }
-
-    @CsvSource({
-            "asc,asc", "desc,desc", "invalid,desc"
-    })
-    @ParameterizedTest
-    void getMediasInOrderTest(String order, String expectedOrder) throws Exception {
-        // GIVEN
-        RequestBuilder request = get("/media")
-                .header("Hx-Request", "true")
-                .param("order", order);
-
-        String defaultSort = "id";
-        Page<Media> returnedPage = new PageImpl<>(mediaList);
-        Pageable expectedPageable = PageRequest.of(0, 50, Sort.by(Sort.Direction.fromString(expectedOrder), defaultSort));
-        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
-
-        MvcResult result;
-
-        when(service.getMediaPage(any(), any()))
-                .thenReturn(completedFuture(returnedPage));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaList"))
-                .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("mediasPage", expectedPage));
-
-        verify(service).getMediaPage(null, expectedPageable);
-    }
-
-    @CsvSource({
-        "-1,0", "0,0", "2,2"
-    })
-    @ParameterizedTest
-    void getMediaWithPageNumberTest(Integer pageIndex, Integer expectedIndex) throws Exception {
-        // GIVEN
-        RequestBuilder request = get("/media")
-                .header("Hx-Request", "true")
-                .param("page", String.valueOf(pageIndex));
-
-        Page<Media> returnedPage = new PageImpl<>(mediaList);
-        Sort expectedSort = Sort.by(Sort.Direction.DESC, "id");
-        Pageable expectedPageable = PageRequest.of(expectedIndex, 50, expectedSort);
-        Page<MediaDTO> expectedPage = new PageImpl<>(dtoList);
-
-        MvcResult result;
-
-        when(service.getMediaPage(any(), any()))
-                .thenReturn(completedFuture(returnedPage));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaList"))
-                .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("mediasPage", expectedPage));
-
-        verify(service).getMediaPage(null, expectedPageable);
+        verify(service).getMedias(search, defaultPage);
     }
 
     @Test
-    void getMediaTest() throws Exception {
+    void getMediasWithPageTest() throws Exception {
         // GIVEN
-        long mediaId = 1L;
-        Media media = mediaList.get(0);
-        MediaDTO expectedMediaDTO = dtoList.get(0);
-        RequestBuilder request = get("/media/" + mediaId);
+        int page = 4;
+        RequestBuilder request = get("/media")
+                .header("Hx-Request", "true")
+                .param("page", String.valueOf(page));
 
+        SearchResults searchResults = new SearchResults(page, page, mediaList.size(), mediaList);
+
+        when(service.getMedias(any(), anyInt())).thenReturn(completedFuture(searchResults));
         MvcResult result;
-
-        when(service.getMedia(any())).thenReturn(completedFuture(media));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
                 .andReturn();
+
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("media"))
+                .andExpect(view().name("fragments :: mediaList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("media", expectedMediaDTO));
+                .andExpect(model().attribute("mediasPage", searchResults));
 
-        verify(service).getMedia(mediaId);
+        verify(service).getMedias(null, page);
+    }
+
+    @Test
+    void getMovieTest() throws Exception {
+        // GIVEN
+        long movieId = 1L;
+        RequestBuilder request = get("/media/movie/" + movieId);
+
+        Media media = mediaList.get(0);
+        MvcResult result;
+
+        when(service.getMovie(any())).thenReturn(completedFuture(media));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("media", media))
+                .andExpect(view().name("media"));
+
+        verify(service, never()).getSeries(any());
+        verify(service).getMovie(movieId);
+    }
+
+    @Test
+    void getSeriesTest() throws Exception {
+        // GIVEN
+        long seriesId = 1L;
+        RequestBuilder request = get("/media/tv/" + seriesId);
+
+        Media media = mediaList.get(0);
+        MvcResult result;
+
+        when(service.getSeries(any())).thenReturn(completedFuture(media));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("media", media))
+                .andExpect(view().name("media"));
+
+        verify(service).getSeries(seriesId);
+        verify(service, never()).getMovie(any());
+    }
+
+    @Test
+    void getSeriesFromUnknownMediaTypeTest() throws Exception {
+        // GIVEN
+        long seriesId = 1L;
+        RequestBuilder request = get("/media/test/" + seriesId);
+
+        Media media = mediaList.get(0);
+        MvcResult result;
+
+        when(service.getSeries(any())).thenReturn(completedFuture(media));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("media", media))
+                .andExpect(view().name("media"));
+
+        verify(service).getSeries(seriesId);
+        verify(service, never()).getMovie(any());
     }
 
     @Test
     void getUnknownMediaTest() throws Exception {
         // GIVEN
-        long mediaId = 1L;
-        RequestBuilder request = get("/media/" + mediaId);
+        long movieId = 1L;
+        RequestBuilder request = get("/media/movie/" + movieId);
 
         MvcResult result;
 
-        when(service.getMedia(any()))
-                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("Media not found")));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isNotFound());
-
-        verify(service).getMedia(mediaId);
-    }
-
-    @Test
-    void getMediaEditForm() throws Exception {
-        // GIVEN
-        long mediaId = 1L;
-        RequestBuilder request = get("/admin/media/" + mediaId);
-
-        Media media = mediaList.get(0);
-        MediaDTO expectedMedia = dtoList.get(0);
-
-        MvcResult result;
-
-        when(service.getMedia(any())).thenReturn(completedFuture(media));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaForm"))
-                .andExpect(model().attribute("media", expectedMedia));
-
-        verify(service).getMedia(mediaId);
-    }
-
-    @Test
-    void getUnknownMediaEditForm() throws Exception {
-        // GIVEN
-        long mediaId = 1L;
-        RequestBuilder request = get("/admin/media/" + mediaId);
-
-        MvcResult result;
-
-        when(service.getMedia(any()))
-                .thenReturn(failedFuture(new EntityNotFoundException("Media not found")));
+        when(service.getMovie(any()))
+                .thenReturn(failedFuture(new EntityNotFoundException("Movie not found")));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -367,139 +243,7 @@ class MediaControllerTests {
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isNotFound());
 
-        verify(service).getMedia(mediaId);
+        verify(service).getMovie(movieId);
     }
 
-    @Test
-    void deleteMediaTest() throws Exception {
-        // GIVEN
-        long mediaId = 1L;
-        RequestBuilder request = delete("/admin/media/" + mediaId)
-                .with(csrf());
-
-        when(service.deleteMedia(any())).thenReturn(completedFuture(null));
-        // WHEN
-        mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(header().string("Hx-Redirect", "/media"));
-        // THEN
-        verify(service).deleteMedia(mediaId);
-    }
-
-    @Test
-    void deleteUnknownMediaTest() throws Exception {
-        // GIVEN
-        long mediaId = 1L;
-        RequestBuilder request = delete("/admin/media/" + mediaId)
-                .with(csrf());
-
-        when(service.deleteMedia(any()))
-                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("Media not found")));
-        // WHEN
-        mvc.perform(request)
-                .andExpect(status().isNotFound());
-        // THEN
-        verify(service).deleteMedia(mediaId);
-    }
-
-    @Test
-    void updateMediaTest() throws Exception {
-        // GIVEN
-        long mediaId = 1L;
-        MediaDTO mediaUpdate = new MediaDTO(null, "New Name", "  "); // Empty string will be null
-        Media mediaUpdateEntity = new Media(null, "New Name", null);
-        String mediaUpdateData = UrlEncodedFormSerializer.serialize(mediaUpdate);
-
-        RequestBuilder request = post("/admin/media/" + mediaId)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .content(mediaUpdateData)
-                .with(csrf());
-
-        Media media = mediaList.get(0);
-        MediaDTO expectedResult = dtoList.get(0);
-
-        MvcResult result;
-
-        when(service.updateMedia(any(), any()))
-                .thenReturn(completedFuture(media));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(model().hasNoErrors())
-                .andExpect(view().name("media :: media"))
-                .andExpect(model().attribute("media", expectedResult));
-
-        verify(service).updateMedia(mediaId, mediaUpdateEntity);
-    }
-
-    @CsvSource({
-            "a,",
-            "too longaaaaaaaaaaaaaaaaaaaaaaa,",
-            ",http://nothttps.com",
-            ",notanurl"
-    })
-    @ParameterizedTest
-    void updateInvalidMediaTest(String title, String imageUrl) throws Exception {
-        // GIVEN
-        long mediaId = 1L;
-        MediaDTO mediaUpdate = new MediaDTO(null, title, imageUrl); // Empty string will be null
-        String mediaUpdateData = UrlEncodedFormSerializer.serialize(mediaUpdate);
-
-        RequestBuilder request = post("/admin/media/" + mediaId)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .content(mediaUpdateData)
-                .with(csrf());
-
-        MvcResult result;
-
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaForm"))
-                .andExpect(model().hasErrors())
-                .andExpect(model().attribute("media", mediaUpdate));
-
-        verify(service, never()).updateMedia(any(), any());
-    }
-
-    @Test
-    void updateUnknownMediaTest() throws Exception {
-        // GIVEN
-        long mediaId = 1L;
-        MediaDTO mediaUpdate = new MediaDTO(null, "New Name", "  "); // Empty string will be null
-        Media mediaUpdateEntity = new Media(null, "New Name", null);
-        String mediaUpdateData = UrlEncodedFormSerializer.serialize(mediaUpdate);
-
-        RequestBuilder request = post("/admin/media/" + mediaId)
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .content(mediaUpdateData)
-                .with(csrf());
-
-        MvcResult result;
-
-        when(service.updateMedia(any(), any()))
-                .thenReturn(failedFuture(new EntityNotFoundException("Media not found")));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isNotFound());
-
-        verify(service).updateMedia(mediaId, mediaUpdateEntity);
-    }
 }

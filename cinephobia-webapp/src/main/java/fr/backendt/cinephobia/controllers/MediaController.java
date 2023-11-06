@@ -15,7 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.util.concurrent.CompletableFuture;
 
 @Controller
-public class MediaController { // TODO Update tests
+public class MediaController {
 
     private static final Logger LOGGER = Logger.getLogger(MediaController.class);
 
