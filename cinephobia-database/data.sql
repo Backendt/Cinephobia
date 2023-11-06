@@ -5,20 +5,12 @@ CREATE TABLE IF NOT EXISTS triggr(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS media(
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    title VARCHAR(30) NOT NULL,
-    image_url VARCHAR(255) NOT NULL,
-    PRIMARY KEY (id)
-);
-
 CREATE TABLE IF NOT EXISTS warn(
     id BIGINT NOT NULL AUTO_INCREMENT,
     triggr_id BIGINT NOT NULL,
     media_id BIGINT NOT NULL,
     exposition_level TINYINT NOT NULL,
     FOREIGN KEY (triggr_id) REFERENCES triggr(id),
-    FOREIGN KEY (media_id) REFERENCES media(id),
     PRIMARY KEY (id)
 );
 
