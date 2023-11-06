@@ -36,9 +36,12 @@ public class Media {
     private String posterPath;
 
     @Nullable
-    public String getImageUrl() {
+    public String getImageUrl(boolean highDefinition) {
         if(posterPath == null) return null;
-        return URI.create(TheMovieDBConfig.IMAGE_BASE_URL)
+        String baseUrl = highDefinition ?
+                TheMovieDBConfig.HD_IMAGE_BASE_URL :
+                TheMovieDBConfig.IMAGE_BASE_URL;
+        return URI.create(baseUrl)
                 .resolve('.' + posterPath)
                 .toString();
     }

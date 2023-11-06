@@ -7,7 +7,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class TheMovieDBConfig {
 
-    public static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original/";
+    public static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w400/";
+    public static final String HD_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original/";
     private static final String V3_API_URL = "https://api.themoviedb.org/3";
 
     @Bean
