@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.lang.Nullable;
 
 import java.net.URI;
-import java.util.Optional;
 
 @Data
 @Generated
@@ -36,16 +35,17 @@ public class Media {
     @JsonProperty("poster_path")
     private String posterPath;
 
-    public Optional<String> getImageUrl() {
-        return Optional.ofNullable(posterPath)
-                .map(imagePath -> URI.create(TheMovieDBConfig.IMAGE_BASE_URL)
-                        .resolve(posterPath)
-                        .toString());
+    @Nullable
+    public String getImageUrl() {
+        if(posterPath == null) return null;
+        return URI.create(TheMovieDBConfig.IMAGE_BASE_URL)
+                .resolve('.' + posterPath)
+                .toString();
     }
 
     public String getMediaUri() {
-        return URI.create("/media")
-                .resolve(type.name().toLowerCase())
+        return URI.create("/media/")
+                .resolve(type.name().toLowerCase() + '/')
                 .resolve(String.valueOf(id))
                 .toString();
     }
