@@ -3,7 +3,7 @@ FROM eclipse-temurin:17 AS builder
 WORKDIR /tmp/cinephobia
 COPY . .
 
-RUN ./mvnw install -DskipTests
+RUN ./mvnw install -P css -DskipTests
 
 FROM eclipse-temurin:17
 
