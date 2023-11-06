@@ -97,7 +97,9 @@ public class MediaRepository {
 
             Media movie = i < movies.size() ? movies.get(i) : null;
             Media serie = i < series.size() ? series.get(i) : null;
-            Media media = isPair && movie != null ? movie : serie;
+
+            boolean nextIsMovie = serie == null || movie != null && isPair;
+            Media media = nextIsMovie ? movie : serie;
             medias.add(media);
         }
 

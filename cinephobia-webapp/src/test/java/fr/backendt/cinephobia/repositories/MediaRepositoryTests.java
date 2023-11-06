@@ -96,6 +96,7 @@ class MediaRepositoryTests {
         assertThat(result.getCurrentPage()).isEqualTo(page);
         assertThat(result.getTotalResults()).isGreaterThanOrEqualTo(expectedResultAmount); // Should be equal, but adding a movie would fail the test
         assertThat(result.getResults().get(0)).hasNoNullFieldsOrPropertiesExcept("posterPath");
+        assertThat(result.getResults()).doesNotContainNull();
     }
 
     @Test
