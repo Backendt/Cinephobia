@@ -16,8 +16,10 @@ function openSearchbar(event) {
 }
 
 function onDOMLoaded() {
+    let letterA = 65;
+    let letterZ = 90;
     window.addEventListener("keydown", (event) => {
-        let isCharacter = 91 > event.keyCode && event.keyCode > 64;
+        let isCharacter = letterZ >= event.keyCode && event.keyCode >= letterA;
         if(!event.isComposing && isCharacter) {
             openSearchbar(event);
         }
