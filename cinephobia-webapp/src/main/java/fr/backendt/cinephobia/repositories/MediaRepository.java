@@ -49,7 +49,7 @@ public class MediaRepository {
                 .retrieve()
                 .onStatus(code -> code.isSameCodeAs(HttpStatus.FORBIDDEN), response -> Mono.error(invalidTokenException))
                 .toBodilessEntity()
-                .block(TIMEOUT_DURATION);
+                .block();
     }
 
     public Optional<Media> getMovie(Long id) {
