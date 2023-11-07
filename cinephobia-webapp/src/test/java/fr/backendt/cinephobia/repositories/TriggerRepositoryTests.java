@@ -7,8 +7,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,62 +50,71 @@ class TriggerRepositoryTests {
     }
 
     @Test
-    void getTriggersContainingNameTest() {
+    void searchTriggersNameTest() {
         // GIVEN
         String fullName = "Testphobia";
         String namePart = "estp";
-        List<Trigger> results;
+        Pageable pageRequest = PageRequest.of(0, 5);
+
+        int sizeExpected = 1;
+        Page<Trigger> results;
 
         // WHEN
-        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(namePart, namePart);
+        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(namePart, namePart, pageRequest);
 
         // THEN
-        assertThat(results).isNotEmpty();
-        assertThat(results.get(0).getName()).isEqualTo(fullName);
+        assertThat(results.getTotalElements()).isEqualTo(sizeExpected);
+        assertThat(results.getContent()).hasSize(sizeExpected);
+        assertThat(results.getContent().get(0).getName()).isEqualTo(fullName);
     }
 
     @Test
-    void getTriggersContainingDescriptionTest() {
+    void searchTriggersDescriptionTest() {
         // GIVEN
         String fullDescription = "Fear of software bugs";
         String descriptionPart = "Soft";
-        List<Trigger> results;
+        Pageable pageRequest = PageRequest.of(0, 5);
+
+        int sizeExpected = 1;
+        Page<Trigger> results;
 
         // WHEN
-        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(descriptionPart, descriptionPart);
+        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(descriptionPart, descriptionPart, pageRequest);
 
         // THEN
-        assertThat(results).isNotEmpty();
-        assertThat(results.get(0).getDescription()).isEqualTo(fullDescription);
+        assertThat(results.getTotalElements()).isEqualTo(sizeExpected);
+        assertThat(results.getContent()).hasSize(sizeExpected);
+        assertThat(results.getContent().get(0).getDescription()).isEqualTo(fullDescription);
     }
     @Test
-    void failToGetTriggersContainingNameOrDescriptionTest() {
+    void searchUnknownTriggers() {
         // GIVEN
-        List<Trigger> results;
+        Page<Trigger> results;
         String incorrectSearch = "techno";
+        Pageable pageRequest = PageRequest.of(0, 5);
 
         // WHEN
-        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(incorrectSearch, incorrectSearch);
+        results = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(incorrectSearch, incorrectSearch, pageRequest);
 
         // THEN
-        assertThat(results).isEmpty();
+        assertThat(results.getTotalElements()).isZero();
+        assertThat(results.getContent()).isEmpty();
     }
 
     @Test
     void deleteTriggerByIdTest() {
         // GIVEN
-        Long triggerId = 1L;
-        Optional<Trigger> resultBefore;
-        Optional<Trigger> resultAfter;
+        long triggerId = 1L;
+        boolean existsBefore, existsAfter;
 
         // WHEN
-        resultBefore = repository.findById(triggerId);
+        existsBefore = repository.existsById(triggerId);
         repository.deleteById(triggerId);
-        resultAfter = repository.findById(triggerId);
+        existsAfter = repository.existsById(triggerId);
 
         // THEN
-        assertThat(resultBefore).isNotEmpty();
-        assertThat(resultAfter).isEmpty();
+        assertThat(existsBefore).isTrue();
+        assertThat(existsAfter).isFalse();
     }
 
     @CsvSource({
