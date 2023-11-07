@@ -6,6 +6,10 @@ import fr.backendt.cinephobia.repositories.TriggerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,16 +26,19 @@ class TriggerServiceTests {
     private TriggerRepository repository;
     private TriggerService service;
 
+    private Trigger trigger;
+
     @BeforeEach
     void initTests() {
         repository = Mockito.mock(TriggerRepository.class);
         service = new TriggerService(repository);
+
+        trigger = new Trigger(1L, "Testphobia", "Fear of tests");
     }
 
     @Test
     void createTriggerTest() throws EntityException {
         // GIVEN
-        Trigger trigger = new Trigger(1L, "Testphobia", "Fear of tests");
         Trigger expected = new Trigger(trigger);
         expected.setId(null);
         Trigger result;
@@ -51,8 +58,6 @@ class TriggerServiceTests {
     @Test
     void failToCreateDuplicateTriggerTest() {
         // GIVEN
-        Trigger trigger = new Trigger(1L, "Testphobia", "Fear of tests");
-
         when(repository.existsByNameIgnoreCase(any()))
                 .thenReturn(true);
         // THEN
@@ -66,44 +71,53 @@ class TriggerServiceTests {
     }
 
     @Test
-    void getAllTriggersTest() {
+    void getTriggersTest() {
         // GIVEN
-        Trigger trigger = new Trigger(1L, "Testphobia", "Fear of tests");
         List<Trigger> triggers = List.of(trigger);
-        List<Trigger> results;
 
-        when(repository.findAll()).thenReturn(triggers);
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Trigger> triggerPage = new PageImpl<>(triggers);
+
+        Page<Trigger> results;
+
+        when(repository.findAll(any(Pageable.class))).thenReturn(triggerPage);
         // WHEN
-        results = service.getAllTriggers().join();
+        results = service.getTriggers(null, pageable).join();
 
         // THEN
-        verify(repository).findAll();
-        assertThat(results).containsExactly(trigger);
+        verify(repository).findAll(pageable);
+        verify(repository, never()).findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(any(), any(), any());
+        assertThat(results).isEqualTo(triggerPage);
+        assertThat(results.getContent()).containsExactlyElementsOf(triggers);
     }
 
     @Test
-    void getTriggersContainingNameTest() {
+    void getTriggersWithSearchTest() {
         // GIVEN
-        Trigger trigger = new Trigger(1L, "Testphobia", "Fear of tests");
-        String searchString = "test";
+        String search = "test";
         List<Trigger> triggers = List.of(trigger);
-        List<Trigger> results;
 
-        when(repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(any(), any()))
-                .thenReturn(triggers);
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Trigger> triggersPage = new PageImpl<>(triggers);
+
+        Page<Trigger> results;
+
+        when(repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(any(), any(), any()))
+                .thenReturn(triggersPage);
         // WHEN
-        results = service.getTriggersContainingString(searchString).join();
+        results = service.getTriggers(search, pageable).join();
 
         // THEN
-        verify(repository).findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(searchString, searchString);
-        assertThat(results).containsExactly(trigger);
+        verify(repository).findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(search, search, pageable);
+        verify(repository, never()).findAll(any(Pageable.class));
+        assertThat(results).isEqualTo(triggersPage);
+        assertThat(results.getContent()).containsExactlyElementsOf(triggers);
     }
 
     @Test
     void getTriggerByIdTest() throws EntityNotFoundException {
         // GIVEN
         Long triggerId = 1L;
-        Trigger trigger = new Trigger(triggerId, "Testphobia", "Fear of tests");
         Trigger result;
 
         when(repository.findById(any())).thenReturn(Optional.of(trigger));
@@ -128,6 +142,106 @@ class TriggerServiceTests {
 
         // THEN
         verify(repository).findById(triggerId);
+    }
+
+    @Test
+    void updateTriggerTest() {
+        // GIVEN
+        long triggerId = 1L;
+        String newName = "New trigger";
+
+        Trigger triggerUpdate = new Trigger();
+        triggerUpdate.setName(newName);
+
+        Trigger expectedTrigger = new Trigger(trigger);
+        expectedTrigger.setName(newName);
+
+        Trigger result;
+
+        when(repository.existsByNameIgnoreCase(any())).thenReturn(false);
+        when(repository.findById(any())).thenReturn(Optional.of(trigger));
+        when(repository.save(any())).thenReturn(expectedTrigger);
+        // WHEN
+        result = service.updateTrigger(triggerId, triggerUpdate).join();
+
+        // THEN
+        verify(repository).existsByNameIgnoreCase(newName);
+        verify(repository).findById(triggerId);
+        verify(repository).save(expectedTrigger);
+        assertThat(result).isEqualTo(expectedTrigger);
+    }
+
+    @Test
+    void updateToDuplicateTriggerTest() {
+        // GIVEN
+        long triggerId = 1L;
+        String newName = "New trigger";
+
+        Trigger triggerUpdate = new Trigger();
+        triggerUpdate.setName(newName);
+
+        when(repository.existsByNameIgnoreCase(any())).thenReturn(true);
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.updateTrigger(triggerId, triggerUpdate).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
+
+        // THEN
+        verify(repository).existsByNameIgnoreCase(newName);
+        verify(repository, never()).findById(any());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void updateUnknownTriggerTest() {
+        // GIVEN
+        long triggerId = 1L;
+        String newName = "New trigger";
+
+        Trigger triggerUpdate = new Trigger();
+        triggerUpdate.setName(newName);
+
+        when(repository.existsByNameIgnoreCase(any())).thenReturn(false);
+        when(repository.findById(any())).thenReturn(Optional.empty());
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.updateTrigger(triggerId, triggerUpdate).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
+
+        // THEN
+        verify(repository).existsByNameIgnoreCase(newName);
+        verify(repository).findById(triggerId);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deleteTriggerTest() {
+        // GIVEN
+        long triggerId = 1L;
+
+        when(repository.existsById(any())).thenReturn(true);
+        // WHEN
+        service.deleteTrigger(triggerId).join();
+
+        // THEN
+        verify(repository).existsById(triggerId);
+        verify(repository).deleteById(triggerId);
+    }
+
+    @Test
+    void deleteUnknownTriggerTest() {
+        // GIVEN
+        long triggerId = 1L;
+
+        when(repository.existsById(any())).thenReturn(false);
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.deleteTrigger(triggerId).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
+
+        // THEN
+        verify(repository).existsById(triggerId);
+        verify(repository, never()).deleteById(any());
     }
 
 }

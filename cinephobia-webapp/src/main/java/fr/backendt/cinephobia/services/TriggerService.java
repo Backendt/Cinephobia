@@ -3,10 +3,13 @@ package fr.backendt.cinephobia.services;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.repositories.TriggerRepository;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
@@ -36,14 +39,10 @@ public class TriggerService {
     }
 
     @Async
-    public CompletableFuture<List<Trigger>> getAllTriggers() {
-        List<Trigger> triggers = repository.findAll();
-        return completedFuture(triggers);
-    }
-
-    @Async
-    public CompletableFuture<List<Trigger>> getTriggersContainingString(String search) {
-        List<Trigger> triggers = repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(search, search);
+    public CompletableFuture<Page<Trigger>> getTriggers(@Nullable String search, Pageable pageable) {
+        Page<Trigger> triggers = search != null ?
+                repository.findAllByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(search, search, pageable) :
+                repository.findAll(pageable);
         return completedFuture(triggers);
     }
 
@@ -54,6 +53,39 @@ public class TriggerService {
                 .orElse(failedFuture(
                         new EntityNotFoundException("Trigger not found")
                 ));
+    }
+
+    @Async
+    public CompletableFuture<Trigger> updateTrigger(Long id, Trigger triggerUpdate) throws EntityNotFoundException {
+        if(triggerUpdate.getName() != null) {
+            String newName = triggerUpdate.getName();
+            boolean triggerAlreadyExists = repository.existsByNameIgnoreCase(newName);
+            if(triggerAlreadyExists) {
+                return failedFuture(new EntityException("Trigger already exists"));
+            }
+        }
+
+        ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration().setSkipNullEnabled(true);
+        return repository.findById(id)
+                .map(trigger -> {
+                    mapper.map(triggerUpdate, trigger);
+                    Trigger savedTrigger = repository.save(trigger);
+                    return completedFuture(savedTrigger);
+                })
+                .orElse(failedFuture(
+                        new EntityNotFoundException("Trigger not found")
+                ));
+    }
+
+    @Async
+    public CompletableFuture<Void> deleteTrigger(Long id) throws EntityNotFoundException {
+        boolean triggerExists = repository.existsById(id);
+        if(!triggerExists) {
+            return failedFuture(new EntityNotFoundException("Trigger not found"));
+        }
+        repository.deleteById(id);
+        return completedFuture(null);
     }
 
 }
