@@ -35,7 +35,7 @@ public class MediaController {
         if(page < 1) page = 1;
 
         return service.getMedias(search, page)
-                .thenApply(searchResults -> new ModelAndView("fragments :: mediaList")
+                .thenApply(searchResults -> new ModelAndView("fragments/medias :: mediaList")
                         .addObject("mediasPage", searchResults))
                 .exceptionally(exception -> {
                     LOGGER.error("Could not get media page.", exception.getCause());

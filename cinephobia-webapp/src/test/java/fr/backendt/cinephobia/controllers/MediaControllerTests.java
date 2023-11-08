@@ -77,7 +77,7 @@ class MediaControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(view().name("fragments/medias :: mediaList"))
                 .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("mediasPage", searchResults));
 
@@ -107,7 +107,7 @@ class MediaControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(view().name("fragments/medias :: mediaList"))
                 .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("mediasPage", searchResults));
 
@@ -135,7 +135,7 @@ class MediaControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("fragments :: mediaList"))
+                .andExpect(view().name("fragments/medias :: mediaList"))
                 .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("mediasPage", searchResults));
 
