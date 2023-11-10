@@ -61,7 +61,7 @@ class TriggerControllerTests {
                 .andExpect(model().hasNoErrors());
     }
 
-    @CsvSource({"","test"})
+    @CsvSource(value = {"null","test"}, nullValues = "null")
     @ParameterizedTest
     void getTriggersTest(String search) throws Exception {
         // GIVEN
