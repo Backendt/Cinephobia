@@ -52,7 +52,7 @@ public class MediaController {
         return mediaFuture
                 .thenApply(media -> new ModelAndView("media")
                         .addObject("media", media))
-                .exceptionally(exception -> {
+                .exceptionally(exception -> { // TODO Can be removed
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found.");
                 });
     }
