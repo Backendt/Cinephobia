@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html lang="en" xmlns:th="http://thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http:/thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -28,6 +29,12 @@
             <li class="nav-item">
               <a class="nav-link" href="/media">Medias</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/trigger">Triggers</a>
+            </li>
+            <li sec:authorize="hasRole('ADMIN')" class="nav-item">
+              <a class="nav-link" href="/admin/user">Users</a>
+            </li>
             <li class="nav-item"> <!-- Separator -->
               <span class="vr d-none d-lg-flex h-100 mx-lg-2" style="color: white"></span>
             </li>
@@ -39,22 +46,9 @@
                 <a class="nav-link" href="/register">Register</a>
               </li>
             </th:block>
-            <th:block sec:authorize="isFullyAuthenticated()">
-              <li class="nav-item">
-                <a class="nav-link" href="/profile">Profile</a>
-              </li>
-              <th:block sec:authorize="hasRole('ADMIN')"> <!-- Admin menu -->
-                <div class="dropdown nav-item d-flex flex-column">
-                  <button class="dropdown-toggle nav-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Admin
-                  </button>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/admin/user">Users</a></li>
-                    <li><a class="dropdown-item" href="/admin/trigger">Triggers</a></li>
-                  </ul>
-                </div>
-              </th:block>
-            </th:block>
+            <li sec:authorize="isFullyAuthenticated()" class="nav-item">
+              <a class="nav-link" href="/profile">Profile</a>
+            </li>
           </ul>
         </div>
       </div> <!-- End of collapsable menu -->
