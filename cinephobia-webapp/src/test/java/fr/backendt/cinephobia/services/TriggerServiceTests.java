@@ -180,6 +180,7 @@ class TriggerServiceTests {
         Trigger triggerUpdate = new Trigger();
         triggerUpdate.setName(newName);
 
+        when(repository.findById(any())).thenReturn(Optional.of(trigger));
         when(repository.existsByNameIgnoreCase(any())).thenReturn(true);
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
@@ -187,8 +188,8 @@ class TriggerServiceTests {
                 .withCauseExactlyInstanceOf(EntityException.class);
 
         // THEN
+        verify(repository).findById(triggerId);
         verify(repository).existsByNameIgnoreCase(newName);
-        verify(repository, never()).findById(any());
         verify(repository, never()).save(any());
     }
 
@@ -201,7 +202,6 @@ class TriggerServiceTests {
         Trigger triggerUpdate = new Trigger();
         triggerUpdate.setName(newName);
 
-        when(repository.existsByNameIgnoreCase(any())).thenReturn(false);
         when(repository.findById(any())).thenReturn(Optional.empty());
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
@@ -209,8 +209,8 @@ class TriggerServiceTests {
                 .withCauseExactlyInstanceOf(EntityNotFoundException.class);
 
         // THEN
-        verify(repository).existsByNameIgnoreCase(newName);
         verify(repository).findById(triggerId);
+        verify(repository, never()).existsByNameIgnoreCase(any());
         verify(repository, never()).save(any());
     }
 

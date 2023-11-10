@@ -57,25 +57,28 @@ public class TriggerService {
 
     @Async
     public CompletableFuture<Trigger> updateTrigger(Long id, Trigger triggerUpdate) throws EntityNotFoundException {
-        if(triggerUpdate.getName() != null) {
-            String newName = triggerUpdate.getName();
-            boolean triggerAlreadyExists = repository.existsByNameIgnoreCase(newName);
-            if(triggerAlreadyExists) {
-                return failedFuture(new EntityException("Trigger already exists"));
-            }
-        }
-
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setSkipNullEnabled(true);
-        return repository.findById(id)
-                .map(trigger -> {
-                    mapper.map(triggerUpdate, trigger);
-                    Trigger savedTrigger = repository.save(trigger);
-                    return completedFuture(savedTrigger);
-                })
-                .orElse(failedFuture(
-                        new EntityNotFoundException("Trigger not found")
-                ));
+
+        triggerUpdate.setId(null);
+        CompletableFuture<Trigger> currentTrigger = repository.findById(id)
+                .map(CompletableFuture::completedFuture)
+                .orElse(failedFuture(new EntityNotFoundException("Trigger not found")));
+
+        return currentTrigger.thenCompose(trigger -> {
+            boolean isChangingTriggerName = triggerUpdate.getName() != null && !trigger.getName().equals(triggerUpdate.getName());
+            if(isChangingTriggerName) {
+                String newName = triggerUpdate.getName();
+                boolean triggerAlreadyExists = repository.existsByNameIgnoreCase(newName);
+                if(triggerAlreadyExists) {
+                    return failedFuture(new EntityException("Trigger already exists"));
+                }
+            }
+
+            mapper.map(triggerUpdate, trigger);
+            Trigger savedTrigger = repository.save(trigger);
+            return completedFuture(savedTrigger);
+        });
     }
 
     @Async
