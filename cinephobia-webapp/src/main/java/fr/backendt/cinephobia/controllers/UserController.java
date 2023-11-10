@@ -150,9 +150,6 @@ public class UserController {
                 .thenApply(future -> HtmxResponse.builder()
                         .redirect("/")
                         .build())
-                .exceptionally(exception -> {
-                    throw new ResponseStatusException(NOT_FOUND, "User not found");
-                })
                 .join();
     }
 

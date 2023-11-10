@@ -49,12 +49,9 @@ public class MediaController {
                 service.getMovie(id) :
                 service.getSeries(id);
 
-        return mediaFuture
-                .thenApply(media -> new ModelAndView("media")
-                        .addObject("media", media))
-                .exceptionally(exception -> { // TODO Can be removed
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Media not found.");
-                });
+        return mediaFuture.thenApply(media ->
+                new ModelAndView("media")
+                        .addObject("media", media));
     }
 
 }
