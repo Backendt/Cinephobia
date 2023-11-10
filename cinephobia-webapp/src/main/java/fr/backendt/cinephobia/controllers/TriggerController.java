@@ -1,9 +1,11 @@
 package fr.backendt.cinephobia.controllers;
 
+import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.dto.TriggerDTO;
 import fr.backendt.cinephobia.services.TriggerService;
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 import org.jboss.logging.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
@@ -21,25 +24,26 @@ import java.util.concurrent.CompletableFuture;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 @Controller
-public class TriggerController { // TODO Write tests
+public class TriggerController {
 
     private static final Logger LOGGER = Logger.getLogger(TriggerController.class);
 
     private final TriggerService service;
+    private final ModelMapper mapper;
 
     public TriggerController(TriggerService service) {
         this.service = service;
+        this.mapper = new ModelMapper();
     }
 
     @PostMapping("/admin/trigger")
-    public CompletableFuture<ModelAndView> createTrigger(@Valid TriggerDTO dto, BindingResult results) {
+    public CompletableFuture<ModelAndView> createTrigger(@Validated({Default.class, NotNull.class}) @ModelAttribute("trigger") TriggerDTO dto, BindingResult results) {
         ModelAndView errorModel = new ModelAndView("fragments/triggers :: triggerForm");
         if(results.hasErrors()) {
             return completedFuture(
                     errorModel.addObject("trigger", dto)
             );
         }
-        ModelMapper mapper = new ModelMapper();
         Trigger trigger = mapper.map(dto, Trigger.class);
 
         return service.createTrigger(trigger)
@@ -86,19 +90,21 @@ public class TriggerController { // TODO Write tests
     @GetMapping("/admin/trigger/{id}")
     public CompletableFuture<ModelAndView> getTriggerUpdateForm(@PathVariable Long id) {
         return service.getTrigger(id)
-                .thenApply(trigger -> new ModelAndView("fragments/triggers :: triggerForm")
-                        .addObject("trigger", trigger));
+                .thenApply(trigger -> {
+                    TriggerDTO triggerDto = mapper.map(trigger, TriggerDTO.class);
+                    return new ModelAndView("fragments/triggers :: triggerForm")
+                        .addObject("trigger", triggerDto);
+            });
     }
 
     @PostMapping("/admin/trigger/{id}")
-    public CompletableFuture<ModelAndView> updateTrigger(@PathVariable Long id, @Valid TriggerDTO dto, BindingResult results) {
+    public CompletableFuture<ModelAndView> updateTrigger(@PathVariable Long id, @Validated @ModelAttribute("trigger") TriggerDTO dto, BindingResult results) {
         ModelAndView errorModel = new ModelAndView("fragments/triggers :: triggerForm");
         if(results.hasErrors()) {
             return completedFuture(
                     errorModel.addObject("trigger", dto)
             );
         }
-        ModelMapper mapper = new ModelMapper();
         Trigger trigger = mapper.map(dto, Trigger.class);
 
         return service.updateTrigger(id, trigger)
@@ -106,7 +112,13 @@ public class TriggerController { // TODO Write tests
                     TriggerDTO savedDto = mapper.map(savedTrigger, TriggerDTO.class);
                     return new ModelAndView("fragments/triggers :: trigger")
                             .addObject("trigger", savedDto);
-                }); // TODO Catch exceptions
+                }).exceptionally(exception -> {
+                    if(exception.getCause() instanceof EntityException.EntityNotFoundException notFoundException) {
+                        throw notFoundException;
+                    }
+                    results.rejectValue("name", "already-exists", "Trigger already exists");
+                    return errorModel.addObject("trigger", dto);
+                });
     }
 
     @DeleteMapping("/admin/trigger/{id}")
