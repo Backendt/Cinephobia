@@ -7,11 +7,11 @@
 </head>
 <body>
     <section layout:fragment="content">
-        <div sec:authorize="hasRole('ADMIN')" class="container d-flex justify-content-end">
+        <div sec:authorize="hasRole('ADMIN')" class="container d-flex justify-content-end py-2">
             <button type="button" title="Add trigger" class="btn btn-primary" hx-get="/admin/trigger" hx-swap="afterbegin" hx-target="#triggers">+</button>
         </div>
         <input type="hidden" id="search" name="search" th:value="${param.search}">
-        <div id="triggers" hx-trigger="load" hx-get="/trigger" hx-swap="innerHTML" hx-include="#search" class="container-xxl list-group my-3" hx-boost="true">
+        <div id="triggers" hx-trigger="load" hx-get="/trigger" hx-swap="innerHTML" hx-include="#search" class="container list-group ps-2" hx-boost="true">
             <div class="d-flex justify-content-center">
                 <span class="spinner-border" role="status"></span>
             </div>

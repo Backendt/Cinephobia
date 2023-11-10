@@ -9,7 +9,7 @@
 <body>
     <section layout:fragment="content">
         <input type="hidden" id="search" name="search" th:value="${param.search}">
-        <div hx-trigger="load" hx-get="/media" hx-swap="innerHTML" hx-include="#search" class="container-xxl row py-3 m-auto">
+        <div hx-trigger="load" hx-get="/media" hx-swap="innerHTML" hx-include="#search" class="container-xxl row m-auto">
             <div class="d-flex justify-content-center">
                 <span class="spinner-border" role="status"></span>
             </div>
