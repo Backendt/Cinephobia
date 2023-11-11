@@ -28,16 +28,18 @@
   </div>
 </th:block>
 
-<form class="list-group-item d-flex justify-content-between align-items-start" th:fragment="triggerForm(trigger)" th:object="${trigger}" hx:post="${trigger.id != null} ? @{/admin/trigger/{id}(id=${trigger.id})} : '/admin/trigger'" hx-swap="outerHTML"> <!-- TODO Add error messages -->
+<form class="list-group-item d-flex justify-content-between align-items-start" th:fragment="triggerForm(trigger)" th:object="${trigger}" hx:post="${trigger.id != null} ? @{/admin/trigger/{id}(id=${trigger.id})} : '/admin/trigger'" hx-swap="outerHTML">
   <div class="ms-2 me-auto">
     <label>
       Name
       <input type="text" th:field="*{name}" placeholder="Name">
     </label>
+    <p th:if="${#fields.hasErrors('name')}" class="alert alert-danger" th:errors="*{name}"></p>
     <label>
       Description
       <input type="text" th:field="*{description}" placeholder="Description">
     </label>
+    <p th:if="${#fields.hasErrors('description')}" class="alert alert-danger" th:errors="*{description}"></p>
   </div>
   <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
   <input type="submit" class="btn btn-primary" value="Submit">
