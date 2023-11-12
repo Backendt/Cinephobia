@@ -12,7 +12,7 @@ function openSearchbar(event) {
     let searchModal = document.querySelector(SEARCHBAR);
 
     searchModal.focus();
-    searchModal.value = event.key;
+    searchModal.value += event.key;
 }
 
 function onDOMLoaded() {
