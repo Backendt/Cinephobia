@@ -23,10 +23,10 @@ CREATE TABLE IF NOT EXISTS users(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS users_warns(
-    warn_id BIGINT NOT NULL,
+CREATE TABLE IF NOT EXISTS users_triggers(
     user_id BIGINT NOT NULL,
-    FOREIGN KEY (warn_id) REFERENCES warn(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    trigger_id BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (trigger_id) REFERENCES triggr(id)
 );
 
