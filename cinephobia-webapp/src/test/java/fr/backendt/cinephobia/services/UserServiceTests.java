@@ -5,6 +5,8 @@ import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -154,61 +156,47 @@ class UserServiceTests {
         String userEmail = "user@test.com";
         User result;
 
-        when(repository.findByEmail(any()))
+        when(repository.findByEmailIgnoreCase(any()))
                 .thenReturn(Optional.of(testUser));
         // WHEN
-        result = service.getUserByEmail(userEmail).join();
+        result = service.getUserByEmail(userEmail, false).join();
 
         // THEN
-        verify(repository).findByEmail(userEmail);
+        verify(repository).findByEmailIgnoreCase(userEmail);
+        verify(repository, never()).findUserWithRelationsByEmail(userEmail);
         assertThat(result).isEqualTo(testUser);
     }
 
     @Test
-    void getUnknownUserByEmail() {
+    void getUserWithRelationsByEmailTest() throws EntityNotFoundException {
+        // GIVEN
+        String userEmail = "user@test.com";
+        User result;
+
+        when(repository.findUserWithRelationsByEmail(any()))
+                .thenReturn(Optional.of(testUser));
+        // WHEN
+        result = service.getUserByEmail(userEmail, true).join();
+
+        // THEN
+        verify(repository).findUserWithRelationsByEmail(userEmail);
+        verify(repository, never()).findByEmailIgnoreCase(userEmail);
+        assertThat(result).isEqualTo(testUser);
+    }
+
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    void getUnknownUserByEmail(boolean withRelations) {
         // GIVEN
         String unknownEmail = "unknown@test.com";
 
-        when(repository.findByEmail(any()))
+        when(repository.findByEmailIgnoreCase(any()))
                 .thenReturn(Optional.empty());
         // WHEN
         // THEN
         assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.getUserByEmail(unknownEmail).join())
+                .isThrownBy(() -> service.getUserByEmail(unknownEmail, withRelations).join())
                 .withCauseExactlyInstanceOf(EntityNotFoundException.class);
-    }
-
-    @Test
-    void getUserIdByEmailTest() {
-        // GIVEN
-        String userEmail = testUser.getEmail().toUpperCase();
-        long userId = 1L;
-        Long result;
-
-        when(repository.findIdByEmailIgnoreCase(any()))
-                .thenReturn(Optional.of(userId));
-        // WHEN
-        result = service.getUserIdByEmail(userEmail).join();
-
-        // THEN
-        verify(repository).findIdByEmailIgnoreCase(userEmail);
-        assertThat(result).isEqualTo(userId);
-    }
-
-    @Test
-    void getUnknownUserIdByEmailTest() {
-        // GIVEN
-        String unknownEmail = "unknown@test.com";
-
-        when(repository.findIdByEmailIgnoreCase(any()))
-                .thenReturn(Optional.empty());
-        // WHEN
-        // THEN
-        assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.getUserIdByEmail(unknownEmail).join())
-                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
-
-        verify(repository).findIdByEmailIgnoreCase(unknownEmail);
     }
 
     @Test
@@ -246,54 +234,71 @@ class UserServiceTests {
     }
 
     @Test
-    void updateUserByIdTest() throws EntityNotFoundException {
+    void updateUserTest() {
         // GIVEN
-        Long userId = 1L;
-        User userUpdate = new User();
-
         String newEmail = "new@test.com";
+
+        User userUpdate = new User();
+        userUpdate.setId(2L); // ID should be removed
         userUpdate.setEmail(newEmail);
 
-        User updatedUser = new User(testUser);
+        User currentUser = new User(testUser);
+        currentUser.setId(1L);
+
+        User updatedUser = new User(currentUser);
         updatedUser.setEmail(newEmail);
 
         User result;
 
-        when(repository.findIdByEmailIgnoreCase(any()))
-                .thenReturn(Optional.of(userId));
-        when(repository.findById(any()))
-                .thenReturn(Optional.of(testUser)); // Used in getUser(id)
-        when(repository.save(any()))
-                .thenReturn(updatedUser);
+        when(repository.save(any())).thenReturn(currentUser);
+        when(repository.existsByEmailIgnoreCase(any())).thenReturn(false);
         // WHEN
-        result = service.updateUserById(userId, userUpdate).join();
+        result = service.updateUser(currentUser, userUpdate).join();
 
         // THEN
-        verify(repository).findIdByEmailIgnoreCase(newEmail);
-        verify(repository).findById(userId); // Used in getUser(id)
         verify(repository).save(updatedUser);
-
+        verify(repository).existsByEmailIgnoreCase(newEmail);
         assertThat(result).isEqualTo(updatedUser);
     }
 
     @Test
-    void updateUserByIdDoesntUpdateIdTest() throws EntityNotFoundException {
+    void updateUserToTakenEmailTest() {
         // GIVEN
-        Long userId = 1L;
+        String newEmail = "taken@test.com";
 
         User userUpdate = new User();
-        Long newId = 2L;
-        userUpdate.setId(newId);
-        String newEmail = "new@test.com";
+        userUpdate.setId(2L); // ID should be removed
         userUpdate.setEmail(newEmail);
 
+        User currentUser = new User(testUser);
+        currentUser.setId(1L);
+
+        when(repository.save(any())).thenReturn(currentUser);
+        when(repository.existsByEmailIgnoreCase(any())).thenReturn(true);
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.updateUser(currentUser, userUpdate).join())
+                .withCauseExactlyInstanceOf(EntityException.class);
+
+        // THEN
+        verify(repository).existsByEmailIgnoreCase(newEmail);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void updateUserByIdTest() {
+        // GIVEN
+        Long userId = 1L;
+        String newName = "New Name";
+
+        User userUpdate = new User();
+        userUpdate.setDisplayName(newName);
+
         User updatedUser = new User(testUser);
-        updatedUser.setEmail(newEmail);
+        updatedUser.setDisplayName(newName);
 
         User result;
 
-        when(repository.findIdByEmailIgnoreCase(any()))
-                .thenReturn(Optional.of(userId));
         when(repository.findById(any()))
                 .thenReturn(Optional.of(testUser));
         when(repository.save(any()))
@@ -302,7 +307,6 @@ class UserServiceTests {
         result = service.updateUserById(userId, userUpdate).join();
 
         // THEN
-        verify(repository).findIdByEmailIgnoreCase(testUser.getEmail());
         verify(repository).findById(userId);
         verify(repository).save(updatedUser);
 
@@ -312,48 +316,75 @@ class UserServiceTests {
     @Test
     void updateUnknownUserByIdTest() {
         // GIVEN
-        Long unknownUserId = 1L;
+        Long userId = 1L;
+        String newName = "New Name";
 
         User userUpdate = new User();
-        userUpdate.setDisplayName("Not Found");
+        userUpdate.setDisplayName(newName);
 
         when(repository.findById(any()))
                 .thenReturn(Optional.empty());
         // WHEN
-        // THEN
-        assertThatExceptionOfType(CompletionException.class)
-                .isThrownBy(() -> service.updateUserById(unknownUserId, userUpdate).join())
-                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
-
-        verify(repository, never()).findIdByEmailIgnoreCase(any());
-        verify(repository).findById(unknownUserId);
-        verify(repository, never()).save(any());
-    }
-
-    @Test
-    void updateUserByIdToUsedEmailTest() {
-        // GIVEN
-        long userId = 1L;
-        long otherUserId = 2L;
-        String takenEmail = "taken@email.com";
-
-        User userUpdate = new User();
-        userUpdate.setEmail(takenEmail);
-
-        when(repository.findIdByEmailIgnoreCase(any()))
-                .thenReturn(Optional.of(otherUserId));
-        // WHEN
-        // THEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.updateUserById(userId, userUpdate).join())
-                .withCauseExactlyInstanceOf(EntityException.class);
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
 
-        verify(repository).findIdByEmailIgnoreCase(takenEmail);
+        // THEN
+        verify(repository).findById(userId);
         verify(repository, never()).save(any());
     }
 
     @Test
-    void deleteUserByIdTest() throws EntityNotFoundException {
+    void updateUserByEmailTest() {
+        // GIVEN
+        String userEmail = "user@test.com";
+        String newName = "New Name";
+
+        User userUpdate = new User();
+        userUpdate.setDisplayName(newName);
+
+        User updatedUser = new User(testUser);
+        updatedUser.setDisplayName(newName);
+
+        User result;
+
+        when(repository.findByEmailIgnoreCase(any()))
+                .thenReturn(Optional.of(testUser));
+        when(repository.save(any()))
+                .thenReturn(updatedUser);
+        // WHEN
+        result = service.updateUserByEmail(userEmail, userUpdate).join();
+
+        // THEN
+        verify(repository).findByEmailIgnoreCase(userEmail);
+        verify(repository).save(updatedUser);
+
+        assertThat(result).isEqualTo(updatedUser);
+    }
+
+    @Test
+    void updateUnknownUserByEmailTest() {
+        // GIVEN
+        String userEmail = "user@test.com";
+        String newName = "New Name";
+
+        User userUpdate = new User();
+        userUpdate.setDisplayName(newName);
+
+        when(repository.findByEmailIgnoreCase(any()))
+                .thenReturn(Optional.empty());
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.updateUserByEmail(userEmail, userUpdate).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
+
+        // THEN
+        verify(repository).findByEmailIgnoreCase(userEmail);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void deleteUserByIdTest() {
         // GIVEN
         Long userId = 1L;
 
@@ -380,6 +411,36 @@ class UserServiceTests {
 
         verify(repository).existsById(userId);
         verify(repository, never()).deleteById(any());
+    }
+
+    @Test
+    void deleteUserByEmailTest() {
+        // GIVEN
+        String userEmail = "user@test.com";
+
+        when(repository.existsByEmailIgnoreCase(any())).thenReturn(true);
+        // WHEN
+        service.deleteUserByEmail(userEmail).join();
+
+        // THEN
+        verify(repository).existsByEmailIgnoreCase(userEmail);
+        verify(repository).deleteByEmailIgnoreCase(userEmail);
+    }
+
+    @Test
+    void deleteUnknownUserByEmailTest() {
+        // GIVEN
+        String userEmail = "unknown@test.com";
+
+        when(repository.existsByEmailIgnoreCase(any())).thenReturn(false);
+        // WHEN
+        // THEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.deleteUserByEmail(userEmail).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
+
+        verify(repository).existsByEmailIgnoreCase(userEmail);
+        verify(repository, never()).deleteByEmailIgnoreCase(any());
     }
 
     @Test

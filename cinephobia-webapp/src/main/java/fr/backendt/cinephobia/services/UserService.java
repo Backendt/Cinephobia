@@ -71,47 +71,49 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<Long> getUserIdByEmail(String email) throws EntityNotFoundException {
-        return repository.findIdByEmailIgnoreCase(email)
-                .map(CompletableFuture::completedFuture)
-                .orElse(
-                        failedFuture(new EntityNotFoundException("No user found with the given email"))
-                );
-    }
+    public CompletableFuture<User> getUserByEmail(String email, boolean withRelations) throws EntityNotFoundException {
+        Optional<User> optionalUser = withRelations ?
+                repository.findUserWithRelationsByEmail(email) :
+                repository.findByEmailIgnoreCase(email);
 
-    @Async
-    public CompletableFuture<User> getUserByEmail(String email) throws EntityNotFoundException {
-        return repository.findByEmail(email)
-                .map(CompletableFuture::completedFuture)
+        return optionalUser.map(CompletableFuture::completedFuture)
                 .orElse(failedFuture(
                         new EntityNotFoundException("User not found")
                 ));
     }
 
     @Async
-    public CompletableFuture<User> updateUserById(Long id, User user) throws EntityNotFoundException {
-        if(user.getEmail() != null) {
-            Optional<Long> userIdOfNewEmail = repository.findIdByEmailIgnoreCase(user.getEmail());
-            boolean newEmailIsTakenByOther = userIdOfNewEmail.isPresent() && !userIdOfNewEmail.get().equals(id);
-            if(newEmailIsTakenByOther) {
-               return failedFuture(new EntityException("New email is already taken"));
-            }
-        }
+    public CompletableFuture<User> updateUserById(Long id, User userUpdate) throws EntityNotFoundException {
+        return repository.findById(id)
+                .map(user -> updateUser(user, userUpdate))
+                .orElse(failedFuture(new EntityNotFoundException("User not found")));
+    }
 
+    @Async
+    public CompletableFuture<User> updateUserByEmail(String email, User userUpdate) {
+        return repository.findByEmailIgnoreCase(email)
+                .map(user -> updateUser(user, userUpdate))
+                .orElse(failedFuture(new EntityNotFoundException("User not found")));
+    }
+
+    public CompletableFuture<User> updateUser(User user, User userUpdate) {
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setSkipNullEnabled(true);
 
-        user.setId(null);
-        User hashedUserUpdate = hashUserPassword(user);
-        return repository.findById(id)
-                .map(currentUser -> {
-                    mapper.map(hashedUserUpdate, currentUser);
-                    User savedUser = repository.save(currentUser);
-                    return completedFuture(savedUser);
-                })
-                .orElse(
-                        failedFuture(new EntityNotFoundException("User not found"))
-                );
+        userUpdate.setId(null);
+        User hashedUserUpdate = hashUserPassword(userUpdate);
+
+        boolean isChangingEmail = userUpdate.getEmail() != null && !userUpdate.getEmail().equals(user.getEmail());
+        if(isChangingEmail) {
+            boolean isEmailTaken = repository.existsByEmailIgnoreCase(userUpdate.getEmail());
+            if(isEmailTaken) {
+                return failedFuture(new EntityException("User with the same email already exists"));
+            }
+        }
+
+        mapper.map(hashedUserUpdate, user);
+        User savedUser = repository.save(user);
+        return completedFuture(savedUser);
     }
 
     @Async
@@ -122,6 +124,17 @@ public class UserService {
         }
 
         repository.deleteById(id);
+        return completedFuture(null);
+    }
+
+    @Async
+    public CompletableFuture<Void> deleteUserByEmail(String email) throws EntityNotFoundException {
+        boolean userExists = repository.existsByEmailIgnoreCase(email);
+        if(!userExists) {
+            return failedFuture(new EntityNotFoundException("User not found"));
+        }
+
+        repository.deleteByEmailIgnoreCase(email);
         return completedFuture(null);
     }
 
