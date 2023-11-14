@@ -1,8 +1,10 @@
 package fr.backendt.cinephobia.controllers;
 
 import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.dto.FullUserDTO;
+import fr.backendt.cinephobia.models.dto.TriggerDTO;
 import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
 import fr.backendt.cinephobia.utils.UrlEncodedFormSerializer;
@@ -29,6 +31,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
 
 import java.util.List;
+import java.util.Set;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
@@ -219,16 +222,52 @@ class UserControllerTests {
         verify(service).updateUserById(userId, userUpdateEntity);
     }
 
-    @WithMockUser(username = "expired.user@test.com")
+    @WithMockUser(username = "user@test.com")
     @Test
     void getUserProfileTest() throws Exception {
+        // GIVEN
+        String loggedInUserEmail = "user@test.com";
+
+        Set<Trigger> triggers = Set.of(new Trigger(1L, "Trigger name", "Trigger description"));
+        Set<TriggerDTO> triggersDTO = Set.of(new TriggerDTO(1L, "Trigger name", "Trigger description"));
+
+        User user = userList.get(0);
+        user.setTriggers(triggers);
+
+        FullUserDTO expectedUserDTO = dtoList.get(0);
+        expectedUserDTO.setTriggers(triggersDTO);
+
+        RequestBuilder request = get("/profile");
+        MvcResult result;
+
+        when(service.getUserByEmail(any(), anyBoolean()))
+                .thenReturn(completedFuture(user));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("profile"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("user", expectedUserDTO));
+
+        verify(service).getUserByEmail(loggedInUserEmail, true);
+    }
+
+    @WithMockUser(username = "expired.user@test.com")
+    @Test
+    void getExpiredUserProfileTest() throws Exception {
         // GIVEN
         String loggedInUserEmail = "expired.user@test.com";
 
         RequestBuilder request = get("/profile");
         MvcResult result;
 
-        when(service.getUserByEmail(any()))
+        when(service.getUserByEmail(any(), anyBoolean()))
                 .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found")));
         // WHEN
         result = mvc.perform(request)
@@ -241,7 +280,7 @@ class UserControllerTests {
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/login"));
 
-        verify(service).getUserByEmail(loggedInUserEmail);
+        verify(service).getUserByEmail(loggedInUserEmail, true);
     }
 
     @WithMockUser(username = "current.user@test.com")
@@ -249,7 +288,7 @@ class UserControllerTests {
     void updateUserProfileTest() throws Exception {
         // GIVEN
         String currentUserEmail = "current.user@test.com";
-        long userId = 1L;
+
         UserDTO userUpdate = new UserDTO("My new name", null, null);
         User userUpdateEntity = new User(null, "My new name", null, null, null);
         String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
@@ -264,8 +303,7 @@ class UserControllerTests {
 
         MvcResult result;
 
-        when(service.getUserIdByEmail(any())).thenReturn(completedFuture(userId));
-        when(service.updateUserById(any(), any())).thenReturn(completedFuture(user));
+        when(service.updateUserByEmail(any(), any())).thenReturn(completedFuture(user));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -278,8 +316,7 @@ class UserControllerTests {
                 .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("user", expectedUser));
 
-        verify(service).getUserIdByEmail(currentUserEmail);
-        verify(service).updateUserById(userId, userUpdateEntity);
+        verify(service).updateUserByEmail(currentUserEmail, userUpdateEntity);
     }
 
     @WithMockUser(username = "current.user@test.com")
@@ -316,8 +353,7 @@ class UserControllerTests {
                 .andExpect(model().errorCount(expectedErrorAmount))
                 .andExpect(model().attribute("user", invalidUpdate));
 
-        verify(service, never()).getUserById(any());
-        verify(service, never()).updateUserById(any(), any());
+        verify(service, never()).updateUserByEmail(any(), any());
     }
 
     @WithMockUser(username = "expired.user@test.com")
@@ -325,38 +361,7 @@ class UserControllerTests {
     void updateExpiredUserProfileTest() throws Exception {
         // GIVEN
         String currentUserEmail = "expired.user@test.com";
-        UserDTO userUpdate = new UserDTO("My new name", null, null);
-        String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
 
-        RequestBuilder request = post("/profile")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .content(userUpdateData)
-                .with(csrf());
-
-        MvcResult result;
-
-        when(service.getUserIdByEmail(any()))
-                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found")));
-        // WHEN
-        result = mvc.perform(request)
-                .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        // THEN
-        mvc.perform(asyncDispatch(result))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/login"));
-
-        verify(service).getUserIdByEmail(currentUserEmail);
-        verify(service, never()).updateUserById(any(), any());
-    }
-
-    @WithMockUser(username = "current.user@test.com")
-    @Test
-    void updateUnknownUserProfileTest() throws Exception {
-        // GIVEN
-        String currentUserEmail = "current.user@test.com";
-        long userId = 1L;
         UserDTO userUpdate = new UserDTO("My new name", null, null);
         User userUpdateEntity = new User(null, "My new name", null, null, null);
         String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
@@ -368,8 +373,40 @@ class UserControllerTests {
 
         MvcResult result;
 
-        when(service.getUserIdByEmail(any())).thenReturn(completedFuture(userId));
-        when(service.updateUserById(any(), any()))
+        when(service.updateUserByEmail(any(), any()))
+                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/login"));
+
+        verify(service).updateUserByEmail(currentUserEmail, userUpdateEntity);
+    }
+
+    @WithMockUser(username = "current.user@test.com")
+    @Test
+    void updateUserProfileToTakenEmailTest() throws Exception {
+        // GIVEN
+        String currentUserEmail = "current.user@test.com";
+        String newEmail = "new.email@test.com";
+
+        User userUpdateEntity = new User(null, "My new name", newEmail, null, null);
+        UserDTO userUpdate = new UserDTO("My new name", newEmail, null);
+        String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
+
+        RequestBuilder request = post("/profile")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .content(userUpdateData)
+                .with(csrf());
+
+        MvcResult result;
+
+        when(service.updateUserByEmail(any(), any()))
                 .thenReturn(failedFuture(new EntityException("Email already taken")));
         // WHEN
         result = mvc.perform(request)
@@ -383,8 +420,7 @@ class UserControllerTests {
                 .andExpect(model().attributeHasFieldErrorCode("user", "email", "email-taken"))
                 .andExpect(model().attribute("user", userUpdate));
 
-        verify(service).getUserIdByEmail(currentUserEmail);
-        verify(service).updateUserById(userId, userUpdateEntity);
+        verify(service).updateUserByEmail(currentUserEmail, userUpdateEntity);
     }
 
 
@@ -392,13 +428,11 @@ class UserControllerTests {
     @Test
     void deleteUserProfileTest() throws Exception {
         // GIVEN
-        long userId = 1L;
         String userEmail = "user@test.com";
         RequestBuilder request = delete("/profile")
                 .with(csrf());
 
-        when(service.getUserIdByEmail(any()))
-                .thenReturn(completedFuture(userId));
+        when(service.deleteUserByEmail(any())).thenReturn(completedFuture(null));
         // WHEN
         mvc.perform(request)
                 .andExpect(status().isOk())
@@ -407,20 +441,18 @@ class UserControllerTests {
         verify(sessions).getAllSessions(any(), eq(false));
         verify(session).expireNow();
 
-        verify(service).getUserIdByEmail(userEmail);
-        verify(service).deleteUserById(userId);
+        verify(service).deleteUserByEmail(userEmail);
     }
 
     @WithMockUser(username = "user@test.com")
     @Test
     void deleteExpiredUserProfileTest() throws Exception {
         // GIVEN
-        long userId = 1L;
         String userEmail = "user@test.com";
         RequestBuilder request = delete("/profile")
                 .with(csrf());
 
-        when(service.getUserIdByEmail(any()))
+        when(service.deleteUserByEmail(any()))
                 .thenReturn(
                         failedFuture(new EntityException.EntityNotFoundException("User not found"))
                 );
@@ -431,8 +463,7 @@ class UserControllerTests {
         verify(sessions).getAllSessions(any(), eq(false));
         verify(session).expireNow();
 
-        verify(service).getUserIdByEmail(userEmail);
-        verify(service, never()).deleteUserById(userId);
+        verify(service).deleteUserByEmail(userEmail);
     }
 
     @Test

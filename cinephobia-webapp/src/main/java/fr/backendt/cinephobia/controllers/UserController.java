@@ -29,6 +29,9 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
+
+
 @Controller
 public class UserController {
 
@@ -47,7 +50,7 @@ public class UserController {
     @GetMapping("/admin/user")
     public CompletableFuture<ModelAndView> getUsers(@RequestParam(value = "search", required = false) String nameSearch,
                                                     @RequestParam(value = "page", required = false, defaultValue = "0") Integer pageIndex,
-                                                    @RequestParam(value = "size", required = false, defaultValue = "50") Integer pageSize) {
+                                                    @RequestParam(value = "size", required = false, defaultValue = "50") Integer pageSize) { // TODO Rework
         if(pageSize < 1) pageSize = 1;
         if(pageSize > 500) pageSize = 500;
         if(pageIndex < 0) pageIndex = 0;
@@ -66,7 +69,7 @@ public class UserController {
     }
 
     @GetMapping("/admin/user/{id}")
-    public CompletableFuture<ModelAndView> getUserProfile(@PathVariable Long id) {
+    public CompletableFuture<ModelAndView> getUserProfile(@PathVariable Long id) { // TODO Rework
         ModelAndView template = new ModelAndView("profile");
 
         return service.getUserById(id)
@@ -101,8 +104,7 @@ public class UserController {
     @GetMapping("/profile")
     public CompletableFuture<ModelAndView> getUserProfile(Authentication authentication) {
         String userEmail = authentication.getName();
-
-        return service.getUserByEmail(userEmail)
+        return service.getUserByEmail(userEmail, true)
                 .thenApply(user -> {
                     FullUserDTO userDto = mapper.map(user, FullUserDTO.class);
 
@@ -120,20 +122,19 @@ public class UserController {
             return completedFuture(template);
         }
 
+        String userEmail = authentication.getName();
         User userUpdateEntity = mapper.map(userUpdate, User.class);
 
-        String userEmail = authentication.getName();
-        CompletableFuture<Long> userIdFuture = service.getUserIdByEmail(userEmail);
-        if(userIdFuture.isCompletedExceptionally()) {
-            return completedFuture(new ModelAndView("redirect:/login"));
-        }
-
-        return userIdFuture.thenCompose(userId -> service.updateUserById(userId, userUpdateEntity))
+        return service.updateUserByEmail(userEmail, userUpdateEntity)
                 .thenApply(user -> {
                     FullUserDTO userDto = mapper.map(user, FullUserDTO.class);
                     return template.addObject("user", userDto);
                 })
                 .exceptionally(exception -> {
+                    if(exception.getCause() instanceof EntityNotFoundException) {
+                        return new ModelAndView("redirect:/login");
+                    }
+
                     result.rejectValue("email", "email-taken", "Email already taken");
                     return template.addObject("user", userUpdate);
                 });
@@ -145,8 +146,7 @@ public class UserController {
         sessions.getAllSessions(currentUser, false)
                 .forEach(SessionInformation::expireNow);
 
-        return service.getUserIdByEmail(currentUser.getUsername())
-                .thenAccept(service::deleteUserById)
+        return service.deleteUserByEmail(currentUser.getUsername())
                 .thenApply(future -> HtmxResponse.builder()
                         .redirect("/")
                         .build())
