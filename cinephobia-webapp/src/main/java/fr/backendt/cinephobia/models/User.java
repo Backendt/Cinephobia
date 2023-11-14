@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -24,7 +27,19 @@ public class User {
 
     private String role;
 
+    @ManyToMany
+    @JoinTable(inverseJoinColumns = @JoinColumn(name = "trigger_id"))
+    private Set<Trigger> triggers = new HashSet<>();
+
     public User(String displayName, String email, String password, String role) {
+        this.displayName = displayName;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
+
+    public User(Long id, String displayName, String email, String password, String role) {
+        this.id = id;
         this.displayName = displayName;
         this.email = email;
         this.password = password;
@@ -37,5 +52,6 @@ public class User {
         this.email = user.email;
         this.password = user.password;
         this.role = user.role;
+        this.triggers = new HashSet<>(user.triggers);
     }
 }

@@ -23,13 +23,14 @@ CREATE TABLE IF NOT EXISTS users(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS users_warns(
-    warn_id BIGINT NOT NULL,
+CREATE TABLE IF NOT EXISTS users_triggers(
     user_id BIGINT NOT NULL,
-    FOREIGN KEY (warn_id) REFERENCES warn(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    trigger_id BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (trigger_id) REFERENCES triggr(id)
 );
 
 INSERT INTO triggr(name, description) VALUES ('Testphobia', 'Fear of unit tests failing'), ('Bugphobia', 'Fear of software bugs');
 INSERT INTO warn(triggr_id, media_id, exposition_level) VALUES (2, 1, 9);
-INSERT INTO users(display_name, email, password, role) VALUES ('John Doe', 'john.doe@test.com', 'John1234', 'USER');
+INSERT INTO users(display_name, email, password, role) VALUES ('John Doe', 'john.doe@test.com', 'John1234', 'USER'), ('Jane Doe', 'jane.doe@test.com', 'Jane1234', 'USER');
+INSERT INTO users_triggers(user_id, trigger_id) VALUES (2, 2);
