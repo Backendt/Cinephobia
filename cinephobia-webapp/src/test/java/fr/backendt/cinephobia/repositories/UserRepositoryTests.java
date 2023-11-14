@@ -105,18 +105,40 @@ class UserRepositoryTests {
         assertThat(result.get()).hasNoNullFieldsOrProperties();
     }
 
-    @Test
-    void getUserByEmailTest() {
+    @CsvSource({
+            "john.doe@test.com",
+            "JOHN.doe@TEST.com"
+    })
+    @ParameterizedTest
+    void getUserByEmailTest(String userEmail) {
         // GIVEN
-        String userEmail = "john.doe@test.com";
         Optional<User> result;
 
         // WHEN
-        result = repository.findByEmail(userEmail);
+        result = repository.findByEmailIgnoreCase(userEmail);
 
         // THEN
         assertThat(result).isNotEmpty();
         assertThat(result.get()).hasNoNullFieldsOrProperties();
+    }
+
+    @CsvSource({
+            "jane.doe@test.com",
+            "JANE.doe@TEST.com"
+    })
+    @ParameterizedTest
+    void getUserWithRelationsTest(String userEmail) {
+        // GIVEN
+        Optional<User> result;
+
+        // WHEN
+        result = repository.findUserWithRelationsByEmail(userEmail);
+
+        // THEN
+        assertThat(result).isNotEmpty();
+        assertThat(result.get()).hasNoNullFieldsOrProperties();
+        assertThat(result.get().getTriggers()).isNotEmpty();
+        assertThat(result.get().getTriggers().toArray()[0]).hasNoNullFieldsOrProperties();
     }
 
     @Test
@@ -136,35 +158,21 @@ class UserRepositoryTests {
         assertThat(existsAfter).isFalse();
     }
 
-    @CsvSource({
-            "john.doe@test.com",
-            "John.doe@test.COM",
-            "JOHN.DOE@TEST.COM"
-    })
-    @ParameterizedTest
-    void getUserIdFromEmailTest(String email) {
-        // GIVEN
-        Optional<Long> result;
-
-        long expectedId = 1L;
-        // WHEN
-        result = repository.findIdByEmailIgnoreCase(email);
-
-        // THEN
-        assertThat(result).contains(expectedId);
-    }
-
     @Test
-    void getUserIdFromUnknownEmailTest() {
+    void deleteUserByEmailTest() {
         // GIVEN
-        String unknownEmail = "john.doe@test.co";
-        Optional<Long> result;
+        String email = "john.doe@test.com";
+        boolean existsBefore;
+        boolean existsAfter;
 
         // WHEN
-        result = repository.findIdByEmailIgnoreCase(unknownEmail);
+        existsBefore = repository.existsByEmailIgnoreCase(email);
+        repository.deleteByEmailIgnoreCase(email);
+        existsAfter = repository.existsByEmailIgnoreCase(email);
 
         // THEN
-        assertThat(result).isEmpty();
+        assertThat(existsBefore).isTrue();
+        assertThat(existsAfter).isFalse();
     }
 
     @Test
