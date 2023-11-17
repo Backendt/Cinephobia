@@ -74,7 +74,11 @@ public class UserService {
     public CompletableFuture<User> getUserByEmail(String email, boolean withRelations) throws EntityNotFoundException {
         Optional<User> optionalUser = withRelations ?
                 repository.findUserWithRelationsByEmail(email) :
-                repository.findByEmailIgnoreCase(email);
+                repository.findByEmailIgnoreCase(email)
+                        .map(user -> { // Remove uninitialized triggers
+                            user.setTriggers(null);
+                            return user;
+                        });
 
         return optionalUser.map(CompletableFuture::completedFuture)
                 .orElse(failedFuture(
