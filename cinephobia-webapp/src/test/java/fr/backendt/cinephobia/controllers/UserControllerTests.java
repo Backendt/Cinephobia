@@ -84,6 +84,19 @@ class UserControllerTests {
         when(sessions.getAllSessions(any(), anyBoolean())).thenReturn(List.of(session));
     }
 
+    @Test
+    void getUsersViewTest() throws Exception {
+        // GIVEN
+        RequestBuilder request = get("/admin/user");
+
+        // WHEN
+        mvc.perform(request)
+        // THEN
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/users"))
+                .andExpect(model().hasNoErrors());
+    }
+
     @CsvSource({
             "0,50,0,50",
             "1,100,1,100",
@@ -96,6 +109,7 @@ class UserControllerTests {
     void getUsersTest(Integer pageIndex, Integer pageSize, Integer expectedIndex, Integer expectedSize) throws Exception {
         // GIVEN
         RequestBuilder request = get("/admin/user")
+                .header("Hx-Request", "true")
                 .param("page", String.valueOf(pageIndex))
                 .param("size", String.valueOf(pageSize));
 
@@ -116,9 +130,9 @@ class UserControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin/users"))
+                .andExpect(view().name("fragments/users :: userList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("usersPage", expectedPage));
+                .andExpect(model().attribute("users", expectedPage));
 
         verify(service).getUsers(null, expectedPageRequest);
     }
@@ -128,6 +142,7 @@ class UserControllerTests {
         // GIVEN
         String nameSearch = "test search";
         RequestBuilder request = get("/admin/user")
+                .header("Hx-Request", "true")
                 .param("search", nameSearch);
 
         Pageable defaultPageRequest = PageRequest.of(0, 50);
@@ -146,11 +161,60 @@ class UserControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("admin/users"))
+                .andExpect(view().name("fragments/users :: userList"))
                 .andExpect(model().hasNoErrors())
-                .andExpect(model().attributeExists("usersPage"));
+                .andExpect(model().attributeExists("users"));
 
         verify(service).getUsers(nameSearch, defaultPageRequest);
+    }
+
+    @Test
+    void getUserEditFormTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
+        RequestBuilder request = get("/admin/user/" + userId);
+
+        User user = userList.get(0);
+        UserResponseDTO userDTO = dtoList.get(0);
+
+        MvcResult result;
+        when(service.getUserById(any())).thenReturn(completedFuture(user));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments/users :: userForm"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("user", userDTO));
+
+        verify(service).getUserById(userId);
+    }
+
+    @Test
+    void getUnknownUserEditFormTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
+        RequestBuilder request = get("/admin/user/" + userId);
+
+        MvcResult result;
+        when(service.getUserById(any())).thenReturn(
+                failedFuture(new EntityException.EntityNotFoundException("User not found"))
+        );
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isNotFound());
+
+        verify(service).getUserById(userId);
     }
 
     @Test
@@ -161,7 +225,7 @@ class UserControllerTests {
         User user = userList.get(0);
         UserResponseDTO userDto = dtoList.get(0);
 
-        UserResponseDTO userUpdate = new UserResponseDTO(null, "Updated", null, null, null);
+        UserDTO userUpdate = new UserDTO("Updated", null, null);
         User userUpdateEntity = new User(null, "Updated", null, null, null);
         String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
 
@@ -181,8 +245,8 @@ class UserControllerTests {
 
         // THEN
         mvc.perform(asyncDispatch(result))
-                .andExpect(status().isCreated())
-                .andExpect(view().name("profile"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments/users :: user"))
                 .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("user", userDto));
 
@@ -190,11 +254,45 @@ class UserControllerTests {
     }
 
     @Test
+    void updateInvalidUserTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
+
+        User user = userList.get(0);
+
+        UserDTO userUpdate = new UserDTO("a", null, null);
+        String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
+
+        RequestBuilder request = post("/admin/user/" + userId)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .content(userUpdateData)
+                .with(csrf());
+
+        MvcResult result;
+
+        when(service.updateUserById(any(), any())).thenReturn(completedFuture(user));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments/users :: userForm"))
+                .andExpect(model().hasErrors())
+                .andExpect(model().attribute("user", userUpdate));
+
+        verify(service, never()).updateUserById(any(), any());
+    }
+
+    @Test
     void updateUnknownUserTest() throws Exception {
         // GIVEN
         long userId = 1L;
 
-        UserResponseDTO userUpdate = new UserResponseDTO(null, "Updated", null, null, null);
+        UserDTO userUpdate = new UserDTO("Updated", null, null);
         User userUpdateEntity = new User(null, "Updated", null, null, null);
         String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
 
@@ -215,12 +313,66 @@ class UserControllerTests {
 
         // THEN
         mvc.perform(asyncDispatch(result))
-                .andExpect(status().isBadRequest())
-                .andExpect(view().name("profile"))
-                .andExpect(model().hasNoErrors())
-                .andExpect(model().attribute("user", userUpdate));
+                .andExpect(status().isNotFound());
 
         verify(service).updateUserById(userId, userUpdateEntity);
+    }
+
+    @Test
+    void makeUserAdminTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
+        RequestBuilder request = post("/admin/user/role/" + userId)
+                .with(csrf());
+
+        User userUpdate = new User();
+        userUpdate.setRole("ADMIN");
+
+        User user = userList.get(0);
+        UserResponseDTO updatedUserDTO = dtoList.get(0);
+
+        MvcResult result;
+        when(service.updateUserById(any(), any())).thenReturn(completedFuture(user));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments/users :: user"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("user", updatedUserDTO));
+
+        verify(service).updateUserById(userId, userUpdate);
+    }
+
+    @Test
+    void makeUnknownUserAdminTest() throws Exception {
+        // GIVEN
+        long userId = 1L;
+        RequestBuilder request = post("/admin/user/role/" + userId)
+                .with(csrf());
+
+        User userUpdate = new User();
+        userUpdate.setRole("ADMIN");
+
+        MvcResult result;
+        when(service.updateUserById(any(), any())).thenReturn(
+                failedFuture(new EntityException.EntityNotFoundException("User not found"))
+        );
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isNotFound());
+
+        verify(service).updateUserById(userId, userUpdate);
     }
 
     @WithMockUser(username = "user@test.com")
@@ -236,7 +388,6 @@ class UserControllerTests {
         user.setTriggers(triggers);
 
         ProfileResponseDTO expectedUserDTO = new ProfileResponseDTO(1L, "User One", "user.one@test.com", "Password", "USER", triggersDTO);
-        expectedUserDTO.setTriggers(triggersDTO);
 
         RequestBuilder request = get("/profile");
         MvcResult result;
@@ -286,6 +437,63 @@ class UserControllerTests {
 
     @WithMockUser(username = "current.user@test.com")
     @Test
+    void getUserProfileEditFormTest() throws Exception {
+        // GIVEN
+        String userEmail = "current.user@test.com";
+        RequestBuilder request = get("/profile")
+                .header("Hx-Request", "true");
+
+        User user = userList.get(0);
+        UserResponseDTO userDto = dtoList.get(0);
+
+        MvcResult result;
+
+        when(service.getUserByEmail(any(), anyBoolean())).thenReturn(completedFuture(user));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments/users :: profileForm"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("user", userDto));
+
+        verify(service).getUserByEmail(userEmail, false);
+    }
+
+    @WithMockUser(username = "unknown.user@test.com")
+    @Test
+    void getUnknownUserProfileEditFormTest() throws Exception {
+        // GIVEN
+        String userEmail = "unknown.user@test.com";
+        RequestBuilder request = get("/profile")
+                .header("Hx-Request", "true");
+
+        MvcResult result;
+
+        when(service.getUserByEmail(any(), anyBoolean())).thenReturn(
+                failedFuture(new EntityException.EntityNotFoundException("User not found"))
+        );
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/login"));
+
+        verify(service).getUserByEmail(userEmail, false);
+    }
+
+    @WithMockUser(username = "current.user@test.com")
+    @Test
     void updateUserProfileTest() throws Exception {
         // GIVEN
         String currentUserEmail = "current.user@test.com";
@@ -313,7 +521,7 @@ class UserControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("profile"))
+                .andExpect(view().name("fragments/users :: profile"))
                 .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("user", expectedUser));
 
@@ -350,7 +558,7 @@ class UserControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("profile"))
+                .andExpect(view().name("fragments/users :: profileForm"))
                 .andExpect(model().errorCount(expectedErrorAmount))
                 .andExpect(model().attribute("user", invalidUpdate));
 
@@ -417,7 +625,7 @@ class UserControllerTests {
         // THEN
         mvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(view().name("profile"))
+                .andExpect(view().name("fragments/users :: profileForm"))
                 .andExpect(model().attributeHasFieldErrorCode("user", "email", "email-taken"))
                 .andExpect(model().attribute("user", userUpdate));
 

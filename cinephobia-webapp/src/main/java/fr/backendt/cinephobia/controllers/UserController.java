@@ -31,7 +31,7 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 
 @Controller
-public class UserController { // TODO Update tests
+public class UserController {
 
     private static final Logger LOGGER = Logger.getLogger(UserController.class);
 
@@ -75,7 +75,6 @@ public class UserController { // TODO Update tests
     public CompletableFuture<ModelAndView> getUserEditForm(@PathVariable Long id) {
         return service.getUserById(id)
                 .thenApply(user -> {
-                    user.setTriggers(null);
                     UserResponseDTO userDTO = mapper.map(user, UserResponseDTO.class);
                     return new ModelAndView("fragments/users :: userForm")
                             .addObject("user", userDTO);
@@ -98,7 +97,7 @@ public class UserController { // TODO Update tests
                 });
     }
 
-    @PostMapping("/admin/user/role/{id}")
+    @PostMapping("/admin/user/role/{id}") // Not a GET request because it would make it vulnerable to CSRF
     public CompletableFuture<ModelAndView> makeUserAdmin(@PathVariable Long id) {
         User userUpdate = new User();
         userUpdate.setRole("ADMIN");
@@ -139,9 +138,9 @@ public class UserController { // TODO Update tests
     @GetMapping(value = "/profile", headers = "Hx-Request")
     public CompletableFuture<ModelAndView> getUserProfileEditForm(Authentication authentication) {
         String userEmail = authentication.getName();
-        return service.getUserByEmail(userEmail, true)
+        return service.getUserByEmail(userEmail, false)
                 .thenApply(user -> {
-                    ProfileResponseDTO userDto = mapper.map(user, ProfileResponseDTO.class);
+                    UserResponseDTO userDto = mapper.map(user, UserResponseDTO.class);
                     return new ModelAndView("fragments/users :: profileForm")
                             .addObject("user", userDto);
                 })
