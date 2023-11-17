@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.controllers;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.dto.TriggerDTO;
 import fr.backendt.cinephobia.services.TriggerService;
@@ -113,7 +113,7 @@ public class TriggerController {
                     return new ModelAndView("fragments/triggers :: trigger")
                             .addObject("trigger", savedDto);
                 }).exceptionally(exception -> {
-                    if(exception.getCause() instanceof EntityException.EntityNotFoundException notFoundException) {
+                    if(exception.getCause() instanceof EntityNotFoundException notFoundException) {
                         throw notFoundException;
                     }
                     results.rejectValue("name", "already-exists", "Trigger already exists");

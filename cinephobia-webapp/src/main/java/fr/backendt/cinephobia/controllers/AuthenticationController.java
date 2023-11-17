@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.controllers;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.BadRequestException;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
@@ -61,7 +61,7 @@ public class AuthenticationController {
         return service.createUser(user)
                 .thenApply(future -> new ModelAndView("redirect:/login"))
                 .exceptionally(exception -> {
-                    if(exception.getCause() instanceof EntityException) {
+                    if(exception.getCause() instanceof BadRequestException) {
                         result.rejectValue("email", "email-taken", "Email already taken");
                         return model;
                     }

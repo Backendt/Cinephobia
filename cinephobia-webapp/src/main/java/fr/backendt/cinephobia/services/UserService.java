@@ -1,6 +1,7 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.BadRequestException;
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 
@@ -30,11 +30,11 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<User> createUser(User user) throws EntityException {
+    public CompletableFuture<User> createUser(User user) throws BadRequestException {
         boolean isEmailTaken = repository.existsByEmailIgnoreCase(user.getEmail());
         if(isEmailTaken) {
             return failedFuture(
-                    new EntityException("User with the same email already exists")
+                    new BadRequestException("User with the same email already exists")
             );
         }
 
@@ -111,7 +111,7 @@ public class UserService {
         if(isChangingEmail) {
             boolean isEmailTaken = repository.existsByEmailIgnoreCase(userUpdate.getEmail());
             if(isEmailTaken) {
-                return failedFuture(new EntityException("User with the same email already exists"));
+                return failedFuture(new BadRequestException("User with the same email already exists"));
             }
         }
 

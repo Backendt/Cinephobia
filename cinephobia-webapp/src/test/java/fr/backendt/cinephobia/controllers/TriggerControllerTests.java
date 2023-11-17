@@ -1,6 +1,7 @@
 package fr.backendt.cinephobia.controllers;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.BadRequestException;
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.dto.TriggerDTO;
 import fr.backendt.cinephobia.services.TriggerService;
@@ -26,13 +27,10 @@ import java.util.List;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 @WithMockUser
 @WebMvcTest(TriggerController.class)
@@ -130,7 +128,7 @@ class TriggerControllerTests {
 
         MvcResult result;
 
-        when(service.createTrigger(any())).thenReturn(failedFuture(new EntityException("Trigger already exists")));
+        when(service.createTrigger(any())).thenReturn(failedFuture(new BadRequestException("Trigger already exists")));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -353,7 +351,7 @@ class TriggerControllerTests {
 
         MvcResult result;
 
-        when(service.updateTrigger(any(), any())).thenReturn(failedFuture(new EntityException("Trigger already exists")));
+        when(service.updateTrigger(any(), any())).thenReturn(failedFuture(new BadRequestException("Trigger already exists")));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())

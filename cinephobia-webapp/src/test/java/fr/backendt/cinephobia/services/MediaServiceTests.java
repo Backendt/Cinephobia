@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.MediaType;
 import fr.backendt.cinephobia.models.tmdb.SearchResults;
@@ -59,7 +59,7 @@ class MediaServiceTests {
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.getMovie(movieId).join())
-                .withCauseExactlyInstanceOf(EntityException.EntityNotFoundException.class);
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
 
         // THEN
         verify(repository).getMovie(movieId);
@@ -90,7 +90,7 @@ class MediaServiceTests {
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.getSeries(seriesId).join())
-                .withCauseExactlyInstanceOf(EntityException.EntityNotFoundException.class);
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
 
         // THEN
         verify(repository).getSeries(seriesId);

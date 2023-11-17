@@ -1,5 +1,6 @@
 package fr.backendt.cinephobia.controllers;
 
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.tmdb.SearchResults;
 import fr.backendt.cinephobia.services.MediaService;
@@ -15,10 +16,8 @@ import org.springframework.test.web.servlet.RequestBuilder;
 
 import java.util.List;
 
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

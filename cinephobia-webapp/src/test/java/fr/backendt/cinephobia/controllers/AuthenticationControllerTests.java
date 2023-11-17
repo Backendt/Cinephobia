@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.controllers;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.BadRequestException;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
@@ -140,7 +140,7 @@ class AuthenticationControllerTests {
 
         when(service.createUser(any()))
                 .thenReturn(CompletableFuture.failedFuture(
-                        new EntityException("Error")
+                        new BadRequestException("Error")
                 ));
         // WHEN
         result = mvc.perform(request)

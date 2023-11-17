@@ -1,6 +1,7 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.BadRequestException;
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.repositories.TriggerRepository;
 import org.modelmapper.ModelMapper;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
 
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 
@@ -26,11 +26,11 @@ public class TriggerService {
     }
 
     @Async
-    public CompletableFuture<Trigger> createTrigger(Trigger trigger) throws EntityException {
+    public CompletableFuture<Trigger> createTrigger(Trigger trigger) throws BadRequestException {
         boolean triggerAlreadyExists = repository.existsByNameIgnoreCase(trigger.getName());
         if(triggerAlreadyExists) {
             return failedFuture(
-                    new EntityException("Trigger already exists")
+                    new BadRequestException("Trigger already exists")
             );
         }
         trigger.setId(null);
@@ -71,7 +71,7 @@ public class TriggerService {
                 String newName = triggerUpdate.getName();
                 boolean triggerAlreadyExists = repository.existsByNameIgnoreCase(newName);
                 if(triggerAlreadyExists) {
-                    return failedFuture(new EntityException("Trigger already exists"));
+                    return failedFuture(new BadRequestException("Trigger already exists"));
                 }
             }
 

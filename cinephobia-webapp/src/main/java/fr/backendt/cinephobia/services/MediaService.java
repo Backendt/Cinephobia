@@ -1,5 +1,6 @@
 package fr.backendt.cinephobia.services;
 
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.tmdb.SearchResults;
 import fr.backendt.cinephobia.repositories.MediaRepository;
@@ -12,8 +13,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
-
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 @Service
 public class MediaService {

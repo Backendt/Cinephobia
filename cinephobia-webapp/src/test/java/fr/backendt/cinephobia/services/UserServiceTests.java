@@ -1,6 +1,7 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.BadRequestException;
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.*;
@@ -44,7 +44,7 @@ class UserServiceTests {
     }
 
     @Test
-    void createUserTest() throws EntityException {
+    void createUserTest() throws BadRequestException {
         // GIVEN
         User testUserWithId = new User(testUser);
         testUserWithId.setId(1L);
@@ -76,7 +76,7 @@ class UserServiceTests {
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.createUser(testUser).join())
-                .withCauseExactlyInstanceOf(EntityException.class);
+                .withCauseExactlyInstanceOf(BadRequestException.class);
 
         // THEN
         verify(repository).existsByEmailIgnoreCase(testUser.getEmail());
@@ -278,7 +278,7 @@ class UserServiceTests {
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.updateUser(currentUser, userUpdate).join())
-                .withCauseExactlyInstanceOf(EntityException.class);
+                .withCauseExactlyInstanceOf(BadRequestException.class);
 
         // THEN
         verify(repository).existsByEmailIgnoreCase(newEmail);

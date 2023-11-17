@@ -1,6 +1,7 @@
 package fr.backendt.cinephobia.controllers;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.BadRequestException;
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.dto.ProfileResponseDTO;
@@ -202,7 +203,7 @@ class UserControllerTests {
 
         MvcResult result;
         when(service.getUserById(any())).thenReturn(
-                failedFuture(new EntityException.EntityNotFoundException("User not found"))
+                failedFuture(new EntityNotFoundException("User not found"))
         );
         // WHEN
         result = mvc.perform(request)
@@ -304,7 +305,7 @@ class UserControllerTests {
         MvcResult result;
 
         when(service.updateUserById(any(), any()))
-                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found")));
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found")));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -360,7 +361,7 @@ class UserControllerTests {
 
         MvcResult result;
         when(service.updateUserById(any(), any())).thenReturn(
-                failedFuture(new EntityException.EntityNotFoundException("User not found"))
+                failedFuture(new EntityNotFoundException("User not found"))
         );
         // WHEN
         result = mvc.perform(request)
@@ -420,7 +421,7 @@ class UserControllerTests {
         MvcResult result;
 
         when(service.getUserByEmail(any(), anyBoolean()))
-                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found")));
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found")));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -476,7 +477,7 @@ class UserControllerTests {
         MvcResult result;
 
         when(service.getUserByEmail(any(), anyBoolean())).thenReturn(
-                failedFuture(new EntityException.EntityNotFoundException("User not found"))
+                failedFuture(new EntityNotFoundException("User not found"))
         );
         // WHEN
         result = mvc.perform(request)
@@ -583,7 +584,7 @@ class UserControllerTests {
         MvcResult result;
 
         when(service.updateUserByEmail(any(), any()))
-                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found")));
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found")));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -616,7 +617,7 @@ class UserControllerTests {
         MvcResult result;
 
         when(service.updateUserByEmail(any(), any()))
-                .thenReturn(failedFuture(new EntityException("Email already taken")));
+                .thenReturn(failedFuture(new BadRequestException("Email already taken")));
         // WHEN
         result = mvc.perform(request)
                 .andExpect(status().isOk())
@@ -663,7 +664,7 @@ class UserControllerTests {
 
         when(service.deleteUserByEmail(any()))
                 .thenReturn(
-                        failedFuture(new EntityException.EntityNotFoundException("User not found"))
+                        failedFuture(new EntityNotFoundException("User not found"))
                 );
         // WHEN
         mvc.perform(request)
@@ -711,10 +712,10 @@ class UserControllerTests {
                 .with(csrf());
 
         when(service.getUserEmailById(any()))
-                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found"))); // This error is ignored in controller
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found"))); // This error is ignored in controller
 
         when(service.deleteUserById(any()))
-                .thenReturn(failedFuture(new EntityException.EntityNotFoundException("User not found")));
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found")));
         // WHEN
         mvc.perform(request)
         // THEN

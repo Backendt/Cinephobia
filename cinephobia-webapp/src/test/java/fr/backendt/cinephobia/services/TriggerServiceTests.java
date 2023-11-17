@@ -1,6 +1,7 @@
 package fr.backendt.cinephobia.services;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.BadRequestException;
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.repositories.TriggerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,8 +15,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -37,7 +36,7 @@ class TriggerServiceTests {
     }
 
     @Test
-    void createTriggerTest() throws EntityException {
+    void createTriggerTest() throws BadRequestException {
         // GIVEN
         Trigger expected = new Trigger(trigger);
         expected.setId(null);
@@ -64,7 +63,7 @@ class TriggerServiceTests {
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.createTrigger(trigger).join())
-                .withCauseExactlyInstanceOf(EntityException.class);
+                .withCauseExactlyInstanceOf(BadRequestException.class);
 
         verify(repository).existsByNameIgnoreCase(trigger.getName());
         verify(repository, never()).save(any());
@@ -185,7 +184,7 @@ class TriggerServiceTests {
         // WHEN
         assertThatExceptionOfType(CompletionException.class)
                 .isThrownBy(() -> service.updateTrigger(triggerId, triggerUpdate).join())
-                .withCauseExactlyInstanceOf(EntityException.class);
+                .withCauseExactlyInstanceOf(BadRequestException.class);
 
         // THEN
         verify(repository).findById(triggerId);

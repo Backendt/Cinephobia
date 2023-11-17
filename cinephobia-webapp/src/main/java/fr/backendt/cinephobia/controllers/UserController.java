@@ -1,9 +1,10 @@
 package fr.backendt.cinephobia.controllers;
 
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.dto.ProfileResponseDTO;
-import fr.backendt.cinephobia.models.dto.UserResponseDTO;
 import fr.backendt.cinephobia.models.dto.UserDTO;
+import fr.backendt.cinephobia.models.dto.UserResponseDTO;
 import fr.backendt.cinephobia.services.UserService;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
 import org.jboss.logging.Logger;
@@ -25,7 +26,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.concurrent.CompletableFuture;
 
-import static fr.backendt.cinephobia.exceptions.EntityException.EntityNotFoundException;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
