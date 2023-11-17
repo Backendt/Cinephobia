@@ -44,7 +44,7 @@ class UserRepositoryTests {
         // THEN
         assertThat(result)
                 .isNotNull()
-                .hasNoNullFieldsOrProperties();
+                .hasNoNullFieldsOrPropertiesExcept("triggers");
     }
 
     @Test
