@@ -1,6 +1,6 @@
 package fr.backendt.cinephobia.repositories;
 
-import fr.backendt.cinephobia.exceptions.EntityException;
+import fr.backendt.cinephobia.exceptions.TMDBException;
 import fr.backendt.cinephobia.models.Media;
 import fr.backendt.cinephobia.models.MediaType;
 import fr.backendt.cinephobia.models.tmdb.SearchResults;
@@ -121,7 +121,7 @@ public class MediaRepository {
                 .retrieve()
                 .bodyToMono(SearchResults.class)
                 .blockOptional(TIMEOUT_DURATION)
-                .orElseThrow(() -> new EntityException("Could not search " + typeName));
+                .orElseThrow(() -> new TMDBException("Could not search " + typeName));
 
         List<Media> newResults = results.getResults().stream()
                 .map(media -> {
@@ -139,7 +139,7 @@ public class MediaRepository {
                 .retrieve()
                 .bodyToMono(SearchResults.class)
                 .blockOptional(TIMEOUT_DURATION)
-                .orElseThrow(() -> new EntityException("Could not get popular movies"));
+                .orElseThrow(() -> new TMDBException("Could not get popular movies"));
 
         List<Media> newResults = results.getResults().stream()
                 .map(media -> {
