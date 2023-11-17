@@ -29,7 +29,7 @@ public class User {
 
     @ManyToMany
     @JoinTable(inverseJoinColumns = @JoinColumn(name = "trigger_id"))
-    private Set<Trigger> triggers = new HashSet<>();
+    private Set<Trigger> triggers;
 
     public User(String displayName, String email, String password, String role) {
         this.displayName = displayName;
@@ -52,6 +52,6 @@ public class User {
         this.email = user.email;
         this.password = user.password;
         this.role = user.role;
-        this.triggers = new HashSet<>(user.triggers);
+        this.triggers = user.triggers != null ? new HashSet<>(user.triggers) : null;
     }
 }

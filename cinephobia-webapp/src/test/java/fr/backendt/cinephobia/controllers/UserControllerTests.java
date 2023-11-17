@@ -3,7 +3,8 @@ package fr.backendt.cinephobia.controllers;
 import fr.backendt.cinephobia.exceptions.EntityException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
-import fr.backendt.cinephobia.models.dto.FullUserDTO;
+import fr.backendt.cinephobia.models.dto.ProfileResponseDTO;
+import fr.backendt.cinephobia.models.dto.UserResponseDTO;
 import fr.backendt.cinephobia.models.dto.TriggerDTO;
 import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.services.UserService;
@@ -57,7 +58,7 @@ class UserControllerTests {
     private SessionInformation session;
 
     private static List<User> userList;
-    private static List<FullUserDTO> dtoList;
+    private static List<UserResponseDTO> dtoList;
 
     @BeforeAll
     static void initUsers() {
@@ -68,9 +69,9 @@ class UserControllerTests {
         );
 
         dtoList = List.of(
-                new FullUserDTO(1L, "User One", "user.one@test.com", "Password", "USER"),
-                new FullUserDTO(2L, "User Two", "user.two@test.com", "Password", "USER"),
-                new FullUserDTO(3L, "User Three", "user.three@test.com", "Password", "ADMIN")
+                new UserResponseDTO(1L, "User One", "user.one@test.com", "Password", "USER"),
+                new UserResponseDTO(2L, "User Two", "user.two@test.com", "Password", "USER"),
+                new UserResponseDTO(3L, "User Three", "user.three@test.com", "Password", "ADMIN")
         );
     }
 
@@ -99,7 +100,7 @@ class UserControllerTests {
                 .param("size", String.valueOf(pageSize));
 
         Page<User> userPage = new PageImpl<>(userList);
-        Page<FullUserDTO> expectedPage = new PageImpl<>(dtoList);
+        Page<UserResponseDTO> expectedPage = new PageImpl<>(dtoList);
 
         Pageable expectedPageRequest = PageRequest.of(expectedIndex, expectedSize);
         MvcResult result;
@@ -158,9 +159,9 @@ class UserControllerTests {
         long userId = 1L;
 
         User user = userList.get(0);
-        FullUserDTO userDto = dtoList.get(0);
+        UserResponseDTO userDto = dtoList.get(0);
 
-        FullUserDTO userUpdate = new FullUserDTO(null, "Updated", null, null, null);
+        UserResponseDTO userUpdate = new UserResponseDTO(null, "Updated", null, null, null);
         User userUpdateEntity = new User(null, "Updated", null, null, null);
         String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
 
@@ -193,7 +194,7 @@ class UserControllerTests {
         // GIVEN
         long userId = 1L;
 
-        FullUserDTO userUpdate = new FullUserDTO(null, "Updated", null, null, null);
+        UserResponseDTO userUpdate = new UserResponseDTO(null, "Updated", null, null, null);
         User userUpdateEntity = new User(null, "Updated", null, null, null);
         String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
 
@@ -234,7 +235,7 @@ class UserControllerTests {
         User user = userList.get(0);
         user.setTriggers(triggers);
 
-        FullUserDTO expectedUserDTO = dtoList.get(0);
+        ProfileResponseDTO expectedUserDTO = new ProfileResponseDTO(1L, "User One", "user.one@test.com", "Password", "USER", triggersDTO);
         expectedUserDTO.setTriggers(triggersDTO);
 
         RequestBuilder request = get("/profile");
@@ -294,7 +295,7 @@ class UserControllerTests {
         String userUpdateData = UrlEncodedFormSerializer.serialize(userUpdate);
 
         User user = userList.get(0);
-        FullUserDTO expectedUser = dtoList.get(0);
+        UserResponseDTO expectedUser = dtoList.get(0);
 
         RequestBuilder request = post("/profile")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
