@@ -84,6 +84,14 @@ public class MediaRepository {
         SearchResults moviesSearch = search(MediaType.MOVIE, search, page);
         SearchResults seriesSearch = search(MediaType.TV, search, page);
 
+        int totalResults = moviesSearch.getTotalResults() + seriesSearch.getTotalResults();
+        int totalPages = Math.max(moviesSearch.getTotalPages(), seriesSearch.getTotalPages());
+        List<Media> medias = getMediaList(seriesSearch, moviesSearch);
+
+        return new SearchResults(page, totalPages, totalResults, medias);
+    }
+
+    private List<Media> getMediaList(SearchResults seriesSearch, SearchResults moviesSearch) {
         List<Media> movies = moviesSearch.getResults();
         List<Media> series = seriesSearch.getResults();
 
@@ -102,11 +110,7 @@ public class MediaRepository {
             Media media = nextIsMovie ? movie : serie;
             medias.add(media);
         }
-
-        int totalResults = moviesSearch.getTotalResults() + seriesSearch.getTotalResults();
-        int totalPages = Math.max(moviesSearch.getTotalPages(), seriesSearch.getTotalPages());
-
-        return new SearchResults(page, totalPages, totalResults, medias);
+        return medias;
     }
 
     private SearchResults search(MediaType type, String search, int page) {
