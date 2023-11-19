@@ -1,11 +1,14 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:hx="http://htmx.org">
 
 <th:block th:fragment="mediaList(mediasPage)">
+    <div th:if="${mediasPage.totalResults == 0}" class="d-flex justify-content-center w-100 py-4">
+        <h1 class="fw-bold">No results found !</h1>
+    </div>
     <th:block th:each="media : ${mediasPage.getResults()}">
-        <div class="col-md-2 col-6 my-2">
-            <a th:href="${media.getMediaUri()}" th:title="${media.title}" class="position-relative">
-                <h2 th:if="${media.posterPath == null}" th:text="${media.title}" class="position-absolute translate-middle top-50 start-50 text-light text-center"></h2>
-                <img loading="lazy" class="img-thumbnail p-0 h-100" th:src="${media.posterPath != null} ? ${media.getImageUrl(false)} : @{/images/placeholder.png}" th:alt="${media.title}">
+        <div style="width: 12rem">
+            <a class="text-decoration-none text-reset" th:href="${media.getMediaUri()}" th:title="${media.title}">
+                <img loading="lazy" class="img-thumbnail mw-100 p-0" th:src="${media.posterPath != null} ? ${media.getImageUrl(false)} : @{/images/placeholder.png}" th:alt="${media.title}">
+                <h4 class="fw-bold px-2 fs-6 mt-1 md-2 text-ellipsis" th:text="${media.title}"></h4>
             </a>
         </div>
     </th:block>
