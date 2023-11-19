@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -62,6 +63,7 @@ public class UserService {
                 ));
     }
 
+    @Async
     public CompletableFuture<String> getUserEmailById(Long id) {
         return repository.findEmailById(id)
                 .map(CompletableFuture::completedFuture)
@@ -76,7 +78,7 @@ public class UserService {
                 repository.findUserWithRelationsByEmail(email) :
                 repository.findByEmailIgnoreCase(email)
                         .map(user -> { // Remove uninitialized triggers
-                            user.setTriggers(null);
+                            user.setTriggers(Set.of());
                             return user;
                         });
 
