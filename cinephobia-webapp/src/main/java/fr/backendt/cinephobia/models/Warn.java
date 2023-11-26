@@ -28,7 +28,7 @@ public class Warn {
     private Long mediaId;
 
     @NotNull(message = "The exposition level is required")
-    @Range(min = 1, max = 10, message = "The exposition level must be between 0 and 10")
+    @Range(min = 0, max = 10, message = "The exposition level must be between 0 and 10")
     private int expositionLevel;
 
     public Warn(Trigger trigger, Long mediaId, int expositionLevel) {
