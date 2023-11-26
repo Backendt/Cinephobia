@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{main.html}"
-      xmlns:th="http://thymeleaf.org" xmlns:hx="http://htmx.org">
+      xmlns:th="http://thymeleaf.org" xmlns:hx="http://htmx.org" xmlns:hx-on="http://htmx.org">
 <head>
   <meta charset="UTF-8">
   <title>Profile | Cinéphobia</title>
@@ -17,7 +17,7 @@
           <p class="fw-bold" th:text="${trigger.name}"></p>
           <p th:text="${trigger.description}"></p>
         </div>
-        <button class="btn btn-secondary" type="button" title="Remove from my triggers"><i class="bi bi-trash text-white"></i></button> <!-- TODO -->
+        <button class="btn btn-secondary" hx-swap="none" hx-on::after-request="htmx.remove(this.closest('.list-group-item'))" hx:delete="@{/profile/trigger/{id}(id=${trigger.id})}" hx:headers='${ {_csrf.headerName: _csrf.token} }' type="button" title="Remove from my triggers"><i class="bi bi-trash text-white"></i></button>
       </div>
     </div>
     <button class="btn btn-outline-danger" hx-push-url="true" hx-target="body" hx-post="/logout" hx:headers='${ {_csrf.headerName: _csrf.token} }'>Logout</button>

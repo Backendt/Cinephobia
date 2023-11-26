@@ -8,7 +8,7 @@
         <p th:text="${trigger.description}"></p>
       </div>
       <div> <!-- Buttons -->
-        <button class="btn btn-primary" type="button" title="Add to my triggers">+</button> <!-- TODO -->
+        <button class="btn btn-primary" hx-post="/profile/trigger" hx:vals='${ {_csrf.parameterName: _csrf.token, "id": trigger.id} }' hx-on::after-request="htmx.remove(this.closest('.list-group-item'))" hx-swap="none" type="button" title="Add to my triggers">+</button>
         <th:block sec:authorize="hasRole('ADMIN')">
           <button class="btn btn-warning" hx:get="@{/admin/trigger/{id}(id=${trigger.id})}" hx-swap="outerHTML" type="button" title="Edit trigger"><i class="bi bi-pencil-square"></i></button>
           <button class="btn btn-danger" hx-on::after-request="htmx.remove(this.closest('.list-group-item'))" hx:delete="@{/admin/trigger/{id}(id=${trigger.id})}" hx:headers='${ {_csrf.headerName: _csrf.token} }' hx-swap="none" hx-confirm="Are you sure you want to delete this trigger?" type="button" title="Delete trigger"><i class="bi bi-trash"></i></button>

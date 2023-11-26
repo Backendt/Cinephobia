@@ -1,5 +1,6 @@
 package fr.backendt.cinephobia.repositories;
 
+import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -37,6 +39,22 @@ class UserRepositoryTests {
     void createUserTest() {
         // GIVEN
         User result;
+
+        // WHEN
+        result = repository.save(userTest);
+
+        // THEN
+        assertThat(result)
+                .isNotNull()
+                .hasNoNullFieldsOrPropertiesExcept("triggers");
+    }
+
+    @Test
+    void createUserWithTriggerTest() {
+        // GIVEN
+        User result;
+        Set<Trigger> triggers = Set.of(new Trigger(1L, null, null));
+        userTest.setTriggers(triggers);
 
         // WHEN
         result = repository.save(userTest);

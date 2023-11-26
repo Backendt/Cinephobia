@@ -5,6 +5,7 @@ import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.dto.ProfileResponseDTO;
 import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.models.dto.UserResponseDTO;
+import fr.backendt.cinephobia.services.TriggerService;
 import fr.backendt.cinephobia.services.UserService;
 import io.github.wimdeblauwe.htmx.spring.boot.mvc.HtmxResponse;
 import org.jboss.logging.Logger;
@@ -12,6 +13,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.session.SessionInformation;
@@ -36,11 +38,13 @@ public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class);
 
     private final UserService service;
+    private final TriggerService triggerService;
     private final SessionRegistry sessions;
     private final ModelMapper mapper;
 
-    public UserController(UserService service, SessionRegistry sessions) {
+    public UserController(UserService service, TriggerService triggerService, SessionRegistry sessions) {
         this.service = service;
+        this.triggerService = triggerService;
         this.sessions = sessions;
         this.mapper = new ModelMapper();
     }
@@ -173,6 +177,21 @@ public class UserController {
                     result.rejectValue("email", "email-taken", "Email already taken");
                     return errorTemplate.addObject("user", userUpdate);
                 });
+    }
+
+    @PostMapping("/profile/trigger") // TODO Write tests
+    public CompletableFuture<ResponseEntity<Void>> addTriggerToProfile(Authentication authentication, Long id) {
+        String userEmail = authentication.getName();
+        return triggerService.getTrigger(id)
+                .thenCompose(trigger -> service.addTriggerToUser(userEmail, trigger))
+                .thenApply(future -> ResponseEntity.ok(null));
+    }
+
+    @DeleteMapping("/profile/trigger/{id}") // TODO Write tests
+    public CompletableFuture<ResponseEntity<Void>> removeTriggerFromProfile(Authentication authentication, @PathVariable("id") Long triggerId) {
+        String userEmail = authentication.getName();
+        return service.removeTriggerFromUser(userEmail, triggerId)
+                .thenApply(future -> ResponseEntity.ok(null));
     }
 
     @DeleteMapping("/profile")

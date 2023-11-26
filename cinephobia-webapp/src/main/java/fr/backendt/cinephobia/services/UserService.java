@@ -2,6 +2,7 @@ package fr.backendt.cinephobia.services;
 
 import fr.backendt.cinephobia.exceptions.BadRequestException;
 import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
+import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
@@ -123,6 +124,25 @@ public class UserService {
     }
 
     @Async
+    public CompletableFuture<Void> addTriggerToUser(String userEmail, Trigger trigger) { // TODO Write tests
+        Optional<User> userFuture = repository.findUserWithRelationsByEmail(userEmail);
+        if(userFuture.isEmpty()) {
+            return failedFuture(new EntityNotFoundException("User not found"));
+        }
+        User user = userFuture.get();
+        Set<Trigger> triggers = user.getTriggers();
+
+        boolean wasNotPresent = triggers.add(trigger);
+        if(!wasNotPresent) {
+            return failedFuture(new BadRequestException("User already have the requested trigger"));
+        }
+
+        user.setTriggers(triggers); // TODO Same instance?
+        repository.save(user);
+        return completedFuture(null);
+    }
+
+    @Async
     public CompletableFuture<Void> deleteUserById(Long id) throws EntityNotFoundException {
         boolean userExists = repository.existsById(id);
         if(!userExists) {
@@ -141,6 +161,25 @@ public class UserService {
         }
 
         repository.deleteByEmailIgnoreCase(email);
+        return completedFuture(null);
+    }
+
+    @Async
+    public CompletableFuture<Void> removeTriggerFromUser(String userEmail, Long triggerId) { // TODO Write tests
+        Optional<User> userFuture = repository.findUserWithRelationsByEmail(userEmail);
+        if(userFuture.isEmpty()) {
+            return failedFuture(new EntityNotFoundException("User not found"));
+        }
+        User user = userFuture.get();
+        Set<Trigger> triggers = user.getTriggers();
+
+        boolean containedTrigger = triggers.removeIf(trigger -> trigger.getId().equals(triggerId));
+        if(!containedTrigger) {
+            return failedFuture(new BadRequestException("User does not have the requested trigger"));
+        }
+
+        user.setTriggers(triggers);
+        repository.save(user);
         return completedFuture(null);
     }
 
