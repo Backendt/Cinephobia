@@ -124,7 +124,7 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<Void> addTriggerToUser(String userEmail, Trigger trigger) { // TODO Write tests
+    public CompletableFuture<Void> addTriggerToUser(String userEmail, Trigger trigger) {
         Optional<User> userFuture = repository.findUserWithRelationsByEmail(userEmail);
         if(userFuture.isEmpty()) {
             return failedFuture(new EntityNotFoundException("User not found"));
@@ -137,7 +137,6 @@ public class UserService {
             return failedFuture(new BadRequestException("User already have the requested trigger"));
         }
 
-        user.setTriggers(triggers); // TODO Same instance?
         repository.save(user);
         return completedFuture(null);
     }
@@ -165,7 +164,7 @@ public class UserService {
     }
 
     @Async
-    public CompletableFuture<Void> removeTriggerFromUser(String userEmail, Long triggerId) { // TODO Write tests
+    public CompletableFuture<Void> removeTriggerFromUser(String userEmail, Long triggerId) {
         Optional<User> userFuture = repository.findUserWithRelationsByEmail(userEmail);
         if(userFuture.isEmpty()) {
             return failedFuture(new EntityNotFoundException("User not found"));

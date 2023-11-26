@@ -2,6 +2,7 @@ package fr.backendt.cinephobia.services;
 
 import fr.backendt.cinephobia.exceptions.BadRequestException;
 import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
+import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +17,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +42,7 @@ class UserServiceTests {
         this.passwordEncoder = Mockito.mock(PasswordEncoder.class);
         this.service = new UserService(repository, passwordEncoder);
 
-        testUser = new User("Jane Doe", "jane.doe@test.com", "myPassword1234", null);
+        testUser = new User(null, "Jane Doe", "jane.doe@test.com", "myPassword1234", null, new HashSet<>());
         when(passwordEncoder.encode(any())).thenReturn("HASHED");
     }
 
@@ -384,6 +387,68 @@ class UserServiceTests {
     }
 
     @Test
+    void addTriggerToUserTest() {
+        // GIVEN
+        String userEmail = "user@test.com";
+        Trigger trigger = new Trigger(1L, "Example trigger", "Example trigger");
+        Set<Trigger> expectedTriggers = new HashSet<>(1);
+
+        User expectedUser = new User(testUser);
+        expectedTriggers.add(trigger);
+        expectedUser.setTriggers(expectedTriggers);
+
+        when(repository.findUserWithRelationsByEmail(any()))
+                .thenReturn(Optional.of(testUser));
+        // WHEN
+        service.addTriggerToUser(userEmail, trigger).join();
+
+        // THEN
+        verify(repository).findUserWithRelationsByEmail(userEmail);
+        verify(repository).save(expectedUser);
+    }
+
+    @Test
+    void addTriggerToUnknownUserTest() {
+        // GIVEN
+        String userEmail = "unknown@test.com";
+        Trigger trigger = new Trigger(1L, "Example trigger", "Example trigger");
+
+        when(repository.findUserWithRelationsByEmail(any()))
+                .thenReturn(Optional.empty());
+
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.addTriggerToUser(userEmail, trigger).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
+
+        // THEN
+        verify(repository).findUserWithRelationsByEmail(userEmail);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void addAlreadyPresentTriggerToUserTest() {
+        // GIVEN
+        String userEmail = "user@test.com";
+        Trigger trigger = new Trigger(1L, "Example trigger", "Example trigger");
+        Set<Trigger> triggers = new HashSet<>(2);
+
+        triggers.add(trigger);
+        testUser.setTriggers(triggers);
+
+        when(repository.findUserWithRelationsByEmail(any()))
+                .thenReturn(Optional.of(testUser));
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.addTriggerToUser(userEmail, trigger).join())
+                .withCauseExactlyInstanceOf(BadRequestException.class);
+
+        // THEN
+        verify(repository).findUserWithRelationsByEmail(userEmail);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void deleteUserByIdTest() {
         // GIVEN
         Long userId = 1L;
@@ -441,6 +506,65 @@ class UserServiceTests {
 
         verify(repository).existsByEmailIgnoreCase(userEmail);
         verify(repository, never()).deleteByEmailIgnoreCase(any());
+    }
+
+    @Test
+    void removeTriggerFromUserTest() {
+        // GIVEN
+        String userEmail = "unknown@test.com";
+        long triggerId = 1L;
+        Set<Trigger> triggers = new HashSet<>(1);
+
+        User expectedUser = new User(testUser);
+
+        Trigger trigger = new Trigger(1L, "Example trigger", "Example trigger");
+        triggers.add(trigger);
+        testUser.setTriggers(triggers);
+
+        when(repository.findUserWithRelationsByEmail(userEmail))
+                .thenReturn(Optional.of(testUser));
+        // WHEN
+        service.removeTriggerFromUser(userEmail, triggerId).join();
+
+        // THEN
+        verify(repository).findUserWithRelationsByEmail(userEmail);
+        verify(repository).save(expectedUser);
+    }
+
+    @Test
+    void removeTriggerFromUnknownUserTest() {
+        // GIVEN
+        String userEmail = "unknown@test.com";
+        long triggerId = 1L;
+
+        when(repository.findUserWithRelationsByEmail(userEmail))
+                .thenReturn(Optional.empty());
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.removeTriggerFromUser(userEmail, triggerId).join())
+                .withCauseExactlyInstanceOf(EntityNotFoundException.class);
+
+        // THEN
+        verify(repository).findUserWithRelationsByEmail(userEmail);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void removeUnknownTriggerFromUserTest() {
+        // GIVEN
+        String userEmail = "unknown@test.com";
+        long triggerId = 1L;
+
+        when(repository.findUserWithRelationsByEmail(userEmail))
+                .thenReturn(Optional.of(testUser));
+        // WHEN
+        assertThatExceptionOfType(CompletionException.class)
+                .isThrownBy(() -> service.removeTriggerFromUser(userEmail, triggerId).join())
+                .withCauseExactlyInstanceOf(BadRequestException.class);
+
+        // THEN
+        verify(repository).findUserWithRelationsByEmail(userEmail);
+        verify(repository, never()).save(any());
     }
 
     @Test
