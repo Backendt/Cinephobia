@@ -8,6 +8,7 @@ import fr.backendt.cinephobia.models.dto.ProfileResponseDTO;
 import fr.backendt.cinephobia.models.dto.UserResponseDTO;
 import fr.backendt.cinephobia.models.dto.TriggerDTO;
 import fr.backendt.cinephobia.models.dto.UserDTO;
+import fr.backendt.cinephobia.services.TriggerService;
 import fr.backendt.cinephobia.services.UserService;
 import fr.backendt.cinephobia.utils.UrlEncodedFormSerializer;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,6 +53,9 @@ class UserControllerTests {
 
     @MockBean
     private UserService service;
+
+    @MockBean
+    private TriggerService triggerService;
 
     @MockBean
     private SessionRegistry sessions;
@@ -633,6 +637,211 @@ class UserControllerTests {
         verify(service).updateUserByEmail(currentUserEmail, userUpdateEntity);
     }
 
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void addTriggerToProfileTest() throws Exception {
+        // GIVEN
+        String userEmail = "user@test.com";
+        long triggerId = 1L;
+
+        Trigger trigger = new Trigger(1L, "Test trigger", "Test trigger");
+
+        RequestBuilder request = post("/profile/trigger")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("id", String.valueOf(triggerId))
+                .with(csrf());
+
+        MvcResult result;
+
+        when(triggerService.getTrigger(any())).thenReturn(completedFuture(trigger));
+        when(service.addTriggerToUser(any(), any()))
+                .thenReturn(completedFuture(null));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk());
+
+        verify(triggerService).getTrigger(triggerId);
+        verify(service).addTriggerToUser(userEmail, trigger);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void addUnknownTriggerToProfileTest() throws Exception {
+        // GIVEN
+        long triggerId = 1L;
+
+        RequestBuilder request = post("/profile/trigger")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("id", String.valueOf(triggerId))
+                .with(csrf());
+
+        MvcResult result;
+
+        when(triggerService.getTrigger(any()))
+                .thenReturn(failedFuture(new EntityNotFoundException("Trigger not found")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isNotFound());
+
+        verify(triggerService).getTrigger(triggerId);
+        verify(service, never()).addTriggerToUser(any(), any());
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void addAlreadyPresentTriggerToProfileTest() throws Exception {
+        // GIVEN
+        String userEmail = "user@test.com";
+        long triggerId = 1L;
+
+        Trigger trigger = new Trigger(1L, "Test trigger", "Test trigger");
+
+        RequestBuilder request = post("/profile/trigger")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("id", String.valueOf(triggerId))
+                .with(csrf());
+
+        MvcResult result;
+
+        when(triggerService.getTrigger(any())).thenReturn(completedFuture(trigger));
+        when(service.addTriggerToUser(any(), any()))
+                .thenReturn(failedFuture(new BadRequestException("User already have trigger")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isBadRequest());
+
+        verify(triggerService).getTrigger(triggerId);
+        verify(service).addTriggerToUser(userEmail, trigger);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void addTriggerToUnknownProfileTest() throws Exception {
+        // GIVEN
+        String userEmail = "user@test.com";
+        long triggerId = 1L;
+
+        Trigger trigger = new Trigger(1L, "Test trigger", "Test trigger");
+
+        RequestBuilder request = post("/profile/trigger")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("id", String.valueOf(triggerId))
+                .with(csrf());
+
+        MvcResult result;
+
+        when(triggerService.getTrigger(any())).thenReturn(completedFuture(trigger));
+        when(service.addTriggerToUser(any(), any()))
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isNotFound());
+
+        verify(triggerService).getTrigger(triggerId);
+        verify(service).addTriggerToUser(userEmail, trigger);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void removeTriggerFromProfileTest() throws Exception {
+        // GIVEN
+        String userEmail = "user@test.com";
+        long triggerId = 1L;
+        RequestBuilder request = delete("/profile/trigger/" + triggerId)
+                .with(csrf());
+
+        MvcResult result;
+
+        when(service.removeTriggerFromUser(any(), any()))
+                .thenReturn(completedFuture(null));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk());
+
+        verify(service).removeTriggerFromUser(userEmail, triggerId);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void removeTriggerFromUnknownProfileTest() throws Exception {
+        // GIVEN
+        String userEmail = "user@test.com";
+        long triggerId = 1L;
+        RequestBuilder request = delete("/profile/trigger/" + triggerId)
+                .with(csrf());
+
+        MvcResult result;
+
+        when(service.removeTriggerFromUser(any(), any()))
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isNotFound());
+
+        verify(service).removeTriggerFromUser(userEmail, triggerId);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void removeUnknownTriggerFromProfileTest() throws Exception {
+        // GIVEN
+        String userEmail = "user@test.com";
+        long triggerId = 1L;
+        RequestBuilder request = delete("/profile/trigger/" + triggerId)
+                .with(csrf());
+
+        MvcResult result;
+
+        when(service.removeTriggerFromUser(any(), any()))
+                .thenReturn(failedFuture(new BadRequestException("User doesn't have trigger")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isBadRequest());
+
+        verify(service).removeTriggerFromUser(userEmail, triggerId);
+    }
 
     @WithMockUser(username = "user@test.com")
     @Test

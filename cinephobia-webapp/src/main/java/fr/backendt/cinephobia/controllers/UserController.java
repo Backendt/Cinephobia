@@ -179,7 +179,7 @@ public class UserController {
                 });
     }
 
-    @PostMapping("/profile/trigger") // TODO Write tests
+    @PostMapping("/profile/trigger")
     public CompletableFuture<ResponseEntity<Void>> addTriggerToProfile(Authentication authentication, Long id) {
         String userEmail = authentication.getName();
         return triggerService.getTrigger(id)
@@ -187,7 +187,7 @@ public class UserController {
                 .thenApply(future -> ResponseEntity.ok(null));
     }
 
-    @DeleteMapping("/profile/trigger/{id}") // TODO Write tests
+    @DeleteMapping("/profile/trigger/{id}")
     public CompletableFuture<ResponseEntity<Void>> removeTriggerFromProfile(Authentication authentication, @PathVariable("id") Long triggerId) {
         String userEmail = authentication.getName();
         return service.removeTriggerFromUser(userEmail, triggerId)
