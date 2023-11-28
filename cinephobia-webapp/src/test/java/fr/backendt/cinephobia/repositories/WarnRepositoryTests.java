@@ -2,6 +2,7 @@ package fr.backendt.cinephobia.repositories;
 
 import fr.backendt.cinephobia.models.MediaType;
 import fr.backendt.cinephobia.models.Trigger;
+import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.Warn;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,8 @@ class WarnRepositoryTests {
     @BeforeEach
     void initTests() {
         Trigger trigger = new Trigger(1L, "Testphobia", "Fear of unit tests failing");
-        warn = new Warn(1L, trigger, 1234L, MediaType.MOVIE, 9);
+        User user = new User(1L, "John doe", "john.doe@test.com", "HASHED", "USER");
+        warn = new Warn(1L, trigger, user,1234L, MediaType.MOVIE, 9);
     }
 
     // Create
@@ -72,7 +74,7 @@ class WarnRepositoryTests {
     }
 
     @Test
-    void getWarnsByMediaIdTest() {
+    void getWarnsByMediaTest() {
         // GIVEN
         long mediaId = 1L;
         MediaType mediaType = MediaType.MOVIE;
@@ -83,6 +85,47 @@ class WarnRepositoryTests {
 
         // THEN
         assertThat(results).isNotEmpty();
+    }
+
+    @Test
+    void getWarnsByUnknownMediaTest() {
+        // GIVEN
+        long mediaId = 0L;
+        MediaType mediaType = MediaType.MOVIE;
+        Page<Warn> results;
+
+        // WHEN
+        results = repository.findAllByMediaIdAndMediaType(mediaId, mediaType, Pageable.unpaged());
+
+        // THEN
+        assertThat(results).isEmpty();
+    }
+
+    @Test
+    void getWarnsByUserEmailTest() {
+        // GIVEN
+        String userEmail = "john.doe@test.com";
+        Page<Warn> results;
+
+        // WHEN
+        results = repository.findAllByUserEmail(userEmail, Pageable.unpaged());
+
+        // THEN
+        assertThat(results).isNotEmpty();
+        assertThat(results.getContent().get(0)).hasNoNullFieldsOrProperties();
+    }
+
+    @Test
+    void getWarnsByUnknownUserEmailTest() {
+        // GIVEN
+        String userEmail = "unknown@test.com";
+        Page<Warn> results;
+
+        // WHEN
+        results = repository.findAllByUserEmail(userEmail, Pageable.unpaged());
+
+        // THEN
+        assertThat(results).isEmpty();
     }
 
     @Test
