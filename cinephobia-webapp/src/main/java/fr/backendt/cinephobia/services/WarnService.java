@@ -2,14 +2,16 @@ package fr.backendt.cinephobia.services;
 
 import fr.backendt.cinephobia.exceptions.BadRequestException;
 import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
+import fr.backendt.cinephobia.models.MediaType;
 import fr.backendt.cinephobia.models.Warn;
 import fr.backendt.cinephobia.repositories.WarnRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -38,14 +40,14 @@ public class WarnService {
     }
 
     @Async
-    public CompletableFuture<List<Warn>> getAllWarns() {
-        List<Warn> warns = repository.findAll();
+    public CompletableFuture<Page<Warn>> getAllWarns(Pageable pageable) {
+        Page<Warn> warns = repository.findAll(pageable);
         return completedFuture(warns);
     }
 
     @Async
-    public CompletableFuture<List<Warn>> getWarnsByMediaId(Long mediaId) {
-        List<Warn> warns = repository.findAllByMediaId(mediaId);
+    public CompletableFuture<Page<Warn>> getWarnsByMedia(Long mediaId, MediaType type, Pageable pageable) {
+        Page<Warn> warns = repository.findAllByMediaIdAndMediaType(mediaId, type, pageable);
         return completedFuture(warns);
     }
 

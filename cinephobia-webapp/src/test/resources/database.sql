@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS warn(
     id BIGINT NOT NULL AUTO_INCREMENT,
     trigger_id BIGINT NOT NULL,
     media_id BIGINT NOT NULL,
+    media_type VARCHAR(255) NOT NULL,
     exposition_level TINYINT NOT NULL,
     FOREIGN KEY (trigger_id) REFERENCES triggr(id) ON UPDATE CASCADE ON DELETE CASCADE, /* Deleting a trigger deletes warns */
     PRIMARY KEY (id)
@@ -31,6 +32,6 @@ CREATE TABLE IF NOT EXISTS users_triggers(
 );
 
 INSERT INTO triggr(name, description) VALUES ('Testphobia', 'Fear of unit tests failing'), ('Bugphobia', 'Fear of software bugs');
-INSERT INTO warn(trigger_id, media_id, exposition_level) VALUES (2, 1, 9);
+INSERT INTO warn(trigger_id, media_id, media_type, exposition_level) VALUES (2, 1, 'MOVIE', 9);
 INSERT INTO users(display_name, email, password, role) VALUES ('John Doe', 'john.doe@test.com', 'John1234', 'USER'), ('Jane Doe', 'jane.doe@test.com', 'Jane1234', 'USER');
 INSERT INTO users_triggers(user_id, trigger_id) VALUES (2, 2);

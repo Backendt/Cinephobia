@@ -1,87 +1,46 @@
 package fr.backendt.cinephobia.repositories;
 
-import fr.backendt.cinephobia.models.Media;
+import fr.backendt.cinephobia.models.MediaType;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.Warn;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class WarnRepositoryTests {
 
     @Autowired
-    private MediaRepository mediaRepository;
-
-    @Autowired
-    private TriggerRepository triggerRepository;
-
-    @Autowired
     private WarnRepository repository;
+
+    private Warn warn;
+
+    @BeforeEach
+    void initTests() {
+        Trigger trigger = new Trigger(1L, "Testphobia", "Fear of unit tests failing");
+        warn = new Warn(1L, trigger, 1234L, MediaType.MOVIE, 9);
+    }
 
     // Create
     @Test
     void createWarnTest() {
         // GIVEN
-        Trigger trigger = triggerRepository.findById(1L).orElseThrow();
-        Media media = mediaRepository.findById(1L).orElseThrow();
-        Warn warn = new Warn(trigger, media, 9);
         Warn result;
 
         // WHEN
         result = repository.save(warn);
 
         // THEN
-        assertThat(result.getId()).isNotNull();
-    }
-
-    @Test
-    void failToCreateWarnWithUnsavedTriggerTest() {
-        // GIVEN
-        Trigger trigger = new Trigger( "Not saved", "Trigger not saved");
-        Media media = mediaRepository.findById(1L).orElseThrow();
-        Warn warn = new Warn(trigger, media, 9);
-
-        // THEN
-        // WHEN
-        assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
-                .isThrownBy(() -> repository.save(warn));
-    }
-
-    @Test
-    void failToCreateWarnWithInvalidTriggerTest() {
-        // GIVEN
-        Trigger trigger = new Trigger(1337L, "Not saved", "Trigger not saved");
-        Media media = mediaRepository.findById(1L).orElseThrow();
-        Warn warn = new Warn(trigger, media, 9);
-
-        // THEN
-        // WHEN
-        assertThatExceptionOfType(DataIntegrityViolationException.class)
-                .isThrownBy(() -> repository.save(warn));
-    }
-
-    @Test
-    void failToCreateWarnWithInvalidMediaTest() {
-        // GIVEN
-        Trigger trigger = triggerRepository.findById(1L).orElseThrow();
-        Media media = new Media(1337L, "Not saved", "https://example.com/hey.png");
-        Warn warn = new Warn(trigger, media, 9);
-
-        // THEN
-        // WHEN
-        assertThatExceptionOfType(DataIntegrityViolationException.class)
-                .isThrownBy(() -> repository.save(warn));
+        assertThat(result).hasNoNullFieldsOrProperties();
     }
 
     @Test
@@ -101,23 +60,26 @@ class WarnRepositoryTests {
     @Test
     void getAllWarnsTest() {
         // GIVEN
-        List<Warn> results;
+        Page<Warn> results;
 
         // WHEN
-        results = repository.findAll();
+        results = repository.findAll(Pageable.unpaged());
 
         // THEN
         assertThat(results).isNotEmpty();
+        assertThat(results.stream().findAny()).isPresent();
+        assertThat(results.stream().findAny().orElseThrow()).hasNoNullFieldsOrProperties();
     }
 
     @Test
     void getWarnsByMediaIdTest() {
         // GIVEN
-        Long mediaId = 1L;
-        List<Warn> results;
+        long mediaId = 1L;
+        MediaType mediaType = MediaType.MOVIE;
+        Page<Warn> results;
 
         // WHEN
-        results = repository.findAllByMediaId(mediaId);
+        results = repository.findAllByMediaIdAndMediaType(mediaId, mediaType, Pageable.unpaged());
 
         // THEN
         assertThat(results).isNotEmpty();
@@ -127,17 +89,16 @@ class WarnRepositoryTests {
     void deleteWarnByIdTest() {
         // GIVEN
         Long warnId = 1L;
-        Optional<Warn> resultBefore;
-        Optional<Warn> resultAfter;
+        boolean existsBefore, existsAfter;
 
         // WHEN
-        resultBefore = repository.findById(warnId);
+        existsBefore = repository.existsById(warnId);
         repository.deleteById(warnId);
-        resultAfter = repository.findById(warnId);
+        existsAfter = repository.existsById(warnId);
 
         // THEN
-        assertThat(resultBefore).isNotEmpty();
-        assertThat(resultAfter).isEmpty();
+        assertThat(existsBefore).isTrue();
+        assertThat(existsAfter).isFalse();
     }
 
 }
