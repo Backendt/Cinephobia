@@ -12,5 +12,6 @@ public interface WarnRepository extends JpaRepository<Warn, Long> {
 
     Page<Warn> findAllByMediaIdAndMediaType(Long id, MediaType mediaType, Pageable pageable);
     Page<Warn> findAllByUserEmail(String userEmail, Pageable pageable);
+    boolean existsByUserIdAndTriggerIdAndMediaIdAndMediaType(Long userId, Long triggerId, Long mediaId, MediaType mediaType);
 
 }

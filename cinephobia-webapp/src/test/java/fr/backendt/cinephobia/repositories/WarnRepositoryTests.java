@@ -162,4 +162,36 @@ class WarnRepositoryTests {
         assertThat(existsAfter).isFalse();
     }
 
+    @Test
+    void existsByUniqueFieldsTest() {
+        // GIVEN
+        long userId = 1;
+        long triggerId = 2;
+        long mediaId = 1;
+        MediaType mediaType = MediaType.MOVIE;
+
+        boolean result;
+        // WHEN
+        result = repository.existsByUserIdAndTriggerIdAndMediaIdAndMediaType(userId, triggerId, mediaId, mediaType);
+
+        // THEN
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void doesNotExistsByUniqueFieldsTest() {
+        // GIVEN
+        long userId = 1;
+        long triggerId = 1;
+        long mediaId = 1;
+        MediaType mediaType = MediaType.MOVIE;
+
+        boolean result;
+        // WHEN
+        result = repository.existsByUserIdAndTriggerIdAndMediaIdAndMediaType(userId, triggerId, mediaId, mediaType);
+
+        // THEN
+        assertThat(result).isFalse();
+    }
+
 }
