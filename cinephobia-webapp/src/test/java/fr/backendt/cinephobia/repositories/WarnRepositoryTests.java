@@ -4,17 +4,20 @@ import fr.backendt.cinephobia.models.MediaType;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.Warn;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -29,7 +32,7 @@ class WarnRepositoryTests {
     void initTests() {
         Trigger trigger = new Trigger(1L, "Testphobia", "Fear of unit tests failing");
         User user = new User(1L, "John doe", "john.doe@test.com", "HASHED", "USER");
-        warn = new Warn(1L, trigger, user,1234L, MediaType.MOVIE, 9);
+        warn = new Warn(1L, trigger, user,1L, MediaType.MOVIE, 9);
     }
 
     // Create
@@ -43,6 +46,21 @@ class WarnRepositoryTests {
 
         // THEN
         assertThat(result).hasNoNullFieldsOrProperties();
+    }
+
+    @Test
+    void createDuplicateWarnTest() {
+        // GIVEN
+        Trigger trigger = new Trigger(2L, "Bugphobia", "Fear of software bugs");
+        User user = new User(1L, "John Doe", "john.doe@test.com", "John1234", "USER");
+        long mediaId = 1L;
+        Warn duplicateWarn = new Warn(trigger, user, mediaId, MediaType.MOVIE, 5);
+
+        // WHEN
+        // THEN
+        assertThatExceptionOfType(DataIntegrityViolationException.class)
+                .isThrownBy(() -> repository.save(duplicateWarn))
+                .withCauseExactlyInstanceOf(ConstraintViolationException.class);
     }
 
     @Test

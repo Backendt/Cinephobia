@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS warn(
     exposition_level TINYINT NOT NULL,
     FOREIGN KEY (trigger_id) REFERENCES triggr(id) ON UPDATE CASCADE ON DELETE CASCADE, /* Deleting a trigger deletes warns */
     FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT UC_Warn UNIQUE (trigger_id, user_id, media_id, media_type)
 );
 
 INSERT INTO triggr(name, description) VALUES ('Testphobia', 'Fear of unit tests failing'), ('Bugphobia', 'Fear of software bugs');
