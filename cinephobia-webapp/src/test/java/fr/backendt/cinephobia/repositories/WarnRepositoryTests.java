@@ -194,4 +194,47 @@ class WarnRepositoryTests {
         assertThat(result).isFalse();
     }
 
+    @Test
+    void getWarnOwnedByUserTest() {
+        // GIVEN
+        long warnId = 1L;
+        String userEmail = "john.doe@test.com";
+
+        Optional<Warn> result;
+        // WHEN
+        result = repository.findByIdAndUserEmail(warnId, userEmail);
+
+        // THEN
+        assertThat(result).isNotEmpty();
+        assertThat(result.get()).hasNoNullFieldsOrProperties();
+    }
+
+    @Test
+    void getUnknownWarnOwnedByUserTest() {
+        // GIVEN
+        long unknownWarnId = 2L;
+        String userEmail = "john.doe@test.com";
+
+        Optional<Warn> result;
+        // WHEN
+        result = repository.findByIdAndUserEmail(unknownWarnId, userEmail);
+
+        // THEN
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getWarnOwnedByOtherUserTest() {
+        // GIVEN
+        long warnId = 1L;
+        String otherUserEmail = "jane.doe@test.com";
+
+        Optional<Warn> result;
+        // WHEN
+        result = repository.findByIdAndUserEmail(warnId, otherUserEmail);
+
+        // THEN
+        assertThat(result).isEmpty();
+    }
+
 }

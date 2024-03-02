@@ -51,8 +51,8 @@ public class Warn {
     }
 
     public Warn(Trigger trigger, User user, Long mediaId, MediaType mediaType, int expositionLevel) {
-        this.trigger = new Trigger(trigger);
-        this.user = new User(user);
+        if(trigger != null) this.trigger = new Trigger(trigger);
+        if(user != null) this.user = new User(user);
         this.mediaId = mediaId;
         this.mediaType = mediaType;
         this.expositionLevel = expositionLevel;
@@ -60,8 +60,8 @@ public class Warn {
 
     public Warn(Warn warn) {
         this.id = warn.id;
-        this.trigger = new Trigger(warn.trigger);
-        this.user = new User(warn.user);
+        if(warn.trigger != null) this.trigger = new Trigger(warn.trigger);
+        if(warn.user != null) this.user = new User(warn.user);
         this.mediaId = warn.mediaId;
         this.mediaType = warn.mediaType;
         this.expositionLevel = warn.expositionLevel;
