@@ -11,6 +11,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -61,24 +62,24 @@ public class TriggerService {
         mapper.getConfiguration().setSkipNullEnabled(true);
 
         triggerUpdate.setId(null);
-        CompletableFuture<Trigger> currentTrigger = repository.findById(id)
-                .map(CompletableFuture::completedFuture)
-                .orElse(failedFuture(new EntityNotFoundException("Trigger not found")));
+        Optional<Trigger> optionalTrigger = repository.findById(id);
+        if(optionalTrigger.isEmpty()) {
+            return failedFuture(new EntityNotFoundException("Trigger not found"));
+        }
+        Trigger currentTrigger = optionalTrigger.get();
 
-        return currentTrigger.thenCompose(trigger -> {
-            boolean isChangingTriggerName = triggerUpdate.getName() != null && !trigger.getName().equals(triggerUpdate.getName());
-            if(isChangingTriggerName) {
-                String newName = triggerUpdate.getName();
-                boolean triggerAlreadyExists = repository.existsByNameIgnoreCase(newName);
-                if(triggerAlreadyExists) {
-                    return failedFuture(new BadRequestException("Trigger already exists"));
-                }
+        boolean isChangingTriggerName = triggerUpdate.getName() != null && !currentTrigger.getName().equals(triggerUpdate.getName());
+        if(isChangingTriggerName) {
+            String newName = triggerUpdate.getName();
+            boolean triggerAlreadyExists = repository.existsByNameIgnoreCase(newName);
+            if(triggerAlreadyExists) {
+                return failedFuture(new BadRequestException("Trigger already exists"));
             }
+        }
 
-            mapper.map(triggerUpdate, trigger);
-            Trigger savedTrigger = repository.save(trigger);
-            return completedFuture(savedTrigger);
-        });
+        mapper.map(triggerUpdate, currentTrigger);
+        Trigger savedTrigger = repository.save(currentTrigger);
+        return completedFuture(savedTrigger);
     }
 
     @Async
