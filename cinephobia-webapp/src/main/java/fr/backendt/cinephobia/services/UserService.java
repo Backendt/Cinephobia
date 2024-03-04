@@ -125,11 +125,11 @@ public class UserService {
 
     @Async
     public CompletableFuture<Void> addTriggerToUser(String userEmail, Trigger trigger) {
-        Optional<User> userFuture = repository.findUserWithRelationsByEmail(userEmail);
-        if(userFuture.isEmpty()) {
+        Optional<User> userOptional = repository.findUserWithRelationsByEmail(userEmail);
+        if(userOptional.isEmpty()) {
             return failedFuture(new EntityNotFoundException("User not found"));
         }
-        User user = userFuture.get();
+        User user = userOptional.get();
         Set<Trigger> triggers = user.getTriggers();
 
         boolean wasNotPresent = triggers.add(trigger);
