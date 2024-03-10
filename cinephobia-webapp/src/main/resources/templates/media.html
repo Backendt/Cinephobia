@@ -6,15 +6,18 @@
 </head>
 <body>
   <section layout:fragment="content">
-    <div id="media" th:fragment="media(media)">
-      <!-- TODO Display media type and description -->
-      <div class="container">
-        <h1 th:text="${media.title}"></h1>
-        <img src="" alt="Media image" th:src="${media.posterPath != null} ? ${media.getImageUrl(true)} : @{/images/placeholder.png}">
+    <div class="container-fluid d-flex flex-column flex-xl-row" id="media" th:fragment="media(media)">
+      <img class="img-fluid w-75 mx-auto rounded" src="" alt="Media poster" th:src="${media.posterPath != null} ? ${media.getImageUrl(true)} : @{/images/placeholder.png}">
+      <div>
+        <div class="container py-2"> <!-- Title & Description -->
+          <h1 th:text="|${media.title} (${#strings.capitalize(media.type.name().toLowerCase())})|"></h1>
+          <p class="text-wrap" th:text="${media.description}"></p>
+        </div>
+        <div class="container"> <!-- Warns -->
+          <p>TODO</p>
+          <!-- TODO Get warns with htmx -->
+        </div>
       </div>
-    </div>
-    <div class="container">
-      <!-- TODO Get warns with htmx -->
     </div>
   </section>
 </body>
