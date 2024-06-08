@@ -1,0 +1,28 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:hx="http://htmx.org">
+
+<th:block th:fragment="warnList(warnPage, warnsUri)">
+    <div th:if="${warnPage.getTotalElements()} == 0" class="d-flex justify-content-center w-100 py-4">
+        <h1 class="fw-bold">No warn found !</h1>
+    </div>
+    <th:block th:each="warn : ${warnPage.getContent()}">
+        <div style="width: 12rem">
+            <div>
+                <p style="fs-3" th:text="${warn.getTrigger().getName()}"></p>
+                <p style="fs-5" th:text="${warn.getTrigger().getDescription()}"></p>
+            </div>
+            <p style="fs-2" th:text="|Exposition: ${warn.getExpositionLevel()}/10|"></p>
+        </div>
+    </th:block>
+    <div th:if="${warnPage.hasNext()}"
+         hx:get="${warnsUri}"
+         hx:vals='${ {"page": warnPage.currentPage + 1} }'
+         hx-include="#search"
+         hx-swap="outerHTML"
+         hx-trigger="revealed"
+         hx-replace-url="true"
+         class="d-flex justify-content-center w-100 py-4">
+        <span class="spinner-border" role="status"></span>
+    </div>
+</th:block>
+
+</html>

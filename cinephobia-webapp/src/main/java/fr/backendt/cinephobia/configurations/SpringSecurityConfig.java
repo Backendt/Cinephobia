@@ -37,6 +37,7 @@ public class SpringSecurityConfig {
                                 "/webjars/**", "/css/*.css", "/images/*.png", "/js/*.js",
                                 "/",
                                 "/media", "/media/**",
+                                "/warn/**",
                                 "/trigger",
                                 "/favicon.ico",
                                 "/error").permitAll()
