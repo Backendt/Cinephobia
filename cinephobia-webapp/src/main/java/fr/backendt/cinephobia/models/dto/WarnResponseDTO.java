@@ -11,7 +11,7 @@ import org.hibernate.validator.constraints.Range;
 @Generated
 @AllArgsConstructor
 @NoArgsConstructor
-public class WarnDTO {
+public class WarnResponseDTO {
 
     private Long id;
 

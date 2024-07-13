@@ -92,4 +92,7 @@ public class TriggerService {
         return completedFuture(null);
     }
 
+    public boolean doesTriggerExists(Long triggerId) {
+        return repository.existsById(triggerId);
+    }
 }
