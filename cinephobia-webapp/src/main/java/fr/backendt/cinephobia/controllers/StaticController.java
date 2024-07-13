@@ -8,7 +8,7 @@ public class StaticController {
 
     @GetMapping("/")
     public String getHome() {
-        return "home";
+        return "redirect:/media";
     }
 
 }
