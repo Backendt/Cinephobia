@@ -60,7 +60,7 @@ class WarnControllerTests {
     @Test
     void getWarnsForMediaTest() throws Exception {
         // GIVEN
-        int defaultPageIndex = 1;
+        int defaultPageIndex = 0;
         int defaultPageSize = 50;
         Long mediaId = testMedia.getId();
         MediaType mediaType = testMedia.getType();
