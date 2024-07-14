@@ -673,8 +673,6 @@ class UserControllerTests {
     @Test
     void getUnknownUserTriggersTest() throws Exception {
         // GIVEN
-        Trigger trigger = new Trigger(1L, "TriggerTest", "TriggerDesc");
-
         String userEmail = "user@test.com";
 
         RequestBuilder request = get("/profile/triggers");
