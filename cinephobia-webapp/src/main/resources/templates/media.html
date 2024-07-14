@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{main.html}" xmlns:th="http://thymeleaf.org" xmlns:hx="http://htmx.org">
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{main.html}" xmlns:th="http://thymeleaf.org" xmlns:sec="http://thymeleaf.org" xmlns:hx="http://htmx.org">
 <head>
   <meta charset="UTF-8">
   <title th:text="${media.title} + ' | Cinéphobia'"></title>
@@ -15,10 +15,10 @@
         </div>
 
         <!-- Warn creation form -->
-        <div class="w-50 container p-2 mx-auto border rounded d-flex mb-2">
+        <div class="w-50 container p-3 mx-auto border rounded d-flex mb-2">
           <th:block sec:authorize="!isFullyAuthenticated()"> <!-- If not logged-in -->
             <p class="fs-5 m-0 text-center">You must log in to create a warn.</p>
-            <a th:href="@{/login}" class="btn btn-primary h-50 my-auto">Login</a>
+            <a th:href="@{/login}" class="btn btn-primary h-50 my-auto mx-2">Login</a>
           </th:block>
           <!-- Form fetched from htmx -->
           <div sec:authorize="isFullyAuthenticated()" hx:get="@{/warn}" hx-trigger="load" hx-swap="outerHTML">

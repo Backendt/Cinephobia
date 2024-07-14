@@ -2,19 +2,16 @@
 
 <form id="warnForm" th:fragment="warnForm(warn)" th:object="${warn}" hx-post="#" hx-target="#warns" hx-swap="afterbegin" hx-on::after-request="htmx.remove(htmx.find('#nowarns'))">
     <div class="ms-2 me-auto">
-        <label>
-            Trigger
-            <input type="number" th:field="*{triggerId}" placeholder="Trigger ID"> <!-- TODO Make a trigger selection menu -->
-        </label>
-        <p th:if="${#fields.hasErrors('triggerId')}" class="alert alert-danger" th:errors="*{triggerId}"></p>
-        <label>
-            Exposition level
-            <input type="range" th:field="*{expositionLevel}" min="0" max="10">
-        </label>
-        <p th:if="${#fields.hasErrors('expositionLevel')}" class="alert alert-danger" th:errors="*{expositionLevel}"></p>
+        <label th:for="*{triggerId}">Trigger</label>
+        <input type="number" th:field="*{triggerId}" placeholder="Trigger ID"> <!-- TODO Make a trigger selection menu -->
+        <p th:if="${#fields.hasErrors('triggerId')}" class="alert alert-danger my-2" th:errors="*{triggerId}"></p>
+
+        <label th:for="*{expositionLevel}">Exposition level</label>
+        <input type="number" th:field="*{expositionLevel}" min="0" max="10" value="0">
+        <p th:if="${#fields.hasErrors('expositionLevel')}" class="alert alert-danger my-2" th:errors="*{expositionLevel}"></p>
     </div>
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-    <input type="submit" class="btn btn-primary" value="Submit">
+    <input type="submit" class="btn btn-primary mt-2" value="Submit">
 </form>
 
 <th:block th:fragment="warnList(warnPage, warnsUri)">
