@@ -4,6 +4,7 @@ import fr.backendt.cinephobia.exceptions.BadRequestException;
 import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
+import fr.backendt.cinephobia.models.dto.TriggerDTO;
 import fr.backendt.cinephobia.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;

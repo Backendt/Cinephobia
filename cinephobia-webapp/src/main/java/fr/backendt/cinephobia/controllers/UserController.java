@@ -1,8 +1,10 @@
 package fr.backendt.cinephobia.controllers;
 
 import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
+import fr.backendt.cinephobia.models.Trigger;
 import fr.backendt.cinephobia.models.User;
 import fr.backendt.cinephobia.models.dto.ProfileResponseDTO;
+import fr.backendt.cinephobia.models.dto.TriggerDTO;
 import fr.backendt.cinephobia.models.dto.UserDTO;
 import fr.backendt.cinephobia.models.dto.UserResponseDTO;
 import fr.backendt.cinephobia.services.TriggerService;
@@ -26,7 +28,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -126,6 +131,25 @@ public class UserController {
                         .redirect("/admin/user")
                         .build())
                 .join(); // HtmxResponse doesn't seem to work when passed as a future
+    }
+
+    @GetMapping("/profile/triggers")
+    public CompletableFuture<ModelAndView> getUserTriggers(Authentication authentication) {
+        ModelAndView model = new ModelAndView("fragments/triggers :: triggersSelection");
+
+        String userEmail = authentication.getName();
+        return service.getUserByEmail(userEmail, true)
+                .thenApply(user -> {
+                    Set<Trigger> triggers = user.getTriggers();
+                    Set<TriggerDTO> triggerDTOs = triggers.stream()
+                            .map(trigger -> mapper.map(trigger, TriggerDTO.class))
+                            .collect(Collectors.toSet());
+                    return model.addObject("triggers", triggerDTOs);
+                })
+                .exceptionally(exception -> {
+                    LOGGER.error("Could not get user to display their trigger list", exception);
+                    return new ModelAndView("redirect:/login");
+                });
     }
 
     @GetMapping("/profile")

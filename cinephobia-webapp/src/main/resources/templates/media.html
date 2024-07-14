@@ -15,7 +15,8 @@
         </div>
 
         <!-- Warn creation form -->
-        <div class="w-50 container p-3 mx-auto border rounded d-flex mb-2">
+        <div class="w-sm-50 container p-3 mx-auto border rounded d-flex flex-column mb-2">
+          <p class="fs-3 text-center">Submit a warn</p>
           <th:block sec:authorize="!isFullyAuthenticated()"> <!-- If not logged-in -->
             <p class="fs-5 m-0 text-center">You must log in to create a warn.</p>
             <a th:href="@{/login}" class="btn btn-primary h-50 my-auto mx-2">Login</a>

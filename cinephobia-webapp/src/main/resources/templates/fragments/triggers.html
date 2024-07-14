@@ -45,4 +45,9 @@
   <input type="submit" class="btn btn-primary" value="Submit">
 </form>
 
+<th:block th:fragment="triggersSelection(triggers)">
+  <option th:if="${triggers.isEmpty()}" value="-1" disabled>You don't have any triggers</option>
+  <option th:each="trigger : ${triggers}" th:value="${trigger.id}" th:text="${trigger.name}"></option>
+</th:block>
+
 </html>

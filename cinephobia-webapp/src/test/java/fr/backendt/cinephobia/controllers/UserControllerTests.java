@@ -639,6 +639,66 @@ class UserControllerTests {
 
     @WithMockUser(username = "user@test.com")
     @Test
+    void getUserTriggersTest() throws Exception {
+        // GIVEN
+        Trigger trigger = new Trigger(1L, "TriggerTest", "TriggerDesc");
+        TriggerDTO triggerDTO = new TriggerDTO(1L, "TriggerTest", "TriggerDesc");
+
+        String userEmail = "user@test.com";
+        User currentUser = new User(userList.get(0));
+        currentUser.setEmail(userEmail);
+        currentUser.setTriggers(Set.of(trigger));
+
+        RequestBuilder request = get("/profile/triggers");
+        MvcResult result;
+
+        when(service.getUserByEmail(any(), anyBoolean())).thenReturn(completedFuture(currentUser));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("triggers", Set.of(triggerDTO)))
+                .andExpect(view().name("fragments/triggers :: triggersSelection"));
+
+        verify(service).getUserByEmail(userEmail, true);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void getUnknownUserTriggersTest() throws Exception {
+        // GIVEN
+        Trigger trigger = new Trigger(1L, "TriggerTest", "TriggerDesc");
+
+        String userEmail = "user@test.com";
+
+        RequestBuilder request = get("/profile/triggers");
+        MvcResult result;
+
+        when(service.getUserByEmail(any(), anyBoolean()))
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found")));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isFound())
+                .andExpect(model().hasNoErrors())
+                .andExpect(redirectedUrl("/login"));
+
+        verify(service).getUserByEmail(userEmail, true);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
     void addTriggerToProfileTest() throws Exception {
         // GIVEN
         String userEmail = "user@test.com";
