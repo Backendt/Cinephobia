@@ -1,11 +1,14 @@
 package fr.backendt.cinephobia.controllers;
 
+import fr.backendt.cinephobia.exceptions.EntityNotFoundException;
 import fr.backendt.cinephobia.models.MediaType;
 import fr.backendt.cinephobia.models.Warn;
 import fr.backendt.cinephobia.models.dto.WarnDTO;
 import fr.backendt.cinephobia.models.dto.WarnResponseDTO;
 import fr.backendt.cinephobia.services.TriggerService;
+import fr.backendt.cinephobia.services.UserService;
 import fr.backendt.cinephobia.services.WarnService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jboss.logging.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -32,11 +35,13 @@ public class WarnController {
 
     private final WarnService service;
     private final TriggerService triggerService;
+    private final UserService userService;
     private final ModelMapper mapper;
 
-    public WarnController(WarnService service, TriggerService triggerService) {
+    public WarnController(WarnService service, TriggerService triggerService, UserService userService) {
         this.service = service;
         this.triggerService = triggerService;
+        this.userService = userService;
         this.mapper = new ModelMapper();
     }
 
@@ -49,12 +54,8 @@ public class WarnController {
         if(size < 1) size = 1;
         else if(size > 300) size = 300;
 
-        MediaType mediaType;
-        try {
-            mediaType = MediaType.valueOf(mediaTypeName);
-        } catch(IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid media type.");
-        }
+        MediaType mediaType = MediaType.fromName(mediaTypeName)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid media type."));
 
         Pageable pageable = PageRequest.of(page, size);
         CompletableFuture<Page<Warn>> warnPage = service.getWarnsForMedia(mediaId, mediaType, pageable);
@@ -72,40 +73,70 @@ public class WarnController {
         });
     }
 
-    @PostMapping("/warn/{mediaType}/{mediaId}") // TODO Write tests
-    public CompletableFuture<ModelAndView> createMediaWarn(@PathVariable("mediaType") String mediaTypeName, @PathVariable("mediaId") Long mediaId, @Validated WarnDTO warnDTO, BindingResult results) {
+    @GetMapping("/warn")
+    public CompletableFuture<ModelAndView> getWarnCreationForm() {
+        ModelAndView model = new ModelAndView("fragments/warns :: warnForm");
+        model.addObject("warn", new WarnDTO());
+        return completedFuture(model);
+    }
+
+    @PostMapping("/media/{mediaType}/{mediaId}")
+    public CompletableFuture<ModelAndView> createWarn(@PathVariable("mediaType") String mediaTypeName, @PathVariable("mediaId") Long mediaId, @ModelAttribute("warn") @Validated WarnDTO warnDTO, BindingResult results, Authentication authentication, HttpServletResponse response) {
         ModelAndView errorModel = new ModelAndView("fragments/warns :: warnForm");
         if(results.hasErrors()) {
-            return completedFuture(
-                    errorModel.addObject("warn", warnDTO)
-            );
+            response.addHeader("HX-Retarget", "#warnForm");
+            response.addHeader("HX-Reswap", "outerHTML");
+            return completedFuture(errorModel.addObject("warn", warnDTO));
         }
 
-        boolean triggerExists = triggerService.doesTriggerExists(warnDTO.getTriggerId());
-        if(!triggerExists) {
-            results.rejectValue("triggerId", "trigger-doesnt-exist", "Trigger does not exist.");
-            return completedFuture(
-                    errorModel.addObject("warn", warnDTO)
-            );
-        }
+        String userEmail = authentication.getName();
+        CompletableFuture<Warn> futureWarn = buildWarnFromDTO(mediaTypeName, mediaId, warnDTO, userEmail, results);
 
-        Warn warn = mapper.map(warnDTO, Warn.class);
-        return service.createWarn(warn)
+        return futureWarn.thenCompose(service::createWarn)
                 .thenApply(savedWarn -> {
-                    WarnDTO savedDTO = mapper.map(savedWarn, WarnDTO.class);
+                    WarnResponseDTO savedDTO = mapper.map(savedWarn, WarnResponseDTO.class);
                     return new ModelAndView("fragments/warns :: warn")
                             .addObject("warn", savedDTO);
                 }).exceptionally(exception -> {
-                    results.rejectValue("triggerId", "already-exists", "Warn already exists");
+                    if(!results.hasErrors()) {
+                        results.rejectValue("triggerId", "warn-already-exist", "You already created a similar warn.");
+                    }
+                    response.addHeader("HX-Retarget", "#warnForm");
+                    response.addHeader("HX-Reswap", "outerHTML");
                     return errorModel.addObject("warn", warnDTO);
                 });
     }
 
-    @DeleteMapping("/warn/{warnId}") // TODO Write tests
-    public CompletableFuture<ResponseEntity<Void>> deleteTrigger(@PathVariable Long warnId, Authentication authentication) {
+    // TODO Add button on view to delete warns
+    @DeleteMapping("/warn/{warnId}")
+    public CompletableFuture<ResponseEntity<Void>> deleteWarn(@PathVariable Long warnId, Authentication authentication) {
         String userEmail = authentication.getName();
         return service.deleteWarnIfOwnedByUser(warnId, userEmail)
                 .thenApply(future -> ResponseEntity.ok().build());
+    }
+
+    private CompletableFuture<Warn> buildWarnFromDTO(String mediaTypeName, long mediaId, WarnDTO warnDTO, String userEmail, BindingResult result) {
+        Warn warn = mapper.map(warnDTO, Warn.class); // Convert DTO
+
+        // Set media
+        MediaType mediaType = MediaType.fromName(mediaTypeName)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid media type."));
+        warn.setMediaType(mediaType);
+        warn.setMediaId(mediaId);
+
+        // Add relations
+        CompletableFuture<Void> futureTrigger = triggerService.getTrigger(warnDTO.getTriggerId())
+                .thenAccept(warn::setTrigger)
+                .exceptionally(exception -> {
+                    result.rejectValue("triggerId", "trigger-doesnt-exist", "Trigger does not exist");
+                    throw new EntityNotFoundException("Trigger does not exist");
+                });
+
+        CompletableFuture<Void> futureUser = userService.getUserByEmail(userEmail, false)
+                .thenAccept(warn::setUser);
+
+        return CompletableFuture.allOf(futureUser, futureTrigger)
+                .thenApply(futures -> warn);
     }
 
 }

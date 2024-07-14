@@ -13,7 +13,22 @@
           <h1 th:text="|${media.title} (${#strings.capitalize(media.type.name().toLowerCase())})|"></h1>
           <p class="text-wrap" th:text="${media.description}"></p>
         </div>
-        <div hx-trigger="load" hx:get="@{/warn/{mediaType}/{mediaId}(mediaType = ${media.type}, mediaId = ${media.id})}" hx-swap="innerHTML" hx-include="#search" style="width: 90%" class="list-group container">
+
+        <!-- Warn creation form -->
+        <div class="w-50 container p-2 mx-auto border rounded d-flex mb-2">
+          <th:block sec:authorize="!isFullyAuthenticated()"> <!-- If not logged-in -->
+            <p class="fs-5 m-0 text-center">You must log in to create a warn.</p>
+            <a th:href="@{/login}" class="btn btn-primary h-50 my-auto">Login</a>
+          </th:block>
+          <!-- Form fetched from htmx -->
+          <div sec:authorize="isFullyAuthenticated()" hx:get="@{/warn}" hx-trigger="load" hx-swap="outerHTML">
+            <div class="d-flex justify-content-center">
+              <span class="spinner-border" role="status"></span>
+            </div>
+          </div>
+        </div>
+
+        <div id="warns" hx-trigger="load" hx:get="@{/warn/{mediaType}/{mediaId}(mediaType = ${media.type}, mediaId = ${media.id})}" hx-swap="innerHTML" hx-include="#search" style="width: 90%" class="list-group container">
           <div class="d-flex justify-content-center">
             <span class="spinner-border" role="status"></span>
           </div>

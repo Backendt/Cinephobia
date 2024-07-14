@@ -243,20 +243,4 @@ class TriggerServiceTests {
         verify(repository, never()).deleteById(any());
     }
 
-    @Test
-    void doesTriggerExistTest() {
-        // GIVEN
-        long triggerId = 1L;
-        boolean exists = true;
-
-        boolean result;
-        when(repository.existsById(any())).thenReturn(exists);
-        // WHEN
-        result = service.doesTriggerExists(triggerId);
-
-        // THEN
-        verify(repository).existsById(triggerId);
-        assertThat(result).isEqualTo(exists);
-    }
-
 }
