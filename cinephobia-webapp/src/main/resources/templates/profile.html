@@ -8,13 +8,13 @@
 <body>
 <section layout:fragment="content">
   <div class="container-xxl">
-    <h3>Profile</h3>
+    <h3 class="mb-2">Profile</h3>
     <th:block th:replace="~{fragments/users :: profile(${user}) }"></th:block>
     <div class="py-3">
       <button class="btn btn-outline-danger" hx-push-url="true" hx-target="body" hx-post="/logout" hx:headers='${ {_csrf.headerName: _csrf.token} }'>Logout</button>
       <button class="btn btn-danger ms-2" hx-target="body" hx-delete="/profile" hx:headers='${ {_csrf.headerName: _csrf.token} }' hx-confirm="Are you sure you want to delete the account?">Delete account</button>
     </div>
-    <h3 class="mt-4">My Triggers</h3>
+    <h3 class="mt-4 mb-3">My Triggers</h3>
     <div class="container list-group ps-2 my-2">
       <div th:each="trigger : ${user.triggers}" class="list-group-item d-flex justify-content-between align-items-start">
         <div class="ms-2 me-auto">
