@@ -9,7 +9,7 @@
     <section layout:fragment="content" class="flex-grow-1 py-3 align-content-center">
         <div class="container h-100 px-2 py-5 w-xxl-25 border rounded d-flex flex-column align-items-center">
             <img th:src="@{/images/Cinéphobia.png}" class="img-fluid w-75 w-sm-50" alt="Cinéphobia logo">
-            <p th:if="${param.error != null}" class="error">Invalid email or password.</p>
+            <p th:if="${param.error != null}">Invalid email or password.</p>
             <form method="POST" class="d-flex flex-column">
                 <div class="py-3">
                     <div class="input-group">

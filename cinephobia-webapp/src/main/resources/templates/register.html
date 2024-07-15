@@ -9,32 +9,37 @@
 </head>
 <body>
     <section layout:fragment="content">
-        <h1>Register</h1>
-        <form th:action="@{/register}" th:object="${user}" method="post">
-            <label>
-                Display name
-                <input type="text" th:field="*{displayName}" placeholder="Display name" required>
-            </label>
-            <p th:if="${#fields.hasErrors('displayName')}" class="error" th:errors="*{displayName}"></p>
+        <div class="container h-100 px-2 py-5 w-xxl-25 border rounded d-flex flex-column align-items-center">
+            <img th:src="@{/images/Cinéphobia.png}" class="img-fluid w-75 w-sm-50" alt="Cinéphobia logo">
+            <p>Register</p>
+            <form class="d-flex flex-column" th:action="@{/register}" th:object="${user}" method="post">
+                <div class="py-3">
+                    <div class="input-group">
+                        <label class="input-group-text" for="displayName">Display name</label>
+                        <input class="form-control" th:field="*{displayName}" id="displayName" type="text" placeholder="Display name" autofocus onfocus="this.select()" required>
+                    </div>
+                    <p th:if="${#fields.hasErrors('displayName')}" class="alert alert-danger mt-2" th:errors="*{displayName}"></p>
 
-            <label>
-                Email
-                <input type="email" th:field="*{email}" placeholder="Email" required>
-            </label>
-            <p th:if="${#fields.hasErrors('email')}" class="error" th:errors="*{email}"></p>
+                    <div class="input-group my-2">
+                        <label class="input-group-text" for="email">Email</label>
+                        <input class="form-control" th:field="*{email}" id="email" type="text" placeholder="Email" required>
+                    </div>
+                    <p th:if="${#fields.hasErrors('email')}" class="alert alert-danger" th:errors="*{email}"></p>
 
-            <label>
-                Password
-                <input type="password" th:field="*{password}" placeholder="Password" required>
-            </label>
-            <p th:if="${#fields.hasErrors('password')}" class="error" th:errors="*{password}"></p>
+                    <div class="input-group mb-2">
+                        <label class="input-group-text" for="password">Password</label>
+                        <input class="form-control" th:field="*{password}" id="password" type="password" placeholder="Password" required>
+                    </div>
+                    <p th:if="${#fields.hasErrors('password')}" class="alert alert-danger" th:errors="*{password}"></p>
 
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <div class="buttons">
-                <a href="/"><input type="button" class="cancel-button" value="Cancel"></a>
-                <input type="submit" value="Register">
-            </div>
-        </form>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <div>
+                        <a class="btn btn-outline-warning" href="/">Cancel</a>
+                        <input class="btn btn-primary" type="submit" value="Register">
+                    </div>
+                </div>
+            </form>
+        </div>
     </section>
 </body>
 </html>
