@@ -20,6 +20,9 @@
         <button class="btn btn-secondary" hx-swap="none" hx-on::after-request="htmx.remove(this.closest('.list-group-item'))" hx:delete="@{/profile/trigger/{id}(id=${trigger.id})}" hx:headers='${ {_csrf.headerName: _csrf.token} }' type="button" title="Remove from my triggers"><i class="bi bi-trash text-white"></i></button>
       </div>
     </div>
+    <h3 class="mt-4">My warns</h3>
+    <div class="container list-group ps-2 my-2" hx-trigger="load" hx-get="/warns" hx-swap="innerHTML"></div>
+
     <button class="btn btn-outline-danger" hx-push-url="true" hx-target="body" hx-post="/logout" hx:headers='${ {_csrf.headerName: _csrf.token} }'>Logout</button>
     <button class="btn btn-danger" hx-target="body" hx-delete="/profile" hx:headers='${ {_csrf.headerName: _csrf.token} }' hx-confirm="Are you sure you want to delete the account?">Delete account</button>
   </div>

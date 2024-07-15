@@ -169,6 +169,34 @@ class MediaControllerTests {
     }
 
     @Test
+    void getMovieCardTest() throws Exception {
+        // GIVEN
+        long movieId = 1L;
+        RequestBuilder request = get("/media/movie/" + movieId)
+                .param("card", "true");
+
+        Media media = mediaList.get(0);
+        MvcResult result;
+
+        when(service.getMovie(any())).thenReturn(completedFuture(media));
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("media", media))
+                .andExpect(view().name("fragments/medias :: media"));
+
+        verify(service, never()).getSeries(any());
+        verify(service).getMovie(movieId);
+    }
+
+    @Test
     void getSeriesTest() throws Exception {
         // GIVEN
         long seriesId = 1L;

@@ -41,4 +41,38 @@
     </div>
 </th:block>
 
+<th:block th:fragment="profileWarns(warns)">
+    <div th:if="${warns.getTotalElements()} == 0" class="list-group-item d-flex justify-content-center w-100 py-4">
+        <h1>No warn found !</h1>
+    </div>
+    <th:block th:each="warn : ${warns.getContent()}">
+        <div class="list-group-item d-flex justify-content-between">
+            <div class="d-flex flex-xxl-row flex-column"> <!-- Left part -->
+                <div class="d-flex justify-content-center w-100 py-4" hx-trigger="revealed" hx:get="${warn.getMediaCardUrl()}" hx-swap="outerHTML">
+                    <span class="spinner-border" role="status"></span>
+                </div>
+                <div class="mx-3">
+                    <div>
+                        <p class="fs-3 text-nowrap" th:text="${warn.getTrigger().getName()}"></p>
+                        <p class="fs-5" th:text="${warn.getTrigger().getDescription()}"></p>
+                    </div>
+                    <p th:text="|Exposition: ${warn.getExpositionLevel()}/10|"></p>
+                </div>
+            </div>
+            <!-- Right part -->
+            <button class="btn btn-danger align-self-start" hx-confirm="Are you sure you want to delete your warn ?" hx-swap="none" hx-on::after-request="htmx.remove(this.closest('.list-group-item'))" hx:delete="@{/warn/{id}(id=${warn.id})}" hx:headers='${ {_csrf.headerName: _csrf.token} }' type="button" title="Delete my warn"><i class="bi bi-trash text-white"></i></button>
+        </div>
+    </th:block>
+    <div th:if="${warns.hasNext()}"
+         hx-get="/warns"
+         hx:vals='${ {"page": warns.getNumber() + 1} }'
+         hx-include="#search"
+         hx-swap="outerHTML"
+         hx-trigger="revealed"
+         hx-replace-url="false"
+         class="d-flex justify-content-center w-100 py-4">
+        <span class="spinner-border" role="status"></span>
+    </div>
+</th:block>
+
 </html>

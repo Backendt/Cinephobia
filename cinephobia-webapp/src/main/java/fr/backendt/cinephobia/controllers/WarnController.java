@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.jboss.logging.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -73,6 +75,25 @@ public class WarnController {
         });
     }
 
+    @GetMapping("/warns")
+    public CompletableFuture<ModelAndView> getUserWarns(@RequestParam(required = false, value = "page", defaultValue = "0") Integer page,
+                                                        @RequestParam(required = false, value = "size", defaultValue = "50") Integer size,
+                                                        Authentication authentication) {
+        Pageable pageable = PageRequest.of(page, size);
+        ModelAndView model = new ModelAndView("fragments/warns :: profileWarns");
+
+        String userEmail = authentication.getName();
+        return service.getWarnsForUser(userEmail, pageable)
+                .thenApply(warns -> {
+                    Page<WarnResponseDTO> warnsDTO = warns.map(warn -> mapper.map(warn, WarnResponseDTO.class));
+                    return model.addObject("warns", warnsDTO);
+                })
+                .exceptionally(exception -> {
+                    LOGGER.error("Could not get user warns to display on profile", exception);
+                    return model.addObject("warns", new PageImpl<>(List.of()));
+                });
+    }
+
     @GetMapping("/warn")
     public CompletableFuture<ModelAndView> getWarnCreationForm() {
         ModelAndView model = new ModelAndView("fragments/warns :: warnForm");
@@ -107,7 +128,6 @@ public class WarnController {
                 });
     }
 
-    // TODO Add button on view to delete warns
     @DeleteMapping("/warn/{warnId}")
     public CompletableFuture<ResponseEntity<Void>> deleteWarn(@PathVariable Long warnId, Authentication authentication) {
         String userEmail = authentication.getName();

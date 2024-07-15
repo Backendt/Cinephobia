@@ -5,7 +5,7 @@
         <h1 class="fw-bold">No results found !</h1>
     </div>
     <th:block th:each="media : ${mediasPage.getResults()}">
-        <div style="width: 12rem">
+        <div th:fragment="media" style="width: 12rem">
             <a class="text-decoration-none text-reset" th:href="${media.getMediaUri()}" th:title="${media.title}">
                 <img loading="lazy" class="img-thumbnail mw-100 p-0" th:src="${media.posterPath != null} ? ${media.getImageUrl(false)} : @{/images/placeholder.png}" th:alt="${media.title}">
                 <h4 class="fw-bold px-2 fs-6 mt-1 md-2 text-ellipsis" th:text="${media.title}"></h4>

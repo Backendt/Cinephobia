@@ -49,6 +49,12 @@ public class WarnService {
     }
 
     @Async
+    public CompletableFuture<Page<Warn>> getWarnsForUser(String userEmail, Pageable pageable) {
+        Page<Warn> warns = repository.findAllByUserEmail(userEmail, pageable);
+        return completedFuture(warns);
+    }
+
+    @Async
     public CompletableFuture<Warn> getWarn(Long warnId) {
         return repository.findById(warnId)
                 .map(CompletableFuture::completedFuture)

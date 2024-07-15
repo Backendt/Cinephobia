@@ -109,6 +109,24 @@ class WarnServiceTests {
     }
 
     @Test
+    void getWarnsForUserTest() {
+        // GIVEN
+        String userEmail = "user@test.com";
+        Pageable pageable = Pageable.unpaged();
+
+        Page<Warn> warns = new PageImpl<>(List.of(testWarn));
+
+        Page<Warn> results;
+        when(repository.findAllByUserEmail(any(), any())).thenReturn(warns);
+        // WHEN
+        results = service.getWarnsForUser(userEmail, pageable).join();
+
+        // THEN
+        verify(repository).findAllByUserEmail(userEmail, pageable);
+        assertThat(results).containsExactly(testWarn);
+    }
+
+    @Test
     void getWarnByIdTest() {
         // GIVEN
         long warnId = 1L;

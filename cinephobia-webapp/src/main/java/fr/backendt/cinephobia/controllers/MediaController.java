@@ -44,14 +44,17 @@ public class MediaController {
     }
 
     @GetMapping("/media/{type}/{id}")
-    public CompletableFuture<ModelAndView> getMedia(@PathVariable("type") String typeString, @PathVariable("id") Long id) {
+    public CompletableFuture<ModelAndView> getMedia(@PathVariable("type") String typeString, @PathVariable("id") Long id, @RequestParam(value = "card", required = false, defaultValue = "false") Boolean card) {
         CompletableFuture<Media> mediaFuture = typeString.equalsIgnoreCase(MediaType.MOVIE.name()) ?
                 service.getMovie(id) :
                 service.getSeries(id);
 
+        String viewName = card != null && card ?
+                "fragments/medias :: media" :
+                "media";
+
         return mediaFuture.thenApply(media ->
-                new ModelAndView("media")
-                        .addObject("media", media));
+                new ModelAndView(viewName).addObject("media", media));
     }
 
 }

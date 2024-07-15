@@ -66,7 +66,7 @@ class WarnControllerTests {
         testUser = new User(3L, "Name", "test@email.com", "password", "USER");
 
         testWarns = List.of(new Warn(4L, trigger, testUser, testMedia.getId(), testMedia.getType(), 5));
-        testResponseDTOs = List.of(new WarnResponseDTO(4L, testMedia.getId(), triggerDTO, 5));
+        testResponseDTOs = List.of(new WarnResponseDTO(4L, testMedia.getId(), testMedia.getType(), triggerDTO, 5));
 
         testDTO = new WarnDTO(4L, trigger.getId(), 5);
     }
@@ -99,12 +99,82 @@ class WarnControllerTests {
 
         // THEN
         mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
                 .andExpect(view().name("fragments/warns :: warnList"))
                 .andExpect(model().hasNoErrors())
                 .andExpect(model().attribute("warnsUri", uri))
                 .andExpect(model().attribute("warnPage", expectedWarns));
 
         verify(service).getWarnsForMedia(mediaId, mediaType, expectedPage);
+    }
+
+    @WithMockUser(username = "user@test.com")
+    @Test
+    void getWarnsForUserTest() throws Exception {
+        // GIVEN
+        int defaultPageIndex = 0;
+        int defaultPageSize = 50;
+        String userEmail = "user@test.com";
+
+        RequestBuilder request = get("/warns");
+
+        Page<Warn> warnPage = new PageImpl<>(testWarns);
+        CompletableFuture<Page<Warn>> warns = completedFuture(warnPage);
+
+        Page<WarnResponseDTO> expectedWarns = new PageImpl<>(testResponseDTOs);
+        Pageable expectedPage = PageRequest.of(defaultPageIndex, defaultPageSize);
+
+        when(service.getWarnsForUser(any(), any()))
+                .thenReturn(warns);
+
+        MvcResult result;
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments/warns :: profileWarns"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("warns", expectedWarns));
+
+        verify(service).getWarnsForUser(userEmail, expectedPage);
+    }
+
+    @WithMockUser(username = "unknown@test.com")
+    @Test
+    void getWarnsForUnknownUserTest() throws Exception {
+        // GIVEN
+        int defaultPageIndex = 0;
+        int defaultPageSize = 50;
+        String userEmail = "unknown@test.com";
+
+        RequestBuilder request = get("/warns");
+
+        Page<WarnResponseDTO> expectedWarns = Page.empty();
+        Pageable expectedPage = PageRequest.of(defaultPageIndex, defaultPageSize);
+
+        when(service.getWarnsForUser(any(), any()))
+                .thenReturn(failedFuture(new EntityNotFoundException("User not found")));
+
+        MvcResult result;
+        // WHEN
+        result = mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // THEN
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(view().name("fragments/warns :: profileWarns"))
+                .andExpect(model().hasNoErrors())
+                .andExpect(model().attribute("warns", expectedWarns));
+
+        verify(service).getWarnsForUser(userEmail, expectedPage);
     }
 
     @Test
